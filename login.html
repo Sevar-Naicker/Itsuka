@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Library card: My library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="login-page">
+
+<!-- The same moving background as the main page, showing whichever scene was chosen last -->
+<canvas class="backdrop" id="backdrop" aria-hidden="true"></canvas>
+
+<main class="card-shadow">
+  <form class="member-card" id="cardForm" novalidate>
+
+    <div class="card-band">
+      <h1>My library</h1>
+      <span class="card-kind">Library card</span>
+    </div>
+
+    <div class="card-body">
+      <h2 id="cardTitle">Sign in</h2>
+      <p class="card-note" id="cardNote" role="alert" hidden></p>
+
+      <!-- Only shown when registering -->
+      <label class="card-line" id="nameLine" hidden>
+        <span>Name</span>
+        <input id="name" type="text" autocomplete="name" maxlength="60">
+      </label>
+      <label class="card-line" id="emailLine">
+        <span>Email</span>
+        <input id="email" type="email" autocomplete="email">
+      </label>
+      <label class="card-line">
+        <span id="passwordLabel">Password</span>
+        <input id="password" type="password" autocomplete="current-password">
+      </label>
+      <!-- Only shown when signing in -->
+      <p class="card-forgot" id="forgotLine"><button class="link-button" id="forgotButton" type="button">Forgot password?</button></p>
+
+      <button class="card-button" id="cardSubmit" type="submit">Sign in</button>
+      <p class="card-switch" id="switchLine">
+        <span id="switchText">No card yet?</span>
+        <button class="link-button" id="switchMode" type="button">Register</button>
+      </p>
+    </div>
+
+    <div class="card-foot" aria-hidden="true">
+      <div class="barcode"></div>
+      <span class="card-number">No. ---- ----</span>
+    </div>
+
+  </form>
+</main>
+
+<!-- The developer tag at the bottom of the page -->
+<footer class="credit">Developed By Sav</footer>
+
+<script src="backgrounds.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="login.js"></script>
+
+</body>
+</html>
