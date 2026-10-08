@@ -20,7 +20,7 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 
 - Plain HTML, CSS and JavaScript. There is no framework and no build step.
 - [Supabase](https://supabase.com) for accounts, the database, user management and picture storage.
-- - GitHub Pages with a custom domain for hosting.
+- GitHub Pages with a custom domain for hosting.
 - The backgrounds are drawn in code on a `<canvas>`, so there are no image or video files.
 
 ## Files:
