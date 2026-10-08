@@ -48,6 +48,12 @@ function Register(Name, Email, Password) {
   });
 }
 
+// The ResendConfirmation function will email the confirmation link again to a user who registered but has not confirmed thier email yet
+function ResendConfirmation(Email) 
+{
+  return DB.auth.resend({ type: "signup", email: Email, options: { emailRedirectTo: new URL("index.html", location.href).href } });
+}
+
 // The SignOut functions will log the user out of thier current session (dunp sign in information)
 function SignOut() 
 {

@@ -1,8 +1,3 @@
--- =====================================================================
--- supabase-pictures.sql: where book pictures and profile photos are kept.
--- Run this ONCE: Supabase dashboard > SQL Editor > New query > paste all of it > Run.
--- =====================================================================
-
 -- Pictures Bucket Creation (public means a picture can be shown by anyone who has its exact address, nobody can list the bucket):
 insert into storage.buckets (id, name, public)
 values ('pictures', 'pictures', true)

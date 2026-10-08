@@ -41,7 +41,8 @@ async function StartMemberArea()
   const Member = await CurrentMember();
   if (!Member)
   {
-    location.replace("login.html");             // replace, not href, so the Back button does not bounce them here again
+    // A confirmation link that expired or was already used arrives here with an error on the address, so we tell the login page
+    location.replace(ArrivedWith.includes("error_code=") ? "login.html?confirm=expired" : "login.html");   // replace, not href, so the Back button does not bounce them here again
     return null;
   }
   SignedIn = Member;

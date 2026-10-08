@@ -35,12 +35,15 @@
         <span>Email</span>
         <input id="email" type="email" autocomplete="email">
       </label>
-      <label class="card-line">
+      <label class="card-line" id="passwordLine">
         <span id="passwordLabel">Password</span>
         <input id="password" type="password" autocomplete="current-password">
       </label>
       <!-- Only shown when signing in -->
       <p class="card-forgot" id="forgotLine"><button class="link-button" id="forgotButton" type="button">Forgot password?</button></p>
+
+      <!-- Only shown while a card is waiting for its email to be confirmed -->
+      <p class="card-forgot" id="resendLine" hidden><button class="link-button" id="resendButton" type="button">Send the email again</button></p>
 
       <button class="card-button" id="cardSubmit" type="submit">Sign in</button>
       <p class="card-switch" id="switchLine">

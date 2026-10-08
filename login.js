@@ -1,4 +1,4 @@
-// This file contains the code for the library card on login.html, the card has three modes: signin, register and newpassword
+// This file contains the code for the library card on login.html, the card has four modes: signin, register, checkemail and newpassword
 
 // The parts of the card this file changes
 const CardForm = document.getElementById("cardForm");
@@ -6,7 +6,9 @@ const CardTitle = document.getElementById("cardTitle");
 const CardNote = document.getElementById("cardNote");
 const NameLine = document.getElementById("nameLine");
 const EmailLine = document.getElementById("emailLine");
+const PasswordLine = document.getElementById("passwordLine");
 const ForgotLine = document.getElementById("forgotLine");
+const ResendLine = document.getElementById("resendLine");
 const SwitchLine = document.getElementById("switchLine");
 const NameBox = document.getElementById("name");
 const EmailBox = document.getElementById("email");
@@ -16,7 +18,7 @@ const SwitchText = document.getElementById("switchText");
 const SwitchButton = document.getElementById("switchMode");
 
 // ButtonLabels holds the wording of the main button for each mode
-const ButtonLabels = { signin: "Sign in", register: "Register", newpassword: "Save password" };
+const ButtonLabels = { signin: "Sign in", register: "Register", checkemail: "Back to sign in", newpassword: "Save password" };
 // Mode holds which mode the card is showing
 let Mode = "signin";
 
@@ -24,12 +26,14 @@ let Mode = "signin";
 function SetMode(NewMode)
 {
   Mode = NewMode;
-  CardTitle.textContent = { signin: "Sign in", register: "Register", newpassword: "New password" }[Mode];
+  CardTitle.textContent = { signin: "Sign in", register: "Register", checkemail: "Check your email", newpassword: "New password" }[Mode];
   SubmitButton.textContent = ButtonLabels[Mode];
   NameLine.hidden = Mode !== "register";
-  EmailLine.hidden = Mode === "newpassword";
+  EmailLine.hidden = Mode === "newpassword" || Mode === "checkemail";
+  PasswordLine.hidden = Mode === "checkemail";
   ForgotLine.hidden = Mode !== "signin";
-  SwitchLine.hidden = Mode === "newpassword";
+  ResendLine.hidden = Mode !== "checkemail";
+  SwitchLine.hidden = Mode === "newpassword" || Mode === "checkemail";
   document.getElementById("passwordLabel").textContent = Mode === "newpassword" ? "New password" : "Password";
   PasswordBox.autocomplete = Mode === "signin" ? "current-password" : "new-password";
   SwitchText.textContent = Mode === "register" ? "Already have a card?" : "No card yet?";
@@ -46,13 +50,15 @@ function ShowNote(Message, Kind)
 
 // LinkExpired is the message shown when a reset link can no longer be used
 const LinkExpired = "That reset link has expired or was already used. Use Forgot password to get a new one.";
+// ConfirmExpired is the message shown when a confirmation link can no longer be used
+const ConfirmExpired = "That confirmation link has expired or was already used. Try signing in. If your card is still waiting, type your email and send the email again.";
 
 // The Explain function turns Supabase's error messages into plain directions for the member
 function Explain(error)
 {
   const Text = (error.message || "").toLowerCase();
   if (Text.includes("invalid login")) return "That email and password do not match a card. Check them and try again.";
-  if (Text.includes("not confirmed")) return "This card is waiting to be confirmed. Open the confirmation email, then sign in.";
+  if (Text.includes("not confirmed")) return "This card is waiting to be confirmed. Open the confirmation email and press the link, then sign in.";
   if (Text.includes("already registered")) return "There is already a card for that email. Sign in instead.";
   if (Text.includes("session missing")) return LinkExpired;
   if (Text.includes("different from the old")) return "That is your current password. Choose a different one.";
@@ -89,11 +95,40 @@ document.getElementById("forgotButton").addEventListener("click", async () =>
   }
 });
 
+// Send the email again: emails the confirmation link again to the address typed on the card
+document.getElementById("resendButton").addEventListener("click", async () =>
+{
+  if (!DB) return;
+  const Email = EmailBox.value.trim();
+  if (!Email.includes("@")) { ShowNote("Type your email address first, then press Send the email again."); EmailBox.focus(); return; }
+  try
+  {
+    const { error } = await ResendConfirmation(Email);
+    if (error) ShowNote(Explain(error));
+    // The same message whether or not that email has a card waiting, so nobody can use this to find out who is a member.
+    else ShowNote("If a card for " + Email + " is waiting to be confirmed, the email is on its way again. Use the link in the newest one, and check your spam folder.", "good");
+  }
+  catch (error)
+  {
+    ShowNote(Explain(error));
+  }
+});
+
 // When the card is submitted we check the boxes and then sign in, register or save the new password
 CardForm.addEventListener("submit", async (event) =>
 {
   event.preventDefault();                       // stop the browser reloading the page, which is what forms do by default
   if (!DB) return;
+
+  // In the checkemail mode the button only takes them back to the sign in mode, with thier email still filled in
+  if (Mode === "checkemail")
+  {
+    SetMode("signin");
+    CardNote.hidden = true;
+    PasswordBox.value = "";
+    PasswordBox.focus();
+    return;
+  }
 
   const Name = NameBox.value.trim();
   const Email = EmailBox.value.trim();
@@ -104,6 +139,7 @@ CardForm.addEventListener("submit", async (event) =>
   if (Mode !== "newpassword" && !Email.includes("@")) { ShowNote("Enter your email address."); EmailBox.focus(); return; }
   if (Password.length < 6) { ShowNote("Use a password of at least 6 characters."); PasswordBox.focus(); return; }
 
+  ResendLine.hidden = true;                     // it comes back below when the card turns out to be waiting
   SubmitButton.disabled = true;
   SubmitButton.textContent = { signin: "Checking your card\u2026", register: "Making your card\u2026", newpassword: "Saving\u2026" }[Mode];
   CardNote.hidden = true;
@@ -123,6 +159,8 @@ CardForm.addEventListener("submit", async (event) =>
       if (error)
       {
         ShowNote(Explain(error));
+        // A card that is still waiting to be confirmed gets the link for sending the email again
+        if (Explain(error).includes("waiting to be confirmed")) ResendLine.hidden = false;
       }
       else if (Data.session)
       {
@@ -131,9 +169,19 @@ CardForm.addEventListener("submit", async (event) =>
       }
       else
       {
-        // Registered, but Supabase wants the email confirmed before the first sign-in.
-        SetMode("signin");
-        ShowNote("Your card is ready. Open the confirmation email we sent to " + Email + ", then sign in here.", "good");
+        // No session means Supabase wants the email confirmed before the first sign-in.
+        // When that email already has a card Supabase sends nothing and hands back a user with an empty identities list.
+        const AlreadyHasCard = Boolean(Data.user && Data.user.identities && Data.user.identities.length === 0);
+        if (AlreadyHasCard)
+        {
+          SetMode("signin");
+          ShowNote("There is already a card for that email. Sign in instead, or use Forgot password.");
+        }
+        else
+        {
+          SetMode("checkemail");
+          ShowNote("We sent a confirmation email to " + Email + ". Open it and press the link to finish your card. It can take a minute to arrive, and it may land in your spam folder.", "good");
+        }
       }
     }
   }
@@ -181,6 +229,14 @@ async function StartLoginPage()
     return;
   }
 
-  if (Member) location.replace("index.html");    // already signed in: no need to show the card
+  if (Member) { location.replace("index.html"); return; }    // already signed in: no need to show the card
+
+  // Did they arrive from a confirmation link that can no longer be used? (member.js sends them here with confirm=expired.)
+  if (ArrivedWith.includes("confirm=expired"))
+  {
+    history.replaceState(null, "", location.pathname);                // tidy the address bar
+    ShowNote(ConfirmExpired);
+    ResendLine.hidden = false;
+  }
 }
 StartLoginPage();

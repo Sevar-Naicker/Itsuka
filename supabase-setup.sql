@@ -1,8 +1,3 @@
--- =====================================================================
--- supabase-setup.sql: the tables behind the shelves.
--- Run this ONCE: Supabase dashboard > SQL Editor > New query > paste all of it > Run.
--- =====================================================================
-
 -- 1. The tables --------------------------------------------------------
 -- Every row remembers which member it belongs to. "default auth.uid()" fills that in
 -- automatically with whoever is signed in when the row is saved.
