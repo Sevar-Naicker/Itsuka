@@ -197,7 +197,8 @@ CardForm.addEventListener("submit", async (event) =>
 // The StartLoginPage function runs when the page opens and decides which mode of the card to show
 async function StartLoginPage()
 {
-  SetMode("signin");
+  // The landing page's Get a library card button sends them here with mode=register, so the card opens ready to register
+  SetMode(ArrivedWith.includes("mode=register") ? "register" : "signin");
   if (!LoginIsSetUp)
   {
     ShowNote("Login is not connected yet. Paste your Supabase details into config.js and reload this page. Until then the library is open to everyone.");

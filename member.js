@@ -1,4 +1,4 @@
-// This file contains the main page's side of login, it sends anyone without a card to login.html and shows the signed-in member's card and photo
+// This file contains the main page's side of login, it sends anyone without a card to the landing page (welcome.html) and shows the signed-in member's card and photo
 
 // The parts of the page this file works with
 const MemberChip = document.getElementById("memberChip");
@@ -33,19 +33,36 @@ async function ShowMemberPhoto()
   }
 }
 
-// The StartMemberArea function checks who is signed in and returns the member, when nobody is signed in it sends them to the login page
+// The StartMemberArea function checks who is signed in and returns the member, when nobody is signed in it sends them to the landing page
 async function StartMemberArea()
 {
-  if (!LoginIsSetUp) return null;               // login is switched off (config.js is empty): the library is open
+  // login is switched off (config.js is empty): the library is open, so we show the page straight away
+  if (!LoginIsSetUp)
+  {
+    document.body.classList.remove("checking");
+    return null;
+  }
 
-  const Member = await CurrentMember();
+  // If the sign-in cannot be read for any reason we treat it as nobody being signed in
+  let Member = null;
+  try
+  {
+    Member = await CurrentMember();
+  }
+  catch (error)
+  {
+    console.error(error);
+  }
+
   if (!Member)
   {
     // A confirmation link that expired or was already used arrives here with an error on the address, so we tell the login page
-    location.replace(ArrivedWith.includes("error_code=") ? "login.html?confirm=expired" : "login.html");   // replace, not href, so the Back button does not bounce them here again
+    // Everyone else who is not signed in goes to the landing page
+    location.replace(ArrivedWith.includes("error_code=") ? "login.html?confirm=expired" : "welcome.html");   // replace, not href, so the Back button does not bounce them here again
     return null;
   }
   SignedIn = Member;
+  document.body.classList.remove("checking");   // we know who it is, so the page can be shown
 
   // The small card in the corner
   document.getElementById("chipName").textContent = MemberName(Member).split(" ")[0] + "\u2019s card";

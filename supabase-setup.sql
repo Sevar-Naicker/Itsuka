@@ -1,6 +1,4 @@
--- 1. The tables --------------------------------------------------------
--- Every row remembers which member it belongs to. "default auth.uid()" fills that in
--- automatically with whoever is signed in when the row is saved.
+-- Every row remembers which member it belongs to. "default auth.uid()" fills that in automatically with whoever is signed in when the row is saved.
 
 -- Sections Table Creation:
 create table public.sections 

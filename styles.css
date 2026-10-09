@@ -1,4 +1,4 @@
-/* This file contains how everything looks, it is linked from index.html and login.html */
+/* This file contains how everything looks, it is linked from index.html, login.html and welcome.html */
 
 /* Variables */
 :root {
@@ -621,3 +621,117 @@ h1 {
   color: var(--gilt);
   font-size: 0.8125rem;
 }
+
+/* Library hidden while checking who is signed in */
+body.checking > *:not(.backdrop) { visibility: hidden; }
+
+/* Landing page layout */
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.welcome-top { justify-content: flex-end; }
+.welcome { display: flex; flex-direction: column; align-items: center; gap: 24px; padding-top: 5vh; }
+
+/* Landing page title shelf */
+.title-section { margin-top: 0; }
+.title-shelf {
+  --tw: clamp(40px, 11vw, 84px);   /* width of one title book */
+  --row: calc(var(--tw) * 3.1);
+  flex-wrap: nowrap;
+}
+.title-shelf .spine { font-size: calc(var(--tw) * 0.74); font-weight: 700; text-shadow: none; cursor: default; }
+@media (max-width: 360px) {
+  .title-shelf .ornament { display: none; }
+}
+
+/* Landing page words */
+.welcome-note {
+  max-width: 30rem;
+  margin: 0;
+  padding: 14px 18px;
+  border: 2px solid var(--gilt);
+  background: rgba(20, 14, 10, 0.8);
+  color: var(--gilt);
+  font-size: 1.0625rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+/* Landing page buttons */
+.welcome-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  filter: drop-shadow(var(--dot) var(--dot) 0 rgba(0, 0, 0, 0.55));
+}
+.brass-button, .wood-button {
+  padding: 13px 18px;
+  border: 0;
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  cursor: pointer;
+  clip-path: polygon(
+    var(--dot) 0, calc(100% - var(--dot)) 0, calc(100% - var(--dot)) var(--dot), 100% var(--dot),
+    100% calc(100% - var(--dot)), calc(100% - var(--dot)) calc(100% - var(--dot)), calc(100% - var(--dot)) 100%,
+    var(--dot) 100%, var(--dot) calc(100% - var(--dot)), 0 calc(100% - var(--dot)), 0 var(--dot), var(--dot) var(--dot)
+  );
+}
+.brass-button {
+  background: var(--brass);
+  color: #2A1A10;
+  box-shadow:
+    inset var(--dot) var(--dot) 0 rgba(255, 255, 255, 0.4),
+    inset calc(var(--dot) * -1) calc(var(--dot) * -1) 0 rgba(0, 0, 0, 0.28);
+}
+.wood-button {
+  background: var(--shelf);
+  color: var(--brass);
+  box-shadow:
+    inset var(--dot) var(--dot) 0 var(--edge),
+    inset calc(var(--dot) * -1) calc(var(--dot) * -1) 0 rgba(0, 0, 0, 0.45);
+}
+.brass-button:active, .wood-button:active { transform: translate(2px, 2px); }
+.brass-button:focus-visible { outline: none; box-shadow: inset 0 0 0 var(--dot) #160E08; }
+.wood-button:focus-visible { outline: none; box-shadow: inset 0 0 0 var(--dot) var(--gilt); }
+@media (hover: hover) {
+  .brass-button:hover, .wood-button:hover { filter: brightness(1.12); }
+}
+@media (max-width: 520px) {
+  .welcome-actions .sign-in { order: 1; }   /* Sign in moves to the second row */
+}
+
+/* Landing page shelf picker */
+.shelf-title { margin: 16px 0 8px; font-size: 1.125rem; font-weight: 500; }
+.shelf-list { display: flex; gap: 12px; padding: 4px; overflow-x: auto; }
+.shelf-choice {
+  flex: none;
+  width: 100px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.shelf-thumb {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  height: 66px;
+  margin-bottom: 6px;
+  padding-bottom: var(--dot);
+  border: var(--dot) solid #000;
+  background: linear-gradient(to top, var(--shelf) 0, var(--shelf) var(--dot), rgba(255, 255, 255, 0.08) var(--dot));
+}
+.shelf-thumb canvas { display: block; image-rendering: crisp-edges; image-rendering: pixelated; }
+.shelf-choice[aria-pressed="true"] .shelf-thumb { border-color: var(--brass); }
+.shelf-choice:focus-visible { outline: 3px solid var(--brass); outline-offset: 2px; }
+
+/* Landing page how it works card */
+.how-dialog .card-line { grid-template-columns: 4.75rem 1fr; align-items: start; }
+.how-dialog .card-line span { padding-top: 9px; }
