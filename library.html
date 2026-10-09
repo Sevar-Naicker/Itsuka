@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<!-- The checking class hides the page until member.js knows who is signed in -->
+<body class="checking">
+
+<!-- The moving background is drawn onto this canvas by backgrounds.js -->
+<canvas class="backdrop" id="backdrop" aria-hidden="true"></canvas>
+
+<!-- The top of the page: The title the two buttons -->
+<header class="top">
+  <h1>My library</h1>
+  <div class="top-actions">
+    <button class="plain-button" id="sceneButton" type="button">Change background</button>
+    <!-- The signed-in member's card. Hidden until member.js knows who is signed in -->
+    <button class="member-chip" id="memberChip" type="button" hidden>
+      <canvas class="chip-photo" id="chipPhoto" aria-hidden="true"></canvas>
+      <span id="chipName"></span>
+    </button>
+  </div>
+</header>
+
+<!-- The plaques (one switch per section) and the shelves are both built by library.js -->
+<nav class="tabs" id="tabs" aria-label="Sections"></nav>
+<!-- A red message box for when the shelves cannot be loaded -->
+<p class="library-note" id="libraryNote" role="alert" hidden></p>
+<main class="sections" id="library"></main>
+
+<!-- The developer tag at the bottom of the page -->
+<footer class="credit">Developed By Sav</footer>
+
+<!-- The background picker, its thumbnails are added by backgrounds.js -->
+<dialog class="scenes" id="scenePicker" aria-labelledby="sceneTitle">
+  <div class="scenes-inner">
+    <div class="scenes-head">
+      <h2 id="sceneTitle">Choose a background</h2>
+      <button class="plain-button" id="sceneDone" type="button">Done</button>
+    </div>
+    <label class="motion-switch">
+      <input type="checkbox" id="motionSwitch"> Moving backgrounds
+    </label>
+    <div class="scene-list" id="sceneList"></div>
+  </div>
+</dialog>
+
+<button class="add-button" id="addBook" type="button">+ Add a book</button>
+
+<!-- The catalogue card-->
+<dialog class="card-dialog" id="catalogueDialog" aria-labelledby="catalogueTitle">
+  <div class="card-shadow">
+    <form class="member-card catalogue-card" id="catalogueForm" novalidate>
+      <div class="catalogue-head">
+        <h2 id="catalogueTitle">Add a book</h2>
+        <span class="card-kind">Catalogue card</span>
+      </div>
+      <div class="card-body">
+        <p class="card-note" id="catalogueNote" role="alert" hidden></p>
+        <label class="card-line">
+          <span>Name</span>
+          <input id="bookName" type="text" maxlength="80" autocomplete="off">
+        </label>
+        <label class="card-line">
+          <span>Link</span>
+          <input id="bookLink" type="text" inputmode="url" autocapitalize="off" spellcheck="false" autocomplete="off" placeholder="instagram.com/someone">
+        </label>
+        <label class="card-line">
+          <span>Section</span>
+          <select id="bookSection"></select>
+        </label>
+        <label class="card-line" id="newSectionLine" hidden>
+          <span>New section</span>
+          <input id="newSectionName" type="text" maxlength="40" autocomplete="off">
+        </label>
+        <label class="card-notes">
+          <span>Notes, one point per line</span>
+          <textarea id="bookNotes" rows="4"></textarea>
+        </label>
+        <div class="picture-row">
+          <canvas class="picture-thumb" id="bookPicturePreview" aria-hidden="true" hidden></canvas>
+          <div class="picture-choices">
+            <label class="link-button file-pick"><span id="bookPictureLabel">Choose a picture</span><input id="bookPictureFile" type="file" accept="image/*"></label>
+            <button class="link-button" id="bookPictureRemove" type="button" hidden>Remove picture</button>
+          </div>
+        </div>
+        <button class="card-button" id="catalogueSubmit" type="submit">Add to shelf</button>
+        <p class="card-switch card-ends">
+          <button class="link-button" id="catalogueCancel" type="button">Cancel</button>
+          <button class="link-button danger-link" id="bookDelete" type="button" hidden>Delete book</button>
+        </p>
+      </div>
+      <div class="catalogue-hole" aria-hidden="true"></div>
+    </form>
+  </div>
+</dialog>
+
+<!-- The sections card: Rename section, delete section and add section. The rows are built by library.js -->
+<dialog class="card-dialog" id="sectionsDialog" aria-labelledby="sectionsTitle">
+  <div class="card-shadow">
+    <div class="member-card catalogue-card">
+      <div class="catalogue-head">
+        <h2 id="sectionsTitle">Sections</h2>
+        <span class="card-kind">Shelf plaques</span>
+      </div>
+      <div class="card-body">
+        <p class="card-note" id="sectionsNote" role="alert" hidden></p>
+        <div id="sectionRows"></div>
+        <form class="card-line section-row" id="sectionAddForm" novalidate>
+          <input id="sectionAddName" type="text" maxlength="40" autocomplete="off" placeholder="New section name" aria-label="New section name">
+          <button class="link-button" type="submit">Add</button>
+        </form>
+        <button class="card-button" id="sectionsDone" type="button">Done</button>
+      </div>
+      <div class="catalogue-hole" aria-hidden="true"></div>
+    </div>
+  </div>
+</dialog>
+
+<!-- Deletion confermation message shown before anything is deleted -->
+<dialog class="card-dialog" id="confirmDialog" aria-labelledby="confirmMessage">
+  <div class="card-shadow">
+    <div class="member-card catalogue-card">
+      <div class="card-body">
+        <p class="confirm-message" id="confirmMessage"></p>
+        <button class="card-button danger" id="confirmYes" type="button">Delete</button>
+        <p class="card-switch"><button class="link-button" id="confirmNo" type="button" autofocus>Keep it</button></p>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<!-- The member's full card that can be opened from the small card in the corner -->
+<dialog class="card-dialog" id="memberDialog" aria-labelledby="memberTitle">
+  <div class="card-shadow">
+    <div class="member-card">
+      <div class="card-band">
+        <span class="card-name">My library</span>
+        <span class="card-kind">Library card</span>
+      </div>
+      <div class="card-body">
+        <h2 id="memberTitle">Your card</h2>
+        <p class="card-note" id="photoNote" role="alert" hidden></p>
+        <div class="card-top">
+          <canvas class="card-photo" id="memberPhoto" aria-hidden="true"></canvas>
+          <div>
+            <div class="card-line"><span>Name</span><b id="memberName"></b></div>
+            <div class="card-line"><span>Member since</span><b id="memberSince"></b></div>
+          </div>
+        </div>
+        <div class="card-line"><span>Email</span><b id="memberEmail"></b></div>
+        <div class="picture-choices">
+          <label class="link-button file-pick"><span id="photoPickLabel">Add a photo</span><input id="photoFile" type="file" accept="image/*"></label>
+          <button class="link-button" id="photoRemove" type="button" hidden>Remove photo</button>
+        </div>
+        <button class="card-button" id="signOut" type="button">Sign out</button>
+        <p class="card-switch"><button class="link-button" id="memberClose" type="button" autofocus>Close</button></p>
+      </div>
+      <div class="card-foot" aria-hidden="true">
+        <div class="barcode"></div>
+        <span class="card-number" id="memberNumber"></span>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<script src="backgrounds.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="pictures.js"></script>
+<script src="member.js"></script>
+<script src="library.js"></script>
+
+</body>
+</html>

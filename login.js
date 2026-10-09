@@ -149,7 +149,7 @@ CardForm.addEventListener("submit", async (event) =>
     if (Mode === "newpassword")
     {
       const { error } = await SetNewPassword(Password);
-      if (!error) { location.href = "index.html"; return; }          // saved, and the link already signed them in
+      if (!error) { location.href = "library.html"; return; }          // saved, and the link already signed them in
       ShowNote(Explain(error));
       if (Explain(error) === LinkExpired) SetMode("signin");
     }
@@ -164,7 +164,7 @@ CardForm.addEventListener("submit", async (event) =>
       }
       else if (Data.session)
       {
-        location.href = "index.html";           // signed in: into the library
+        location.href = "library.html";         // signed in: into the library
         return;
       }
       else
@@ -230,7 +230,7 @@ async function StartLoginPage()
     return;
   }
 
-  if (Member) { location.replace("index.html"); return; }    // already signed in: no need to show the card
+  if (Member) { location.replace("library.html"); return; }    // already signed in: no need to show the card
 
   // Did they arrive from a confirmation link that can no longer be used? (member.js sends them here with confirm=expired.)
   if (ArrivedWith.includes("confirm=expired"))

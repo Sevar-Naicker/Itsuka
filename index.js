@@ -1,4 +1,4 @@
-// This file contains the code for the landing page (welcome.html), it loads after backgrounds.js and uses its Sprite, Rect, Remember and Recall functions
+// This file contains the code for the landing page (index.html), it loads after backgrounds.js and auth.js and uses their functions
 
 // The pictures for the title shelf:
 
@@ -308,3 +308,49 @@ HowDialog.addEventListener("click", (event) =>
 {
   if (event.target === HowDialog) HowDialog.close();
 });
+
+// The buttons for a signed-in member:
+
+// ActionsRow is the row of buttons, CardButton is Get a library card and SignInButton is Sign in
+const ActionsRow = document.querySelector(".welcome-actions");
+const CardButton = document.getElementById("cardButton");
+const SignInButton = document.getElementById("signInButton");
+
+// The StartWelcomePage function checks who is signed in and shows the right buttons, a signed-in member gets a Library button in place of Sign in
+async function StartWelcomePage()
+{
+  // If the sign-in cannot be read for any reason we treat it as nobody being signed in
+  let Member = null;
+  try
+  {
+    Member = await CurrentMember();
+  }
+  catch (error)
+  {
+    console.error(error);
+  }
+
+  // Email links that land on this page are passed on: a used or expired one to the library card and a working one into the library
+  if (ArrivedWith.includes("error_code="))
+  {
+    location.replace("login.html?confirm=expired");
+    return;
+  }
+  if (Member && ArrivedWith.includes("access_token="))
+  {
+    location.replace("library.html");
+    return;
+  }
+
+  // A member already has a card, so Get a library card is hidden and Sign in becomes Library
+  // When login is switched off (config.js is empty) the library is open to everyone, so they get the Library button as well
+  if (Member || !LoginIsSetUp)
+  {
+    CardButton.hidden = true;
+    SignInButton.textContent = "Library";
+    SignInButton.href = "library.html";
+    ActionsRow.classList.add("member");
+  }
+  ActionsRow.classList.remove("waiting");      // we know who it is, so the buttons can be shown
+}
+StartWelcomePage();

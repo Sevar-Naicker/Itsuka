@@ -8,7 +8,7 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 
 ## What it does:
 
-- **Landing Page:** visitors who are not signed in see the name Itsuka spelled out as six books on a shelf, with buttons to get a library card, sign in or read how it works. They can also choose what sits at the end of the shelf: tea and books, a cat, an armchair, a plant or a lantern.
+- **Landing Page:** the first page everyone sees is the name Itsuka spelled out as six books on a shelf, with buttons to get a library card, sign in or read how it works. A member who is already signed in gets a Library button instead. Visitors can also choose what sits at the end of the shelf: tea and books, a cat, an armchair, a plant or a lantern.
 - **Shelves and Books:** every saved creator / page is a book on a shelf. Hover or tap a spine and it opens to show a picture, your notes and a link.
 - **Sections:** shelves are grouped under plaques such as Artists or Work Ideas. Each plaque switches its section on or off, so you can view one, a few or all of them.
 - **Library Card:** members register and sign in with a library card, and can add a profile photo to it.
@@ -28,15 +28,15 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 
 | File | What it is |
 | --- | --- |
-| `index.html` | The library itself: plaques, shelves, books |
-| `welcome.html` | The landing page visitors see before signing in |
+| `index.html` | The landing page, the first page everyone sees |
+| `library.html` | The library itself: plaques, shelves, books |
 | `login.html` | The library card: sign in, register and reset a password |
 | `styles.css` | How everything looks |
 | `config.js` | Which Supabase project the site talks to |
-| `auth.js` | Signing in, registering and signing out (used by the library and the library card) |
+| `auth.js` | Signing in, registering and signing out (used by all three pages) |
 | `login.js` | The form on the library card |
-| `welcome.js` | The item on the landing page's title shelf, its picker and the How it works card |
-| `member.js` | Checks for a card on the main page, sends anyone without one to the landing page and shows the member's card |
+| `index.js` | The landing page: the item on the title shelf, its picker, the How it works card and the Library button for members |
+| `member.js` | Checks for a card on the library page, sends anyone without one to the landing page and shows the member's card |
 | `pictures.js` | Shrinks, stores and draws pictures (book pictures and card photos) |
 | `library.js` | The plaques, shelves and books, and the cards for adding to them |
 | `backgrounds.js` | The pixel scenes, background picker and colour themes (used by all three pages) |
@@ -49,8 +49,8 @@ All of them must stay in the same folder in order for the project to run.
 
 Use a small local web server instead of double-clicking the files, so all the pages share the same sign-in:
 
-- **VS Code:** install the Live Server extension, right-click `welcome.html` and choose "Open with Live Server".
-- **Python:** open a terminal in this folder, run `python -m http.server 8000`, then visit `http://localhost:8000/welcome.html`.
+- **VS Code:** install the Live Server extension, right-click `index.html` and choose "Open with Live Server".
+- **Python:** open a terminal in this folder, run `python -m http.server 8000`, then visit `http://localhost:8000`.
 
 ## Setting up your own copy:
 
@@ -72,4 +72,5 @@ If both values in `config.js` are left empty, login is off and the library shows
 The publishable key in `config.js` (it starts with `sb_publishable_`) is meant to be seen by browsers, so it is safe to publish.
 
 ## Credits:
+
 Developed by Sav.

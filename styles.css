@@ -1,4 +1,4 @@
-/* This file contains how everything looks, it is linked from index.html, login.html and welcome.html */
+/* This file contains how everything looks, it is linked from index.html, library.html and login.html */
 
 /* Variables */
 :root {
@@ -699,8 +699,9 @@ body.checking > *:not(.backdrop) { visibility: hidden; }
   .brass-button:hover, .wood-button:hover { filter: brightness(1.12); }
 }
 @media (max-width: 520px) {
-  .welcome-actions .sign-in { order: 1; }   /* Sign in moves to the second row */
+  .welcome-actions:not(.member) .sign-in { order: 1; }   /* Sign in moves to the second row */
 }
+.welcome-actions.waiting { visibility: hidden; }   /* hidden until we know who is signed in */
 
 /* Landing page shelf picker */
 .shelf-title { margin: 16px 0 8px; font-size: 1.125rem; font-weight: 500; }

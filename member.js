@@ -1,4 +1,4 @@
-// This file contains the main page's side of login, it sends anyone without a card to the landing page (welcome.html) and shows the signed-in member's card and photo
+// This file contains the library page's side of login, it sends anyone without a card to the landing page (index.html) and shows the signed-in member's card and photo
 
 // The parts of the page this file works with
 const MemberChip = document.getElementById("memberChip");
@@ -58,7 +58,7 @@ async function StartMemberArea()
   {
     // A confirmation link that expired or was already used arrives here with an error on the address, so we tell the login page
     // Everyone else who is not signed in goes to the landing page
-    location.replace(ArrivedWith.includes("error_code=") ? "login.html?confirm=expired" : "welcome.html");   // replace, not href, so the Back button does not bounce them here again
+    location.replace(ArrivedWith.includes("error_code=") ? "login.html?confirm=expired" : "index.html");   // replace, not href, so the Back button does not bounce them here again
     return null;
   }
   SignedIn = Member;

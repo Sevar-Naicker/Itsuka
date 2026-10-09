@@ -1,4 +1,4 @@
-// This file contains all relavent code for user accounts, its used by both pages and loads after the Supabase library and config.js
+// This file contains all relavent code for user accounts, its used by all three pages and loads after the Supabase library and config.js
 
 // Settings is declared to hold our projects adress and key, we also make sure it uses an empty list when they congif.js isnt found
 const Settings = window.LIBRARY_CONFIG || {};
@@ -43,7 +43,7 @@ function Register(Name, Email, Password) {
     options: 
     {
       data: { name: Name }, // k=Kept with the account and shown on their card
-      emailRedirectTo: new URL("index.html", location.href).href, // The confirmation email sends them back to the index page (home page)
+      emailRedirectTo: new URL("library.html", location.href).href, // The confirmation email sends them back to the library page
     },
   });
 }
@@ -51,7 +51,7 @@ function Register(Name, Email, Password) {
 // The ResendConfirmation function will email the confirmation link again to a user who registered but has not confirmed thier email yet
 function ResendConfirmation(Email) 
 {
-  return DB.auth.resend({ type: "signup", email: Email, options: { emailRedirectTo: new URL("index.html", location.href).href } });
+  return DB.auth.resend({ type: "signup", email: Email, options: { emailRedirectTo: new URL("library.html", location.href).href } });
 }
 
 // The SignOut functions will log the user out of thier current session (dunp sign in information)
