@@ -90,6 +90,9 @@ const FindButton = document.getElementById("findButton");
 // SearchText holds what is typed in the search box in small letters, empty means "show every book"
 let SearchText = "";
 
+// PlacesAreSaved holds whether the database has the position column that remembers each book's place (added by supabase-order.sql)
+let PlacesAreSaved = true;
+
 // DoneSwitch is the Hide done button and HideDone holds whether the books marked as done are hidden, it uses the choice saved on this device
 const DoneSwitch = document.getElementById("doneSwitch");
 let HideDone = Recall("library-hide-done") === "yes";
@@ -164,6 +167,25 @@ function Matches(Book)
 function Visible(Book)
 {
   return Matches(Book) && !(HideDone && Book.done);
+}
+
+// The NowInSeconds function returns the time as a number, a new book uses it as its place so it goes on the end of its shelf
+function NowInSeconds()
+{
+  return Date.now() / 1000;
+}
+
+// The EndPlace function returns the place that puts a book after every book already in a section
+function EndPlace(Section)
+{
+  const Last = Section.books[Section.books.length - 1];
+  return Last ? Math.max(NowInSeconds(), Last.position + 1) : NowInSeconds();
+}
+
+// The SectionOf function finds the section a book is in
+function SectionOf(Book)
+{
+  return Library.find((Section) => Section.books.includes(Book));
 }
 
 // The BookWithId function finds a book in the library by its id
@@ -365,6 +387,7 @@ function RenderShelves()
     if (HideDone && Section.books.length && !Section.books.some(Visible)) return;
 
     const Block = Make("section", "section");
+    Block.dataset.section = Section.id;                               // so a dropped book knows which shelf it landed on
     // With exactly one section switched on, its plaque at the top already names it. Otherwise each shelf gets a label.
     if (Chosen.size !== 1) Block.append(Make("h2", "plaque", Section.name));
     const Shelf = Make("div", "shelf");
@@ -485,6 +508,206 @@ LibraryRoot.addEventListener("click", async (event) =>
   Box.disabled = false;
 });
 
+// Moving a book by dragging its spine:
+// With a mouse the book lifts once it is dragged a little, on a phone the finger has to rest on the spine for a moment first so that scrolling still works
+
+// HOLD_TIME is how long a finger must rest on a spine before the book lifts, in milliseconds
+const HOLD_TIME = 350;
+// MOUSE_SLACK and TOUCH_SLACK are how far a press may move, in screen pixels, before a mouse lifts the book or a finger counts as scrolling
+const MOUSE_SLACK = 6;
+const TOUCH_SLACK = 10;
+
+// Press holds a press on a spine that has not lifted the book yet and Carry holds the book being carried, both are null the rest of the time
+let Press = null;
+let Carry = null;
+// DroppedAt holds when the last book was put down, so the click that follows a drag does not open it
+let DroppedAt = 0;
+
+// The ForgetPress function drops a press that did not turn into a drag
+function ForgetPress()
+{
+  if (Press) clearTimeout(Press.Timer);
+  Press = null;
+}
+
+// The LiftBook function starts carrying a book: its slot on the shelf fades and a copy of its spine follows the pointer
+function LiftBook(Elem, X, Y)
+{
+  ForgetPress();
+  CloseAll();
+  const Spine = Elem.querySelector(".spine");
+  const Box = Spine.getBoundingClientRect();
+  const Copy = Spine.cloneNode(true);
+  Copy.className = "spine carried";
+  ["--cover", "--title", "--w", "--h"].forEach((Name) => Copy.style.setProperty(Name, Elem.style.getPropertyValue(Name)));
+  document.body.append(Copy);
+  document.body.classList.add("carrying");
+  Elem.classList.add("is-lifted");
+  Carry = { Elem, Copy, GrabX: X - Box.left, GrabY: Y - Box.top, X, Y, HomeShelf: Elem.parentNode, HomeNext: Elem.nextSibling };
+  if (navigator.vibrate) navigator.vibrate(15);                       // a small buzz on phones that support it
+  CarryTo(X, Y);
+  requestAnimationFrame(ScrollWhileCarrying);
+}
+
+// The CarryTo function moves the carried copy to the pointer and slides the book's slot to wherever it would land
+function CarryTo(X, Y)
+{
+  Carry.X = X;
+  Carry.Y = Y;
+  Carry.Copy.style.left = X - Carry.GrabX + "px";
+  Carry.Copy.style.top = Y - Carry.GrabY - 12 + "px";
+
+  const Under = document.elementFromPoint(X, Y);
+  if (!Under) return;
+  const Over = Under.closest(".book");
+  const Shelf = Under.closest(".shelf");
+  if (Over && Over !== Carry.Elem)
+  {
+    // Over the left half of a book the slot goes before it, over the right half it goes after
+    const Box = Over.getBoundingClientRect();
+    const Next = X > Box.left + Box.width / 2 ? Over.nextSibling : Over;
+    if (Next !== Carry.Elem && Carry.Elem.nextSibling !== Next) Over.parentNode.insertBefore(Carry.Elem, Next);
+  }
+  else if (Shelf && !Over)
+  {
+    // Over the empty part of a shelf the slot goes on the end, just before the ornament
+    const Ornament = Shelf.querySelector(".ornament");
+    if (Carry.Elem.parentNode !== Shelf || Carry.Elem.nextSibling !== Ornament) Shelf.insertBefore(Carry.Elem, Ornament);
+  }
+}
+
+// The ScrollWhileCarrying function scrolls the page when a carried book is held near the top or bottom of the screen
+function ScrollWhileCarrying()
+{
+  if (!Carry) return;
+  const Edge = 70;
+  const Step = Carry.Y < Edge ? -10 : Carry.Y > window.innerHeight - Edge ? 10 : 0;
+  if (Step)
+  {
+    window.scrollBy(0, Step);
+    CarryTo(Carry.X, Carry.Y);
+  }
+  requestAnimationFrame(ScrollWhileCarrying);
+}
+
+// The StopCarrying function takes away the carried copy and gives back the book that was being carried
+function StopCarrying()
+{
+  const Was = Carry;
+  Carry = null;
+  Was.Copy.remove();
+  Was.Elem.classList.remove("is-lifted");
+  document.body.classList.remove("carrying");
+  DroppedAt = performance.now();
+  return Was;
+}
+
+// The PutBack function ends a drag without moving anything
+function PutBack()
+{
+  const Was = StopCarrying();
+  Was.HomeShelf.insertBefore(Was.Elem, Was.HomeNext);
+}
+
+// The DropBook function puts the carried book down where its slot is and saves its new shelf and place
+async function DropBook()
+{
+  const Was = StopCarrying();
+  const Elem = Was.Elem;
+  const Book = BookWithId(Elem.dataset.id);
+  const To = Library.find((Section) => String(Section.id) === Elem.closest(".section").dataset.section);
+
+  // The books now either side of it on the shelf tell us where it goes among all the books of that section, hidden ones included
+  const IsBook = (Other) => Other && Other.classList.contains("book");
+  const Others = To.books.filter((Other) => Other !== Book);
+  let Index = Others.length;
+  if (IsBook(Elem.nextElementSibling)) Index = Others.indexOf(BookWithId(Elem.nextElementSibling.dataset.id));
+  else if (IsBook(Elem.previousElementSibling)) Index = Others.indexOf(BookWithId(Elem.previousElementSibling.dataset.id)) + 1;
+
+  // Put down where it was picked up: nothing to save
+  if (SectionOf(Book) === To && To.books.indexOf(Book) === Index) return;
+
+  // Its place is a number between the places of the books either side, so only this one book has to be saved
+  const Before = Others[Index - 1];
+  const After = Others[Index];
+  const Position = Before && After ? (Before.position + After.position) / 2
+    : Before ? Math.max(NowInSeconds(), Before.position + 1)
+    : After ? After.position - 1
+    : NowInSeconds();
+  try
+  {
+    await MoveBook(Book, To, Index, Position);
+    LibraryNote.hidden = true;
+  }
+  catch (error)
+  {
+    console.error(error);
+    ShowLibraryNote(ExplainDatabase(error));
+  }
+  RenderTabs();                                  // the counts on the plaques may have changed
+  Update();                                      // rebuilt from the saved order, so a move that failed goes back by itself
+}
+
+// A press on a spine may become a drag
+LibraryRoot.addEventListener("pointerdown", (event) =>
+{
+  const Spine = event.target.closest(".spine");
+  if (!Spine || event.button !== 0 || Carry) return;
+  const Elem = Spine.closest(".book");
+  Press = { Elem, X: event.clientX, Y: event.clientY, Touch: event.pointerType !== "mouse", Timer: null };
+  if (Press.Touch) Press.Timer = setTimeout(() => LiftBook(Elem, Press.X, Press.Y), HOLD_TIME);
+});
+
+// Moving the pointer lifts the book (mouse), carries it, or shows that a finger is scrolling instead
+document.addEventListener("pointermove", (event) =>
+{
+  if (Carry)
+  {
+    CarryTo(event.clientX, event.clientY);
+    return;
+  }
+  if (!Press) return;
+  const Moved = Math.hypot(event.clientX - Press.X, event.clientY - Press.Y);
+  if (Press.Touch && Moved > TOUCH_SLACK) ForgetPress();
+  if (Press && !Press.Touch && Moved > MOUSE_SLACK) LiftBook(Press.Elem, event.clientX, event.clientY);
+});
+
+// Letting go puts the book down
+document.addEventListener("pointerup", () =>
+{
+  ForgetPress();
+  if (Carry) DropBook();
+});
+
+// The browser taking over the gesture, or the Escape key, puts the book back where it was
+document.addEventListener("pointercancel", () =>
+{
+  ForgetPress();
+  if (Carry) PutBack();
+});
+document.addEventListener("keydown", (event) =>
+{
+  if (event.key === "Escape" && Carry) PutBack();
+});
+
+// While a book is carried the page must not scroll under the finger
+document.addEventListener("touchmove", (event) =>
+{
+  if (Carry) event.preventDefault();
+}, { passive: false });
+
+// A long press on a phone would otherwise bring up the browser's own menu
+LibraryRoot.addEventListener("contextmenu", (event) =>
+{
+  if (event.target.closest(".spine") && (Press || Carry)) event.preventDefault();
+});
+
+// The click that comes straight after a drag is swallowed, so putting a book down does not open it
+LibraryRoot.addEventListener("click", (event) =>
+{
+  if (performance.now() - DroppedAt < 400) event.stopPropagation();
+}, true);
+
 // Opening and closing books:
 
 // The ShowPicture function fetches and draws a book's picture the first time the book is opened instead of when the page loads
@@ -583,10 +806,16 @@ async function LoadLibrary()
   ]);
   if (Sections.error) throw Sections.error;
   if (Books.error) throw Books.error;
+  // Every book gets a place, a number that decides its spot on the shelf. Before supabase-order.sql has been run it is the time the book was added
+  PlacesAreSaved = !Books.data.length || Books.data[0].position !== undefined;
+  Books.data.forEach((Book) =>
+  {
+    Book.position = Number(Book.position ?? Date.parse(Book.created_at) / 1000);
+  });
   Library = Sections.data.map((Section) => ({
     id: Section.id,
     name: Section.name,
-    books: Books.data.filter((Book) => Book.section_id === Section.id),
+    books: Books.data.filter((Book) => Book.section_id === Section.id).sort((a, b) => a.position - b.position),
   }));
 }
 
@@ -632,13 +861,14 @@ async function DeleteSection(Section)
 // The SaveBook function saves a new book into a section and returns it
 async function SaveBook(Section, Details)
 {
-  let Row = { id: "local-" + Date.now(), ...Details };
+  let Row = { id: "local-" + Date.now(), ...Details, position: EndPlace(Section) };      // a new book goes on the end of its shelf
   if (DB)
   {
-    const { data: Data, error } = await DB.from("books")
-      .insert({ section_id: Section.id, ...Details })
-      .select("*").single();
+    const New = { section_id: Section.id, ...Details };
+    if (PlacesAreSaved) New.position = Row.position;
+    const { data: Data, error } = await DB.from("books").insert(New).select("*").single();
     if (error) throw error;
+    Data.position = Number(Data.position ?? Row.position);
     Row = Data;
   }
   Section.books.push(Row);
@@ -648,18 +878,39 @@ async function SaveBook(Section, Details)
 // The UpdateBook function saves changes to an existing book and moves it to another section when that changed
 async function UpdateBook(Book, Section, Details)
 {
+  const OldSection = SectionOf(Book);
+  // A book moved to another section with the card goes on the end of that shelf
+  const Moved = OldSection !== Section;
+  const Changes = { ...Details };
+  if (Moved) Changes.position = EndPlace(Section);
   if (DB)
   {
-    const { error } = await DB.from("books").update({ section_id: Section.id, ...Details }).eq("id", Book.id);
+    const Saved = { section_id: Section.id, ...Changes };
+    if (!PlacesAreSaved) delete Saved.position;
+    const { error } = await DB.from("books").update(Saved).eq("id", Book.id);
     if (error) throw error;
   }
-  const OldSection = Library.find((s) => s.books.includes(Book));
-  Object.assign(Book, Details);
+  Object.assign(Book, Changes);
   if (OldSection !== Section)
   {
     OldSection.books = OldSection.books.filter((Other) => Other !== Book);
     Section.books.push(Book);
   }
+}
+
+// The MoveBook function saves a book's new shelf and place after it has been dragged, Index is where it goes among the other books of that section
+async function MoveBook(Book, Section, Index, Position)
+{
+  if (DB)
+  {
+    const { error } = await DB.from("books").update({ section_id: Section.id, position: Position }).eq("id", Book.id);
+    if (error) throw error;
+  }
+  const OldSection = SectionOf(Book);
+  OldSection.books = OldSection.books.filter((Other) => Other !== Book);
+  Section.books.splice(Index, 0, Book);
+  Book.position = Position;
+  Book.section_id = Section.id;
 }
 
 // The MarkDone function saves whether a book is done
@@ -1050,6 +1301,7 @@ async function StartLibrary()
   else
   {
     Library = ExampleLibrary;                    // login is off: show the examples
+    Library.forEach((Section) => Section.books.forEach((Book, i) => { Book.position = i; }));
   }
   RenderTabs();
   Update();

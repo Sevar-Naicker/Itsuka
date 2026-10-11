@@ -822,3 +822,11 @@ body.checking > *:not(.backdrop) { visibility: hidden; }
 .done-box::before { content: ""; width: 12px; height: 12px; border: 2px solid var(--ink); }
 .done-box[aria-pressed="true"]::before { background: var(--ink); box-shadow: inset 0 0 0 2px var(--paper); }
 .done-box:disabled { opacity: 0.55; }
+
+/* Moving a book by dragging */
+.spine { user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.book.is-lifted { opacity: 0.3; }
+.spine.carried { position: fixed; z-index: 60; margin: 0; pointer-events: none; transform: rotate(-5deg); transition: none; }
+body.carrying { cursor: grabbing; user-select: none; -webkit-user-select: none; }
+body.carrying .open-book { visibility: hidden !important; }
+body.carrying .book .spine { transform: none; }

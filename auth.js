@@ -111,6 +111,7 @@ function ExplainDatabase(error)
   {
     return "The shelves are not set up in Supabase yet. Run supabase-setup.sql in the SQL Editor, then reload this page.";
   }
+  if (Text.includes("'position' column") || Text.includes("books.position")) return "Moving books is not set up in Supabase yet. Run supabase-order.sql in the SQL Editor, then try again.";
   if (Text.includes("'done' column") || Text.includes("books.done")) return "Marking books as done is not set up in Supabase yet. Run supabase-done.sql in the SQL Editor, then try again.";
   if (Text.includes("could not be read as a picture")) return "That file could not be read as a picture. Try a JPG or PNG.";
   if (Text.includes("check constraint")) return "That is longer than the library can keep. Shorten it and try again.";
