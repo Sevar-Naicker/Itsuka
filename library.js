@@ -90,6 +90,10 @@ const FindButton = document.getElementById("findButton");
 // SearchText holds what is typed in the search box in small letters, empty means "show every book"
 let SearchText = "";
 
+// DoneSwitch is the Hide done button and HideDone holds whether the books marked as done are hidden, it uses the choice saved on this device
+const DoneSwitch = document.getElementById("doneSwitch");
+let HideDone = Recall("library-hide-done") === "yes";
+
 // Small helpers:
 
 // The Make function creates an element with a class and some text
@@ -156,6 +160,45 @@ function Matches(Book)
   return Words.includes(SearchText);
 }
 
+// The Visible function checks whether a book should be on the shelf: it must fit the search and not be a done book while those are hidden
+function Visible(Book)
+{
+  return Matches(Book) && !(HideDone && Book.done);
+}
+
+// The BookWithId function finds a book in the library by its id
+function BookWithId(Id)
+{
+  for (const Section of Library)
+  {
+    const Book = Section.books.find((Other) => String(Other.id) === String(Id));
+    if (Book) return Book;
+  }
+  return null;
+}
+
+// The ShowDoneSwitch function shows the Hide done button only when there is a done book to hide
+function ShowDoneSwitch()
+{
+  const AnyDone = Library.some((Section) => Section.books.some((Book) => Book.done));
+  if (!AnyDone && HideDone)
+  {
+    HideDone = false;                                                 // nothing left to hide, so the switch goes back to off
+    Remember("library-hide-done", "no");
+  }
+  DoneSwitch.hidden = !AnyDone;
+  DoneSwitch.setAttribute("aria-pressed", String(HideDone));
+}
+
+// The DressAsDone function gives a book on the shelf the look of a done book or takes it away again: the ribbon, the stamp and the ticked box
+function DressAsDone(Elem, Book)
+{
+  const Done = Boolean(Book.done);
+  Elem.classList.toggle("is-done", Done);
+  Elem.querySelector(".spine").setAttribute("aria-label", Done ? Book.name + ", done" : Book.name);
+  Elem.querySelector(".done-box").setAttribute("aria-pressed", String(Done));
+}
+
 // The ClearSearch function empties the search box so every book shows again
 function ClearSearch()
 {
@@ -207,6 +250,9 @@ function MakeBook(Book, ColourNumber)
   Spine.type = "button";
   Spine.setAttribute("aria-expanded", "false");
   Spine.append(Make("span", "", Book.name));
+  const Ribbon = Make("i", "ribbon");                                  // only shows on a done book
+  Ribbon.setAttribute("aria-hidden", "true");
+  Spine.append(Ribbon);
 
   const Open = Make("div", "open-book");
   const Left = Make("div", "page left");
@@ -217,6 +263,7 @@ function MakeBook(Book, ColourNumber)
 
   const Right = Make("div", "page right");
   Right.append(Make("h3", "", Book.name));
+  Right.append(Make("p", "stamp", "Done"));                            // only shows on a done book
   const Points = (Book.notes || "").split("\n").map((Line) => Line.trim()).filter(Boolean);
   if (Points.length)
   {
@@ -234,11 +281,15 @@ function MakeBook(Book, ColourNumber)
   const Foot = Make("div", "page-foot");
   const Edit = Make("button", "link-button edit-book", "Edit");
   Edit.type = "button";
-  Foot.append(Edit);
+  // The tick box that marks the book as done, or not done again
+  const DoneBox = Make("button", "link-button done-box", "Done");
+  DoneBox.type = "button";
+  Foot.append(Edit, DoneBox);
   Right.append(Foot);
   Open.append(Left, Right);
 
   Elem.append(Spine, Open);
+  DressAsDone(Elem, Book);
   return Elem;
 }
 
@@ -264,6 +315,7 @@ function RenderTabs()
   TabsRoot.replaceChildren();
   const Total = Library.reduce((Sum, Section) => Sum + Section.books.length, 0);
   FindButton.hidden = Total === 0;                                    // nothing to search until there is a book
+  ShowDoneSwitch();
   if (Total === 0 && !SearchLine.hidden) ShowSearch(false);
   const AddTab = (Key, Label, Count, OnClick) =>
   {
@@ -308,7 +360,9 @@ function RenderShelves()
   {
     if (Chosen.size && !Chosen.has(Section.id)) return;
     // While searching, a section with no matching book is left out
-    if (SearchText && !Section.books.some(Matches)) return;
+    if (SearchText && !Section.books.some(Visible)) return;
+    // While done books are hidden, so is a section where every book is done
+    if (HideDone && Section.books.length && !Section.books.some(Visible)) return;
 
     const Block = Make("section", "section");
     // With exactly one section switched on, its plaque at the top already names it. Otherwise each shelf gets a label.
@@ -317,7 +371,7 @@ function RenderShelves()
     // i is the book's place in its section, so a book keeps its colour while the search hides the books around it
     Section.books.forEach((Book, i) =>
     {
-      if (Matches(Book)) Shelf.append(MakeBook(Book, Index * 3 + i));
+      if (Visible(Book)) Shelf.append(MakeBook(Book, Index * 3 + i));
     });
     Shelf.append(MakeOrnament(Index));
     Block.append(Shelf);
@@ -329,7 +383,23 @@ function RenderShelves()
   {
     const Empty = Make("div", "empty-library");
     Empty.append(Make("h2", "", "No books match \u201C" + SearchBox.value.trim() + "\u201D"));
-    Empty.append(Make("p", "", Chosen.size ? "Only the sections switched on were searched. Press All to search every shelf." : "Check the spelling or try a shorter word."));
+    const DoneMatch = HideDone && Library.some((Section) => Section.books.some((Book) => Book.done && Matches(Book)));
+    const Hint = DoneMatch ? "A done book matches. Press Hide done to bring the done books back."
+      : Chosen.size ? "Only the sections switched on were searched. Press All to search every shelf."
+      : "Check the spelling or try a shorter word.";
+    Empty.append(Make("p", "", Hint));
+    LibraryRoot.append(Empty);
+    return;
+  }
+
+  // Hiding the done books can leave nothing to show as well
+  if (HideDone && !LibraryRoot.children.length)
+  {
+    const Empty = Make("div", "empty-library");
+    Empty.append(
+      Make("h2", "", "Every book here is done"),
+      Make("p", "", "Press Hide done to bring them back."),
+    );
     LibraryRoot.append(Empty);
     return;
   }
@@ -380,6 +450,41 @@ SearchBox.addEventListener("keydown", (event) =>
   FindButton.focus();
 });
 
+// The Hide done button hides the books marked as done and brings them back, the choice is remembered on this device
+DoneSwitch.addEventListener("click", () =>
+{
+  HideDone = !HideDone;
+  Remember("library-hide-done", HideDone ? "yes" : "no");
+  ShowDoneSwitch();
+  Update();
+});
+
+// The Done tick box inside an open book marks the book as done, or as not done again
+LibraryRoot.addEventListener("click", async (event) =>
+{
+  const Box = event.target.closest(".done-box");
+  if (!Box || Box.disabled) return;
+  const Elem = Box.closest(".book");
+  const Book = BookWithId(Elem.dataset.id);
+  if (!Book) return;
+
+  Box.disabled = true;
+  try
+  {
+    await MarkDone(Book, !Book.done);
+    LibraryNote.hidden = true;
+    ShowDoneSwitch();
+    if (HideDone && Book.done) Update();          // it is hidden straight away, like the other done books
+    else DressAsDone(Elem, Book);
+  }
+  catch (error)
+  {
+    console.error(error);
+    ShowLibraryNote(ExplainDatabase(error));
+  }
+  Box.disabled = false;
+});
+
 // Opening and closing books:
 
 // The ShowPicture function fetches and draws a book's picture the first time the book is opened instead of when the page loads
@@ -387,7 +492,8 @@ function ShowPicture(Book)
 {
   if (!Book.dataset.picture || Book.dataset.pictureShown) return;
   Book.dataset.pictureShown = "yes";
-  LoadPicture(PictureAddress(Book.dataset.picture))
+  PictureAddress(Book.dataset.picture)
+    .then(LoadPicture)
     .then((LoadedImage) => PaintPixelated(Book.querySelector(".picture"), LoadedImage, BOOK_DOTS))
     .catch(console.error);                       // if it cannot be fetched, the block of colour stays
 }
@@ -473,7 +579,7 @@ async function LoadLibrary()
 {
   const [Sections, Books] = await Promise.all([
     DB.from("sections").select("id, name").order("created_at"),
-    DB.from("books").select("id, section_id, name, link, notes, picture").order("created_at"),
+    DB.from("books").select("*").order("created_at"),      // every column, so the shelves still load before supabase-done.sql has been run
   ]);
   if (Sections.error) throw Sections.error;
   if (Books.error) throw Books.error;
@@ -531,7 +637,7 @@ async function SaveBook(Section, Details)
   {
     const { data: Data, error } = await DB.from("books")
       .insert({ section_id: Section.id, ...Details })
-      .select("id, section_id, name, link, notes, picture").single();
+      .select("*").single();
     if (error) throw error;
     Row = Data;
   }
@@ -554,6 +660,17 @@ async function UpdateBook(Book, Section, Details)
     OldSection.books = OldSection.books.filter((Other) => Other !== Book);
     Section.books.push(Book);
   }
+}
+
+// The MarkDone function saves whether a book is done
+async function MarkDone(Book, Done)
+{
+  if (DB)
+  {
+    const { error } = await DB.from("books").update({ done: Done }).eq("id", Book.id);
+    if (error) throw error;
+  }
+  Book.done = Done;
 }
 
 // The DeleteBook function deletes a book and its picture
@@ -635,7 +752,7 @@ async function ShowCardPicture()
   if (!Has) return;
   try
   {
-    const Address = ChosenPicture ? URL.createObjectURL(ChosenPicture) : PictureAddress(KeptPicture);
+    const Address = ChosenPicture ? URL.createObjectURL(ChosenPicture) : await PictureAddress(KeptPicture);
     PaintPixelated(BookPicturePreview, await LoadPicture(Address), THUMB_DOTS);
     if (ChosenPicture) URL.revokeObjectURL(Address);
   }

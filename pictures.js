@@ -94,16 +94,27 @@ async function StorePicture(ImageBlob)
   return Path;
 }
 
-// The PictureAddress function returns the full web address of a stored picture from its path
-function PictureAddress(Path)
+// FetchedPictures remembers the pictures already fetched during this visit, so each one is only downloaded once
+const FetchedPictures = new Map();
+
+// The PictureAddress function fetches a stored picture as the signed-in member and returns a temporary address for it that only works in this tab
+// Pictures are private, so there is no public address: Supabase only hands a picture to the member it belongs to
+async function PictureAddress(Path)
 {
   if (!Path) return "";
   if (Path.startsWith("blob:") || Path.startsWith("data:") || !DB) return Path;
-  return DB.storage.from(PICTURE_BUCKET).getPublicUrl(Path).data.publicUrl;
+  if (!FetchedPictures.has(Path))
+  {
+    const { data: Data, error } = await DB.storage.from(PICTURE_BUCKET).download(Path);
+    if (error) throw error;
+    FetchedPictures.set(Path, URL.createObjectURL(Data));
+  }
+  return FetchedPictures.get(Path);
 }
 
 // The DiscardPicture function deletes a stored picture that is no longer used
 async function DiscardPicture(Path)
 {
+  FetchedPictures.delete(Path);
   if (DB && Path && !Path.startsWith("blob:")) await DB.storage.from(PICTURE_BUCKET).remove([Path]);
 }

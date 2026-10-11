@@ -23,7 +23,7 @@ async function ShowMemberPhoto()
   if (!Path) return;
   try
   {
-    const LoadedImage = await LoadPicture(PictureAddress(Path));
+    const LoadedImage = await LoadPicture(await PictureAddress(Path));
     PaintPixelated(MemberPhoto, LoadedImage, CARD_DOTS);
     PaintPixelated(ChipPhoto, LoadedImage, CHIP_DOTS);
   }
