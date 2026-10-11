@@ -23,9 +23,8 @@
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="The name Itsuka spelled out as six books on a shelf in a pixel-art cabin">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
+<!-- The pixel font is hosted with the site, fetching it early makes the lettering appear sooner -->
+<link rel="preload" href="fonts/pixelify-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -107,7 +106,8 @@
 </dialog>
 
 <script src="backgrounds.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- The Supabase library, pinned to one exact version so an update cannot change how the site behaves -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
 <script src="config.js"></script>
 <script src="auth.js"></script>
 <script src="index.js"></script>

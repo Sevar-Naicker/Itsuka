@@ -179,6 +179,18 @@ function ShowSearch(Open)
   }
 }
 
+// The ShowLoading function shows a short message where the shelves will be while they are being fetched
+function ShowLoading()
+{
+  const Loading = Make("div", "empty-library");
+  Loading.setAttribute("role", "status");
+  Loading.append(
+    Make("h2", "", "Fetching your shelves\u2026"),
+    Make("p", "", "Your books will be here in a moment."),
+  );
+  LibraryRoot.replaceChildren(Loading);
+}
+
 // Building the page:
 
 // The MakeBook function builds one book: the spine and the open book that appears on hover or tap
@@ -905,6 +917,8 @@ async function StartLibrary()
 
   if (Member)
   {
+    // If the shelves take more than a moment to arrive we say so, a quick load shows nothing extra
+    const Waiting = setTimeout(ShowLoading, 300);
     try
     {
       await LoadLibrary();
@@ -914,6 +928,7 @@ async function StartLibrary()
       console.error(error);
       ShowLibraryNote(ExplainDatabase(error));
     }
+    clearTimeout(Waiting);
   }
   else
   {

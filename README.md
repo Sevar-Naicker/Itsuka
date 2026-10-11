@@ -24,6 +24,7 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 - [Supabase](https://supabase.com) for accounts, the database, user management and picture storage.
 - GitHub Pages with a custom domain for hosting.
 - The backgrounds are drawn in code on a `<canvas>`, so the only image files are the icons and the link preview picture.
+- The pixel font (Pixelify Sans) is hosted with the site, and the Supabase library is loaded at one exact version.
 
 ## Files:
 
@@ -46,6 +47,7 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 | `supabase-limits.sql` | Adds generous size limits to pictures and text. Run once in Supabase |
 | `manifest.json` | Lets a phone add the site to its home screen like an app |
 | `icons/` | The tab icon, the home screen icons and the picture shown when the link is shared |
+| `fonts/` | The pixel font files and their licence |
 
 All of them must stay in the same folder in order for the project to run.
 
@@ -78,5 +80,4 @@ If both values in `config.js` are left empty, login is off and the library shows
 The publishable key in `config.js` (it starts with `sb_publishable_`) is meant to be seen by browsers, so it is safe to publish.
 
 ## Credits:
-
 Developed by Sav.
