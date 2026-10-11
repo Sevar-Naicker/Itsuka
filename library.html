@@ -3,7 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>My library</title>
+<title>Itsuka</title>
+<!-- The tab icon, the home screen icon and the settings file for adding the site to a phone -->
+<meta name="theme-color" content="#1F3A2E">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Itsuka">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400..700&display=swap" rel="stylesheet">
@@ -18,7 +25,7 @@
 
 <!-- The top of the page: The title the two buttons -->
 <header class="top">
-  <h1>My library</h1>
+  <h1><a href="index.html">Itsuka</a></h1>
   <div class="top-actions">
     <button class="plain-button" id="sceneButton" type="button">Change background</button>
     <!-- The signed-in member's card. Hidden until member.js knows who is signed in -->
@@ -29,8 +36,17 @@
   </div>
 </header>
 
-<!-- The plaques (one switch per section) and the shelves are both built by library.js -->
-<nav class="tabs" id="tabs" aria-label="Sections"></nav>
+<!-- The search box, tucked away until the Find button is pressed -->
+<div class="search-line" id="searchLine" hidden>
+  <label class="visually-hidden" for="searchBox">Find a book</label>
+  <input class="search-box" id="searchBox" type="search" maxlength="80" autocomplete="off" placeholder="Find a book by name or notes">
+</div>
+
+<!-- The Find button and the plaques (one switch per section), the plaques and the shelves are both built by library.js -->
+<div class="tabs-row">
+  <button class="plain-button find-button" id="findButton" type="button" aria-expanded="false" aria-controls="searchLine" hidden>Find</button>
+  <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+</div>
 <!-- A red message box for when the shelves cannot be loaded -->
 <p class="library-note" id="libraryNote" role="alert" hidden></p>
 <main class="sections" id="library"></main>
@@ -70,7 +86,7 @@
         </label>
         <label class="card-line">
           <span>Link</span>
-          <input id="bookLink" type="text" inputmode="url" autocapitalize="off" spellcheck="false" autocomplete="off" placeholder="instagram.com/someone">
+          <input id="bookLink" type="text" maxlength="2000" inputmode="url" autocapitalize="off" spellcheck="false" autocomplete="off" placeholder="instagram.com/someone">
         </label>
         <label class="card-line">
           <span>Section</span>
@@ -82,7 +98,7 @@
         </label>
         <label class="card-notes">
           <span>Notes, one point per line</span>
-          <textarea id="bookNotes" rows="4"></textarea>
+          <textarea id="bookNotes" rows="4" maxlength="10000"></textarea>
         </label>
         <div class="picture-row">
           <canvas class="picture-thumb" id="bookPicturePreview" aria-hidden="true" hidden></canvas>
@@ -142,7 +158,7 @@
   <div class="card-shadow">
     <div class="member-card">
       <div class="card-band">
-        <span class="card-name">My library</span>
+        <span class="card-name">Itsuka</span>
         <span class="card-kind">Library card</span>
       </div>
       <div class="card-body">

@@ -83,6 +83,13 @@ const LibraryRoot = document.getElementById("library");
 const LibraryNote = document.getElementById("libraryNote");
 const Chosen = new Set();      // ids of the sections switched on with the plaques at the top; empty means "show them all"
 
+// SearchLine is the row that holds the search box, SearchBox is the box itself and FindButton is the button that opens and closes the row
+const SearchLine = document.getElementById("searchLine");
+const SearchBox = document.getElementById("searchBox");
+const FindButton = document.getElementById("findButton");
+// SearchText holds what is typed in the search box in small letters, empty means "show every book"
+let SearchText = "";
+
 // Small helpers:
 
 // The Make function creates an element with a class and some text
@@ -139,6 +146,37 @@ function ShowLibraryNote(Message)
 {
   LibraryNote.textContent = Message;
   LibraryNote.hidden = false;
+}
+
+// The Matches function checks whether a book fits the search, it looks at the book's name and notes
+function Matches(Book)
+{
+  if (!SearchText) return true;
+  const Words = (Book.name + "\n" + (Book.notes || "")).toLowerCase();
+  return Words.includes(SearchText);
+}
+
+// The ClearSearch function empties the search box so every book shows again
+function ClearSearch()
+{
+  SearchBox.value = "";
+  SearchText = "";
+}
+
+// The ShowSearch function opens or closes the search box, closing it also clears the search
+function ShowSearch(Open)
+{
+  SearchLine.hidden = !Open;
+  FindButton.setAttribute("aria-expanded", String(Open));
+  if (Open)
+  {
+    SearchBox.focus();
+  }
+  else if (SearchText)
+  {
+    ClearSearch();
+    Update();
+  }
 }
 
 // Building the page:
@@ -213,6 +251,8 @@ function RenderTabs()
 {
   TabsRoot.replaceChildren();
   const Total = Library.reduce((Sum, Section) => Sum + Section.books.length, 0);
+  FindButton.hidden = Total === 0;                                    // nothing to search until there is a book
+  if (Total === 0 && !SearchLine.hidden) ShowSearch(false);
   const AddTab = (Key, Label, Count, OnClick) =>
   {
     const Button = Make("button", "plaque tab", Label + " ");
@@ -255,16 +295,32 @@ function RenderShelves()
   Library.forEach((Section, Index) =>
   {
     if (Chosen.size && !Chosen.has(Section.id)) return;
+    // While searching, a section with no matching book is left out
+    if (SearchText && !Section.books.some(Matches)) return;
 
     const Block = Make("section", "section");
     // With exactly one section switched on, its plaque at the top already names it. Otherwise each shelf gets a label.
     if (Chosen.size !== 1) Block.append(Make("h2", "plaque", Section.name));
     const Shelf = Make("div", "shelf");
-    Section.books.forEach((Book, i) => Shelf.append(MakeBook(Book, Index * 3 + i)));
+    // i is the book's place in its section, so a book keeps its colour while the search hides the books around it
+    Section.books.forEach((Book, i) =>
+    {
+      if (Matches(Book)) Shelf.append(MakeBook(Book, Index * 3 + i));
+    });
     Shelf.append(MakeOrnament(Index));
     Block.append(Shelf);
     LibraryRoot.append(Block);
   });
+
+  // A search that found nothing gets a message in place of the shelves
+  if (SearchText && !LibraryRoot.children.length)
+  {
+    const Empty = Make("div", "empty-library");
+    Empty.append(Make("h2", "", "No books match \u201C" + SearchBox.value.trim() + "\u201D"));
+    Empty.append(Make("p", "", Chosen.size ? "Only the sections switched on were searched. Press All to search every shelf." : "Check the spelling or try a shorter word."));
+    LibraryRoot.append(Empty);
+    return;
+  }
 
   ApplyTheme(Current.theme);     // colour the new books to match the background
   TidyOrnaments();
@@ -293,6 +349,24 @@ function Update()
   });
   RenderShelves();
 }
+
+// Typing in the search box rebuilds the shelves with only the books that match
+SearchBox.addEventListener("input", () =>
+{
+  SearchText = SearchBox.value.trim().toLowerCase();
+  Update();
+});
+
+// The Find button opens the search box and closes it again
+FindButton.addEventListener("click", () => ShowSearch(SearchLine.hidden));
+
+// The Escape key closes the search box and hands the keyboard back to the Find button
+SearchBox.addEventListener("keydown", (event) =>
+{
+  if (event.key !== "Escape") return;
+  ShowSearch(false);
+  FindButton.focus();
+});
 
 // Opening and closing books:
 
@@ -659,6 +733,7 @@ CatalogueForm.addEventListener("submit", async (event) =>
 
     CatalogueDialog.close();
     if (Chosen.size) Chosen.add(Section.id);                           // make sure the shelf it is on is showing
+    if (!Matches(Book)) ClearSearch();                                 // and that a search is not hiding it
     RenderTabs();
     Update();
     const Elem = LibraryRoot.querySelector(`.book[data-id="${Book.id}"]`);

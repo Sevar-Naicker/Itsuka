@@ -112,6 +112,8 @@ function ExplainDatabase(error)
     return "The shelves are not set up in Supabase yet. Run supabase-setup.sql in the SQL Editor, then reload this page.";
   }
   if (Text.includes("could not be read as a picture")) return "That file could not be read as a picture. Try a JPG or PNG.";
+  if (Text.includes("check constraint")) return "That is longer than the library can keep. Shorten it and try again.";
+  if (Text.includes("maximum allowed size") || Text.includes("mime type")) return "That picture could not be stored. Try a smaller JPG or PNG.";
   if (Text.includes("failed to fetch") || Text.includes("network")) return "Could not reach the library. Check your internet connection and try again.";
 
   // If anything is not recognised above we show Supabase's own error message

@@ -123,6 +123,34 @@ h1 {
 }
 .scene[aria-pressed="true"] canvas { border-color: var(--brass); }
 
+/* Title link back to the landing page */
+h1 a { color: inherit; text-decoration: none; }
+h1 a:focus-visible { outline: 3px solid var(--brass); outline-offset: 4px; }
+
+/* Search box */
+.search-line { margin-top: 18px; }
+.search-box {
+  width: min(100%, 28rem);
+  padding: 9px 12px;
+  border: 2px solid var(--gilt);
+  border-radius: 0;
+  background: rgba(20, 14, 10, 0.8);
+  box-shadow: var(--dot) var(--dot) 0 rgba(0, 0, 0, 0.5);
+  color: var(--gilt);
+  font: inherit;
+  font-size: 1rem;
+  appearance: none;
+}
+.search-box::placeholder { color: var(--gilt); opacity: 0.6; }
+.search-box:focus { outline: 3px solid var(--brass); outline-offset: 2px; }
+.search-box::-webkit-search-cancel-button { filter: grayscale(1) brightness(3); cursor: pointer; }
+
+/* Find button and plaque row */
+.tabs-row { display: flex; align-items: stretch; gap: 10px; margin-top: 26px; }
+.tabs-row .tabs { flex: 1; min-width: 0; margin-top: 0; }
+.find-button { flex: none; margin: 2px 0 8px; padding: 7px 12px; box-shadow: none; }
+.find-button[aria-expanded="true"] { background: var(--brass); border-color: var(--brass); color: #2A1A10; }
+
 /* Sections and plaques */
 .sections { display: flex; flex-wrap: wrap; align-items: flex-start; column-gap: 28px; }
 .section { margin-top: 22px; min-width: 0; max-width: 100%; }

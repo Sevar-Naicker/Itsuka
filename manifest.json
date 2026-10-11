@@ -1,0 +1,15 @@
+{
+  "_comment": "This file contains the settings a phone uses when Itsuka is added to its home screen: the name, icons, colours and which page opens first",
+  "name": "Itsuka",
+  "short_name": "Itsuka",
+  "description": "A cozy place for your favorite ideas and inspirations to stay, till you need them someday.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#1F3A2E",
+  "theme_color": "#1F3A2E",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

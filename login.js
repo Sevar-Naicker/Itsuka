@@ -64,6 +64,7 @@ function Explain(error)
   if (Text.includes("different from the old")) return "That is your current password. Choose a different one.";
   if (Text.includes("password should")) return "Use a password of at least 6 characters.";
   if (Text.includes("rate limit") || Text.includes("security purposes")) return "Too many tries for now. Wait a few minutes and try again.";
+  if (Text.includes("not authorized")) return "The library cannot send email to that address yet. Please let the person who runs this library know.";
   if (Text.includes("failed to fetch") || Text.includes("network")) return "Could not reach the library. Check your internet connection and try again.";
   return error.message || "Something went wrong. Try again.";
 }
