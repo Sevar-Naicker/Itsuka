@@ -51,15 +51,7 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 | `library.js` | The plaques, shelves and books, the cards for adding to them and the Share card |
 | `shelf.js` | The shared shelf page: shows the shelf and adds its books to the visitor's library |
 | `backgrounds.js` | The pixel scenes, background picker and colour themes (used by every page) |
-| `supabase-setup.sql` | Creates the tables for sections and books. Run once in Supabase |
-| `supabase-pictures.sql` | Creates the storage for pictures. Run once in Supabase |
-| `supabase-limits.sql` | Adds generous size limits to pictures and text. Run once in Supabase |
-| `supabase-done.sql` | Adds the done mark to books. Run once in Supabase |
-| `supabase-order.sql` | Lets each book remember its place on the shelf. Run once in Supabase |
-| `supabase-section-order.sql` | Lets the sections be moved up and down. Run once in Supabase |
-| `supabase-section-sort.sql` | Lets each shelf remember how its books are sorted. Run once in Supabase |
-| `supabase-private-pictures.sql` | Makes pictures private to the member they belong to. Run once in Supabase |
-| `supabase-share.sql` | Lets a member share a shelf with a link. Run once in Supabase |
+| `supabase.sql` | Sets up the database, the picture storage and shelf sharing in a new Supabase project. Run once |
 | `manifest.json` | Lets a phone add the site to its home screen like an app |
 | `icons/` | The tab icon, the home screen icons and the picture shown when the link is shared |
 | `fonts/` | The pixel font files and their licence |
@@ -78,14 +70,11 @@ Use a small local web server instead of double-clicking the files, so all the pa
 The `config.js` in this repository points at the live Itsuka project. To run your own library with your own members, create a free Supabase project and point the site at it:
 
 1. In your Supabase project press **Connect**, then copy the **Project URL** and the **Publishable key** into `config.js`, replacing the ones that are there.
-2. Open **SQL Editor**, start a new query, paste in everything from `supabase-setup.sql` and press **Run**. Do this once. It creates the tables that hold each member's sections and books.
-3. Do the same with `supabase-pictures.sql`. It creates the storage for book pictures and card photos.
-4. Do the same with `supabase-limits.sql`. It stops anyone storing oversized pictures or text by going around the website.
-5. Do the same with `supabase-done.sql`, `supabase-order.sql`, `supabase-section-order.sql`, `supabase-section-sort.sql`, `supabase-private-pictures.sql` and then `supabase-share.sql`. They add the done mark, let books and sections be moved and sorted, make pictures private and let shelves be shared.
-6. Go to **Authentication > URL Configuration**. Set **Site URL** to the address your site runs at, and add that address ending in `/**` to **Redirect URLs**. For Live Server that is `http://127.0.0.1:5500/**`. The links in the confirmation and password reset emails only lead back to the site if its address is on this list.
-7. Under **Authentication > Sign In / Providers**, **Confirm email** decides whether new members must confirm their email address before their first sign-in. Switching it off is handy while building. Switch it on before you share the site.
-8. Supabase's built-in email only delivers to people on your own Supabase team. To let anyone register, connect an email provider such as Resend under **Authentication > Emails > SMTP Settings**. The provider's key is a secret and belongs only in the Supabase dashboard.
-9. In `index.html`, change the two `https://itsuka.co.za` addresses near the top (`og:url` and `og:image`) to your own site's address, so shared links show your preview.
+2. Open **SQL Editor**, start a new query, paste in everything from `supabase.sql` and press **Run**. Do this once. It creates the tables that hold each member's sections and books, the private storage for book pictures and card photos, the size limits that stop anyone storing oversized pictures or text by going around the website, and what shelf sharing needs.
+3. Go to **Authentication > URL Configuration**. Set **Site URL** to the address your site runs at, and add that address ending in `/**` to **Redirect URLs**. For Live Server that is `http://127.0.0.1:5500/**`. The links in the confirmation and password reset emails only lead back to the site if its address is on this list.
+4. Under **Authentication > Sign In / Providers**, **Confirm email** decides whether new members must confirm their email address before their first sign-in. Switching it off is handy while building. Switch it on before you share the site.
+5. Supabase's built-in email only delivers to people on your own Supabase team. To let anyone register, connect an email provider such as Resend under **Authentication > Emails > SMTP Settings**. The provider's key is a secret and belongs only in the Supabase dashboard.
+6. In `index.html` and `shelf.html`, change the `https://itsuka.co.za` addresses near the top (`og:url` and `og:image`) to your own site's address, so shared links show your preview.
 
 If both values in `config.js` are left empty, login is off and the library shows a few example shelves that are not saved anywhere.
 

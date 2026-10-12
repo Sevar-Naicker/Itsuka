@@ -1,6 +1,6 @@
 // This file contains the code for choosing, shrinking, storing and drawing pictures, it is used for book pictures and library card photos and loads after auth.js
 
-// PICTURE_BUCKET is the name of the storage area in Supabase (made by supabase-pictures.sql)
+// PICTURE_BUCKET is the name of the storage area in Supabase (made by supabase.sql)
 const PICTURE_BUCKET = "pictures";
 
 // The DOTS values are the grid sizes each kind of picture is drawn at, every dot is shown 2 screen pixels wide

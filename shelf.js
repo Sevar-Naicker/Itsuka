@@ -150,14 +150,11 @@ async function LoadMine()
   ]);
   if (Sections.error) throw Sections.error;
   if (Books.error) throw Books.error;
-  Books.data.forEach((Book) => { Book.position = Number(Book.position ?? Date.parse(Book.created_at) / 1000); });
   Mine = Sections.data.map((Section) => ({
     id: Section.id,
     name: Section.name,
     sort_by: Section.sort_by || "",
-    position: Number(Section.position ?? Date.parse(Section.created_at) / 1000),
-    hasPosition: Section.position !== undefined,
-    hasSort: Section.sort_by !== undefined,
+    position: Section.position,
     books: Books.data.filter((Book) => Book.section_id === Section.id).sort((a, b) => a.position - b.position),
   })).sort((a, b) => a.position - b.position);
 }
@@ -168,12 +165,10 @@ async function ShelfToAddTo()
   const Found = MySection();
   if (Found) return Found;
   const Last = Mine[Mine.length - 1];
-  const New = { name: Shelf.name };
-  if (!Last || Last.hasPosition) New.position = Last ? Math.max(NowInSeconds(), Last.position + 1) : NowInSeconds();
-  if ((!Last || Last.hasSort) && Shelf.sort_by) New.sort_by = Shelf.sort_by;     // it keeps the order the shared shelf is sorted in
+  const New = { name: Shelf.name, position: Last ? Math.max(NowInSeconds(), Last.position + 1) : NowInSeconds(), sort_by: Shelf.sort_by || "" };     // it keeps the order the shared shelf is sorted in
   const { data: Data, error } = await DB.from("sections").insert(New).select("*").single();
   if (error) throw error;
-  const Section = { id: Data.id, name: Data.name, sort_by: Data.sort_by || "", position: Number(Data.position ?? NowInSeconds()), hasPosition: Data.position !== undefined, hasSort: Data.sort_by !== undefined, books: [] };
+  const Section = { id: Data.id, name: Data.name, sort_by: Data.sort_by || "", position: Data.position, books: [] };
   Mine.push(Section);
   return Section;
 }
@@ -196,10 +191,9 @@ async function CopyBook(Section, Book)
   }
   // It goes on the end of the shelf, or into its sorted spot when the visitor's shelf keeps an order
   const Spot = SpotFor(Section, { name: Book.name, added: Date.now() });
-  if (Section.hasPosition) Details.position = Spot.Position;
+  Details.position = Spot.Position;
   const { data: Data, error } = await DB.from("books").insert(Details).select("*").single();
   if (error) throw error;
-  Data.position = Number(Data.position ?? Spot.Position);
   Section.books.splice(Spot.Index, 0, Data);
 }
 

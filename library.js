@@ -50,13 +50,7 @@ const ShelfSettings = { find: true, done: true, hideDone: true, pull: true, drag
 const SettingsList = document.getElementById("settingsList");
 const SettingsNote = document.getElementById("settingsNote");
 
-// PlacesAreSaved holds whether the database has the position column that remembers each book's place (added by supabase-order.sql)
-let PlacesAreSaved = true;
 
-// SectionPlacesAreSaved holds whether the database has the position column for sections (added by supabase-section-order.sql)
-let SectionPlacesAreSaved = true;
-// SectionSortIsSaved holds whether the database has the column that remembers how each shelf is sorted (added by supabase-section-sort.sql)
-let SectionSortIsSaved = true;
 
 // DoneSwitch is the Hide done button and HideDone holds whether the books marked as done are hidden, it uses the choice saved on this device
 const DoneSwitch = document.getElementById("doneSwitch");
@@ -609,7 +603,7 @@ async function LoadCopy(ChosenFile)
       {
         Section = await SaveSection(Name);
         const How = SORT_NAMES.some(([Value]) => Value && Value === Shelf.sort_by) ? Shelf.sort_by : "";
-        if (How && SectionSortIsSaved) await SetSectionSort(Section, How);
+        if (How) await SetSectionSort(Section, How);
       }
       for (const Entry of Array.isArray(Shelf.books) ? Shelf.books : [])
       {
@@ -860,26 +854,18 @@ LibraryRoot.addEventListener("click", (event) =>
 async function LoadLibrary()
 {
   const [Sections, Books] = await Promise.all([
-    DB.from("sections").select("*").order("created_at"),   // every column, so the shelves still load before supabase-section-order.sql has been run
-    DB.from("books").select("*").order("created_at"),      // every column, so the shelves still load before supabase-done.sql has been run
+    DB.from("sections").select("*"),
+    DB.from("books").select("*"),
   ]);
   if (Sections.error) throw Sections.error;
   if (Books.error) throw Books.error;
-  // Every book gets a place, a number that decides its spot on the shelf. Before supabase-order.sql has been run it is the time the book was added
-  PlacesAreSaved = !Books.data.length || Books.data[0].position !== undefined;
-  Books.data.forEach((Book) =>
-  {
-    Book.position = Number(Book.position ?? Date.parse(Book.created_at) / 1000);
-  });
-  // Sections get a place in the same way, so they can be moved up and down
-  SectionPlacesAreSaved = !Sections.data.length || Sections.data[0].position !== undefined;
-  SectionSortIsSaved = !Sections.data.length || Sections.data[0].sort_by !== undefined;
+  // Every section and book has a place, a number that decides its spot, so they are put in that order
   Library = Sections.data.map((Section) => ({
     id: Section.id,
     name: Section.name,
     sort_by: Section.sort_by || "",
-    share_key: Section.share_key || "",                    // empty until the shelf is shared (needs supabase-share.sql)
-    position: Number(Section.position ?? Date.parse(Section.created_at) / 1000),
+    share_key: Section.share_key || "",                    // empty until the shelf is shared
+    position: Section.position,
     books: Books.data.filter((Book) => Book.section_id === Section.id).sort((a, b) => a.position - b.position),
   })).sort((a, b) => a.position - b.position);
 }
@@ -893,9 +879,7 @@ async function SaveSection(Name)
   let Row = { id: "local-" + Date.now(), name: Name };
   if (DB)
   {
-    const New = { name: Name };
-    if (SectionPlacesAreSaved) New.position = Position;
-    const { data: Data, error } = await DB.from("sections").insert(New).select("id, name").single();
+    const { data: Data, error } = await DB.from("sections").insert({ name: Name, position: Position }).select("id, name").single();
     if (error) throw error;
     Row = Data;
   }
@@ -936,11 +920,8 @@ async function SaveBook(Section, Details)
   let Row = { id: "local-" + Date.now(), ...Details, position: Spot.Position };
   if (DB)
   {
-    const New = { section_id: Section.id, ...Details };
-    if (PlacesAreSaved) New.position = Row.position;
-    const { data: Data, error } = await DB.from("books").insert(New).select("*").single();
+    const { data: Data, error } = await DB.from("books").insert({ section_id: Section.id, ...Details, position: Row.position }).select("*").single();
     if (error) throw error;
-    Data.position = Number(Data.position ?? Row.position);
     Row = Data;
   }
   Section.books.splice(Spot.Index, 0, Row);
@@ -959,9 +940,7 @@ async function UpdateBook(Book, Section, Details)
   if (Spot) Changes.position = Spot.Position;
   if (DB)
   {
-    const Saved = { section_id: Section.id, ...Changes };
-    if (!PlacesAreSaved) delete Saved.position;
-    const { error } = await DB.from("books").update(Saved).eq("id", Book.id);
+    const { error } = await DB.from("books").update({ section_id: Section.id, ...Changes }).eq("id", Book.id);
     if (error) throw error;
   }
   Object.assign(Book, Changes);

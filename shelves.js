@@ -160,13 +160,6 @@ function SpotFor(Section, Book)
   return { Index, Position: PlaceBetween(Others[Index - 1], Others[Index]) };
 }
 
-// The EndPlace function returns the place that puts a book after every book already in a section
-function EndPlace(Section)
-{
-  const Last = Section.books[Section.books.length - 1];
-  return Last ? Math.max(NowInSeconds(), Last.position + 1) : NowInSeconds();
-}
-
 // Building books and ornaments:
 
 // The MakeBook function builds one book: the spine and the open book that appears on hover or tap, each page adds its own buttons to the foot of the right page
