@@ -1,4 +1,4 @@
-/* This file contains how everything looks, it is linked from index.html, library.html and login.html */
+/* This file contains how everything looks, it is linked from index.html, library.html, login.html and shelf.html */
 
 /* Pixel font, hosted with the site */
 @font-face {
@@ -878,3 +878,32 @@ body.no-ornaments #library .ornament { display: none !important; }
 .library-copy { display: flex; flex-wrap: wrap; gap: 10px; }
 .library-status { max-width: 40rem; margin: 10px 0 0; font-size: 0.875rem; line-height: 1.4; color: var(--gilt); }
 .library-status.problem { padding: 8px 12px; border: 2px solid #7A1E14; background: #F3D9D4; color: #7A1E14; }
+
+/* Links dressed as buttons */
+a.plain-button { display: inline-block; text-decoration: none; }
+a.card-button { display: block; box-sizing: border-box; text-align: center; text-decoration: none; }
+
+/* Share card */
+.share-section.is-shared { padding: 1px 6px; background: var(--brass); text-decoration: none; }
+.share-about { margin: 0 0 12px; font-size: 0.9375rem; line-height: 1.4; color: var(--faded); }
+.share-link { grid-template-columns: 1fr; }
+.share-link input { font-size: 0.875rem; }
+.share-actions { display: flex; gap: 10px; }
+.share-actions .card-button { flex: 1; }
+
+/* Shared shelf page */
+.share-banner { max-width: 34rem; margin-top: 26px; padding: 16px 18px; border: 2px solid var(--gilt); background: rgba(20, 14, 10, 0.8); color: var(--gilt); }
+.share-banner p { margin: 0; }
+.share-from { color: var(--brass); font-size: 0.875rem; font-weight: 600; letter-spacing: 0.04em; }
+.share-title { margin: 2px 0 6px; font-size: 1.5rem; font-weight: 700; line-height: 1.15; overflow-wrap: anywhere; }
+.share-count { font-size: 0.9375rem; line-height: 1.4; }
+.share-banner .brass-button { margin-top: 14px; }
+.share-banner .brass-button:disabled { filter: saturate(0.4) brightness(0.8); cursor: default; transform: none; }
+.share-status { margin-top: 12px !important; font-size: 0.875rem; line-height: 1.4; }
+.share-status a { color: inherit; font-weight: 600; }
+.share-status.problem { padding: 8px 12px; border: 2px solid #7A1E14; background: #F3D9D4; color: #7A1E14; }
+.shared-page .section { margin-top: 30px; }
+.add-one { padding: 2px; font-size: 0.875rem; }
+.add-one:disabled { color: var(--faded); text-decoration: none; cursor: default; }
+.gone-home { margin-top: 14px; }
+

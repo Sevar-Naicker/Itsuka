@@ -16,7 +16,8 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 - **Settings:** the Settings button holds the background and a switch for each shelf tool: Find, the done mark, Hide done, Pull a book, dragging, shelf ornaments and opening books on hover. The switches are saved with the member's account, so they follow them to every device.
 - **Download and Load a Copy:** under Settings, Download a copy saves the whole library, pictures included, as one file. Load a copy adds the books from such a file back in, skipping any already on the same shelf.
 - **Library Card:** members register and sign in with a library card, and can add a profile photo to it.
-- **Private Shelves:** each member only ever sees their own sections, books, notes and pictures.
+- **Private Shelves:** each member only ever sees their own sections, books, notes and pictures, unless they choose to share a shelf.
+- **Share a Shelf:** the Share button on the Edit sections card makes a private link to one shelf. Anyone with the link can look at its books and add them to their own library, without seeing the owner's other shelves, email or done marks. Stop sharing turns the link off straight away.
 - **Pull a Book:** the Pull a book button picks a random book that is not done. A light hops along a few spines before the chosen book rises off its shelf and opens.
 - **Done Mark:** tick Done inside a book once you have visited, bought or used it. The book gets a ribbon on its spine and a stamp inside, and the Hide done button tucks the finished books away.
 - **Pictures:** one picture per book, shrunk before upload and drawn in a pixel style to match the library.
@@ -37,16 +38,19 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 | --- | --- |
 | `index.html` | The landing page, the first page everyone sees |
 | `library.html` | The library itself: plaques, shelves, books |
+| `shelf.html` | The page a shared shelf's link opens |
 | `login.html` | The library card: sign in, register and reset a password |
 | `styles.css` | How everything looks |
 | `config.js` | Which Supabase project the site talks to |
-| `auth.js` | Signing in, registering and signing out (used by all three pages) |
+| `auth.js` | Signing in, registering and signing out (used by every page) |
 | `login.js` | The form on the library card |
 | `index.js` | The landing page: the item on the title shelf, its picker, the How it works card and the Library button for members |
-| `member.js` | Checks for a card on the library page, sends anyone without one to the landing page and shows the member's card |
+| `member.js` | Checks for a card on the library page, sends anyone without one to the landing page and shows the member's card. It also sends a visitor back to a shared shelf after they sign in |
 | `pictures.js` | Shrinks, stores and draws pictures (book pictures and card photos) |
-| `library.js` | The plaques, shelves and books, and the cards for adding to them |
-| `backgrounds.js` | The pixel scenes, background picker and colour themes (used by all three pages) |
+| `shelves.js` | Draws the books and shelves, opens and closes books and keeps books in order (used by the library and the shared shelf page) |
+| `library.js` | The plaques, shelves and books, the cards for adding to them and the Share card |
+| `shelf.js` | The shared shelf page: shows the shelf and adds its books to the visitor's library |
+| `backgrounds.js` | The pixel scenes, background picker and colour themes (used by every page) |
 | `supabase-setup.sql` | Creates the tables for sections and books. Run once in Supabase |
 | `supabase-pictures.sql` | Creates the storage for pictures. Run once in Supabase |
 | `supabase-limits.sql` | Adds generous size limits to pictures and text. Run once in Supabase |
@@ -55,6 +59,7 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 | `supabase-section-order.sql` | Lets the sections be moved up and down. Run once in Supabase |
 | `supabase-section-sort.sql` | Lets each shelf remember how its books are sorted. Run once in Supabase |
 | `supabase-private-pictures.sql` | Makes pictures private to the member they belong to. Run once in Supabase |
+| `supabase-share.sql` | Lets a member share a shelf with a link. Run once in Supabase |
 | `manifest.json` | Lets a phone add the site to its home screen like an app |
 | `icons/` | The tab icon, the home screen icons and the picture shown when the link is shared |
 | `fonts/` | The pixel font files and their licence |
@@ -76,7 +81,7 @@ The `config.js` in this repository points at the live Itsuka project. To run you
 2. Open **SQL Editor**, start a new query, paste in everything from `supabase-setup.sql` and press **Run**. Do this once. It creates the tables that hold each member's sections and books.
 3. Do the same with `supabase-pictures.sql`. It creates the storage for book pictures and card photos.
 4. Do the same with `supabase-limits.sql`. It stops anyone storing oversized pictures or text by going around the website.
-5. Do the same with `supabase-done.sql`, `supabase-order.sql`, `supabase-section-order.sql`, `supabase-section-sort.sql` and then `supabase-private-pictures.sql`. They add the done mark, let books and sections be moved and sorted, and make pictures private.
+5. Do the same with `supabase-done.sql`, `supabase-order.sql`, `supabase-section-order.sql`, `supabase-section-sort.sql`, `supabase-private-pictures.sql` and then `supabase-share.sql`. They add the done mark, let books and sections be moved and sorted, make pictures private and let shelves be shared.
 6. Go to **Authentication > URL Configuration**. Set **Site URL** to the address your site runs at, and add that address ending in `/**` to **Redirect URLs**. For Live Server that is `http://127.0.0.1:5500/**`. The links in the confirmation and password reset emails only lead back to the site if its address is on this list.
 7. Under **Authentication > Sign In / Providers**, **Confirm email** decides whether new members must confirm their email address before their first sign-in. Switching it off is handy while building. Switch it on before you share the site.
 8. Supabase's built-in email only delivers to people on your own Supabase team. To let anyone register, connect an email provider such as Resend under **Authentication > Emails > SMTP Settings**. The provider's key is a secret and belongs only in the Supabase dashboard.

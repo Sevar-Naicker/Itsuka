@@ -1,4 +1,4 @@
-// This file contains all relavent code for user accounts, its used by all three pages and loads after the Supabase library and config.js
+// This file contains all relavent code for user accounts, its used by every page and loads after the Supabase library and config.js
 
 // Settings is declared to hold our projects adress and key, we also make sure it uses an empty list when they congif.js isnt found
 const Settings = window.LIBRARY_CONFIG || {};
@@ -111,6 +111,7 @@ function ExplainDatabase(error)
   {
     return "The shelves are not set up in Supabase yet. Run supabase-setup.sql in the SQL Editor, then reload this page.";
   }
+  if (Text.includes("share_key") || Text.includes("shared_shelf")) return "Sharing shelves is not set up in Supabase yet. Run supabase-share.sql in the SQL Editor, then try again.";
   if (Text.includes("sort_by")) return "Remembering how a shelf is sorted is not set up in Supabase yet. Run supabase-section-sort.sql in the SQL Editor, then try again.";
   if (Text.includes("sections.position") || (Text.includes("'position' column") && Text.includes("'sections'"))) return "Moving sections is not set up in Supabase yet. Run supabase-section-order.sql in the SQL Editor, then try again.";
   if (Text.includes("'position' column") || Text.includes("books.position")) return "Moving books is not set up in Supabase yet. Run supabase-order.sql in the SQL Editor, then try again.";

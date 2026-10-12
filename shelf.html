@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A shared shelf: Itsuka</title>
+<meta name="description" content="A shelf of artists, creators and shops shared from someone's Itsuka library.">
+<!-- Shared shelves stay out of search engines, only people with the link should find them -->
+<meta name="robots" content="noindex">
+<!-- The tab icon, the home screen icon and the settings file for adding the site to a phone -->
+<meta name="theme-color" content="#1F3A2E">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Itsuka">
+<!-- The card shown when a shelf's link is sent in a chat -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Itsuka">
+<meta property="og:title" content="A shelf shared with you on Itsuka">
+<meta property="og:description" content="Have a look through the books on this shelf and add the ones you like to your own library.">
+<meta property="og:image" content="https://itsuka.co.za/icons/preview.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="The name Itsuka spelled out as six books on a shelf in a pixel-art cabin">
+<meta name="twitter:card" content="summary_large_image">
+<!-- The pixel font is hosted with the site, fetching it early makes the lettering appear sooner -->
+<link rel="preload" href="fonts/pixelify-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="styles.css">
+</head>
+
+<!-- The checking class hides the page until shelf.js knows who is visiting -->
+<body class="checking shared-page">
+
+<!-- The moving background is drawn onto this canvas by backgrounds.js -->
+<canvas class="backdrop" id="backdrop" aria-hidden="true"></canvas>
+
+<!-- The top of the page: the title, the background button and the way into the visitor's own library -->
+<header class="top">
+  <h1><a href="index.html">Itsuka</a></h1>
+  <div class="top-actions">
+    <button class="plain-button" id="sceneButton" type="button">Background</button>
+    <a class="plain-button" id="topLink" href="login.html">Sign in</a>
+  </div>
+</header>
+
+<!-- Who shared the shelf and the Add all button, filled in by shelf.js -->
+<section class="share-banner" id="shareBanner" aria-labelledby="shareTitle" hidden>
+  <p class="share-from" id="shareFrom">Shared with you</p>
+  <h2 class="share-title" id="shareTitle"></h2>
+  <p class="share-count" id="shareCount"></p>
+  <button class="brass-button" id="addAll" type="button">Add all to my library</button>
+  <p class="share-status" id="shareStatus" role="status" hidden></p>
+</section>
+
+<!-- The shared shelf, built by shelf.js -->
+<main class="sections" id="library"></main>
+
+<!-- The developer tag at the bottom of the page -->
+<footer class="credit">Developed By Sav</footer>
+
+<!-- The card shown when someone without a library card presses an Add button -->
+<dialog class="card-dialog" id="cardAsk" aria-labelledby="cardAskTitle">
+  <div class="card-shadow">
+    <div class="member-card catalogue-card">
+      <div class="catalogue-head">
+        <h2 id="cardAskTitle">You need a library card</h2>
+        <span class="card-kind">Itsuka</span>
+      </div>
+      <div class="card-body">
+        <p class="share-about">Books are added to your own Itsuka library. Get a free library card or sign in, and you will come straight back to this shelf.</p>
+        <a class="card-button" id="cardAskRegister" href="login.html?mode=register">Get a library card</a>
+        <p class="card-switch card-ends">
+          <button class="link-button" id="cardAskClose" type="button">Not now</button>
+          <a class="link-button" id="cardAskSignIn" href="login.html">I have a card</a>
+        </p>
+      </div>
+      <div class="catalogue-hole" aria-hidden="true"></div>
+    </div>
+  </div>
+</dialog>
+
+<!-- The background picker, its thumbnails are added by backgrounds.js -->
+<dialog class="scenes" id="scenePicker" aria-labelledby="sceneTitle">
+  <div class="scenes-inner">
+    <div class="scenes-head">
+      <h2 id="sceneTitle">Choose a background</h2>
+      <button class="plain-button" id="sceneDone" type="button">Done</button>
+    </div>
+    <label class="motion-switch">
+      <input type="checkbox" id="motionSwitch"> Moving backgrounds
+    </label>
+    <div class="scene-list" id="sceneList"></div>
+  </div>
+</dialog>
+
+<script src="backgrounds.js"></script>
+<!-- The Supabase library, pinned to one exact version so an update cannot change how the site behaves -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="pictures.js"></script>
+<script src="shelves.js"></script>
+<script src="shelf.js"></script>
+
+</body>
+</html>

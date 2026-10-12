@@ -130,7 +130,7 @@
   </div>
 </dialog>
 
-<!-- The sections card: Rename section, delete section and add section. The rows are built by library.js -->
+<!-- The sections card: Rename, move, sort, share and delete sections and add new ones. The rows are built by library.js -->
 <dialog class="card-dialog" id="sectionsDialog" aria-labelledby="sectionsTitle">
   <div class="card-shadow">
     <div class="member-card catalogue-card">
@@ -146,6 +146,36 @@
           <button class="link-button" type="submit">Add</button>
         </form>
         <button class="card-button" id="sectionsDone" type="button">Done</button>
+      </div>
+      <div class="catalogue-hole" aria-hidden="true"></div>
+    </div>
+  </div>
+</dialog>
+
+<!-- The share card: a private link to one shelf, filled in by library.js -->
+<dialog class="card-dialog" id="shareDialog" aria-labelledby="shareTitle">
+  <div class="card-shadow">
+    <div class="member-card catalogue-card">
+      <div class="catalogue-head">
+        <h2 id="shareTitle">Share a shelf</h2>
+        <span class="card-kind">Lending slip</span>
+      </div>
+      <div class="card-body">
+        <p class="card-note" id="shareNote" role="alert" hidden></p>
+        <p class="share-about" id="shareAbout"></p>
+        <label class="card-line share-link" id="shareLinkLine" hidden>
+          <span class="visually-hidden">Link to this shelf</span>
+          <input id="shareLink" type="text" readonly spellcheck="false">
+        </label>
+        <button class="card-button" id="shareMake" type="button">Make a link</button>
+        <div class="share-actions" id="shareActions" hidden>
+          <button class="card-button" id="shareCopy" type="button">Copy link</button>
+          <button class="card-button" id="shareSend" type="button" hidden>Send</button>
+        </div>
+        <p class="card-switch card-ends">
+          <button class="link-button" id="shareClose" type="button">Back</button>
+          <button class="link-button danger-link" id="shareStop" type="button" hidden>Stop sharing</button>
+        </p>
       </div>
       <div class="catalogue-hole" aria-hidden="true"></div>
     </div>
@@ -205,6 +235,7 @@
 <script src="config.js"></script>
 <script src="auth.js"></script>
 <script src="pictures.js"></script>
+<script src="shelves.js"></script>
 <script src="member.js"></script>
 <script src="library.js"></script>
 

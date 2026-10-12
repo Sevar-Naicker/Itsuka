@@ -33,6 +33,18 @@ async function ShowMemberPhoto()
   }
 }
 
+// The TakeShelfReturn function reads and forgets the shared shelf a visitor left to sign in (noted by shelf.js), it only returns it when it was noted in the last day
+function TakeShelfReturn()
+{
+  let Note = null;
+  try { Note = JSON.parse(Recall("library-return")); }
+  catch (error) { Note = null; }
+  if (!Note) return "";
+  Remember("library-return", "");
+  const Fresh = Date.now() - Number(Note.at) < 24 * 60 * 60 * 1000;
+  return Fresh && /^shelf\.html\?k=[A-Za-z0-9_-]{24,64}$/.test(Note.to) ? Note.to : "";
+}
+
 // The StartMemberArea function checks who is signed in and returns the member, when nobody is signed in it sends them to the landing page
 async function StartMemberArea()
 {
@@ -59,6 +71,13 @@ async function StartMemberArea()
     // A confirmation link that expired or was already used arrives here with an error on the address, so we tell the login page
     // Everyone else who is not signed in goes to the landing page
     location.replace(ArrivedWith.includes("error_code=") ? "login.html?confirm=expired" : "index.html");   // replace, not href, so the Back button does not bounce them here again
+    return null;
+  }
+  // A visitor who left a shared shelf to sign in or get a card goes back to that shelf instead
+  const ShelfAddress = TakeShelfReturn();
+  if (ShelfAddress)
+  {
+    location.replace(ShelfAddress);
     return null;
   }
   SignedIn = Member;
