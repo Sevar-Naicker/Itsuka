@@ -12,8 +12,9 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 - **Search:** the Find button on the library page opens a search box that finds a book by its name or notes.
 - **Shelves and Books:** every saved creator / page is a book on a shelf. Hover or tap a spine and it opens to show a picture, your notes and a link.
 - **Move Books:** drag a book by its spine to move it along its shelf or onto another section's shelf. On a phone, rest a finger on the spine until the book lifts, then drag.
-- **Sections:** shelves are grouped under plaques such as Artists or Work Ideas. Each plaque switches its section on or off, so you can view one, a few or all of them. The Edit sections card moves a section up or down, and sorts its books A to Z, newest first or oldest first.
+- **Sections:** shelves are grouped under plaques such as Artists or Work Ideas. Each plaque switches its section on or off, so you can view one, a few or all of them. The Edit sections card moves a section up or down, and sets the order of its books: your own order (by dragging), A to Z, newest first or oldest first. A sorted shelf keeps new books in that order.
 - **Settings:** the Settings button holds the background and a switch for each shelf tool: Find, the done mark, Hide done, Pull a book, dragging, shelf ornaments and opening books on hover. The switches are saved with the member's account, so they follow them to every device.
+- **Download and Load a Copy:** under Settings, Download a copy saves the whole library, pictures included, as one file. Load a copy adds the books from such a file back in, skipping any already on the same shelf.
 - **Library Card:** members register and sign in with a library card, and can add a profile photo to it.
 - **Private Shelves:** each member only ever sees their own sections, books, notes and pictures.
 - **Pull a Book:** the Pull a book button picks a random book that is not done. A light hops along a few spines before the chosen book rises off its shelf and opens.
@@ -52,6 +53,7 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 | `supabase-done.sql` | Adds the done mark to books. Run once in Supabase |
 | `supabase-order.sql` | Lets each book remember its place on the shelf. Run once in Supabase |
 | `supabase-section-order.sql` | Lets the sections be moved up and down. Run once in Supabase |
+| `supabase-section-sort.sql` | Lets each shelf remember how its books are sorted. Run once in Supabase |
 | `supabase-private-pictures.sql` | Makes pictures private to the member they belong to. Run once in Supabase |
 | `manifest.json` | Lets a phone add the site to its home screen like an app |
 | `icons/` | The tab icon, the home screen icons and the picture shown when the link is shared |
@@ -74,7 +76,7 @@ The `config.js` in this repository points at the live Itsuka project. To run you
 2. Open **SQL Editor**, start a new query, paste in everything from `supabase-setup.sql` and press **Run**. Do this once. It creates the tables that hold each member's sections and books.
 3. Do the same with `supabase-pictures.sql`. It creates the storage for book pictures and card photos.
 4. Do the same with `supabase-limits.sql`. It stops anyone storing oversized pictures or text by going around the website.
-5. Do the same with `supabase-done.sql`, `supabase-order.sql`, `supabase-section-order.sql` and then `supabase-private-pictures.sql`. They add the done mark, let books and sections be moved and make pictures private.
+5. Do the same with `supabase-done.sql`, `supabase-order.sql`, `supabase-section-order.sql`, `supabase-section-sort.sql` and then `supabase-private-pictures.sql`. They add the done mark, let books and sections be moved and sorted, and make pictures private.
 6. Go to **Authentication > URL Configuration**. Set **Site URL** to the address your site runs at, and add that address ending in `/**` to **Redirect URLs**. For Live Server that is `http://127.0.0.1:5500/**`. The links in the confirmation and password reset emails only lead back to the site if its address is on this list.
 7. Under **Authentication > Sign In / Providers**, **Confirm email** decides whether new members must confirm their email address before their first sign-in. Switching it off is handy while building. Switch it on before you share the site.
 8. Supabase's built-in email only delivers to people on your own Supabase team. To let anyone register, connect an email provider such as Resend under **Authentication > Emails > SMTP Settings**. The provider's key is a secret and belongs only in the Supabase dashboard.

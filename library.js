@@ -112,6 +112,10 @@ let PlacesAreSaved = true;
 
 // SectionPlacesAreSaved holds whether the database has the position column for sections (added by supabase-section-order.sql)
 let SectionPlacesAreSaved = true;
+// SORT_NAMES holds the ways a shelf can keep its books in order, an empty key means the member's own order (set by dragging)
+// SectionSortIsSaved holds whether the database has the column that remembers how each shelf is sorted (added by supabase-section-sort.sql)
+let SectionSortIsSaved = true;
+const SORT_NAMES = [["", "Your own order"], ["name", "A to Z"], ["newest", "Newest first"], ["oldest", "Oldest first"]];
 
 // DoneSwitch is the Hide done button and HideDone holds whether the books marked as done are hidden, it uses the choice saved on this device
 const DoneSwitch = document.getElementById("doneSwitch");
@@ -199,6 +203,44 @@ function Visible(Book)
 function NowInSeconds()
 {
   return Date.now() / 1000;
+}
+
+// The AddedTime function returns when a book was added, as a number to compare, a book that is still being saved counts as added now
+function AddedTime(Book)
+{
+  return Book.created_at ? Date.parse(Book.created_at) : Book.added ?? Book.position ?? Date.now();
+}
+
+// The SortRule function returns how two books compare for a shelf's order: below 0 puts A first, above 0 puts B first
+function SortRule(How)
+{
+  if (How === "name") return (A, B) => A.name.localeCompare(B.name, undefined, { sensitivity: "base" });
+  if (How === "newest") return (A, B) => AddedTime(B) - AddedTime(A);
+  return (A, B) => AddedTime(A) - AddedTime(B);
+}
+
+// The PlaceBetween function returns a place number between two books, either of which may be missing at the ends of a shelf
+function PlaceBetween(Before, After)
+{
+  if (Before && After) return (Before.position + After.position) / 2;
+  if (Before) return Math.max(NowInSeconds(), Before.position + 1);
+  if (After) return After.position - 1;
+  return NowInSeconds();
+}
+
+// The SpotFor function works out where a book goes in a section: in sorted order when the shelf keeps one, otherwise on the end
+// It returns the book's index among the other books and its place number
+function SpotFor(Section, Book)
+{
+  const Others = Section.books.filter((Other) => Other !== Book);
+  let Index = Others.length;
+  if (Section.sort_by)
+  {
+    const Rule = SortRule(Section.sort_by);
+    const First = Others.findIndex((Other) => Rule(Book, Other) < 0);
+    if (First !== -1) Index = First;
+  }
+  return { Index, Position: PlaceBetween(Others[Index - 1], Others[Index]) };
 }
 
 // The EndPlace function returns the place that puts a book after every book already in a section
@@ -683,6 +725,165 @@ function BuildSettingsList()
   });
 }
 
+// Saving a copy of the library and loading one back:
+
+// LibraryStatus is the line under the two buttons that says how a download or a load is going
+const LibraryStatus = document.getElementById("libraryStatus");
+const CopyFile = document.getElementById("copyFile");
+
+// The ShowLibraryStatus function shows how a download or a load is going, Problem makes it red
+function ShowLibraryStatus(Message, Problem)
+{
+  LibraryStatus.textContent = Message;
+  LibraryStatus.classList.toggle("problem", Boolean(Problem));
+  LibraryStatus.hidden = !Message;
+}
+
+// The PictureAsText function fetches a stored picture and turns it into text, so it can travel inside the copy
+async function PictureAsText(Path)
+{
+  const Address = await PictureAddress(Path);
+  const Picture = await (await fetch(Address)).blob();
+  return new Promise((Resolve, Reject) =>
+  {
+    const Reader = new FileReader();
+    Reader.onload = () => Resolve(Reader.result);
+    Reader.onerror = () => Reject(Reader.error);
+    Reader.readAsDataURL(Picture);
+  });
+}
+
+// The DownloadLibrary function saves the whole library, pictures included, as one file on this device
+async function DownloadLibrary(Button)
+{
+  Button.disabled = true;
+  const Total = Library.reduce((Sum, Section) => Sum + Section.books.filter((Book) => Book.picture).length, 0);
+  let Packed = 0;
+  ShowLibraryStatus("Packing your library\u2026");
+  try
+  {
+    const Copy = { app: "Itsuka", version: 1, saved: new Date().toISOString(), sections: [] };
+    for (const Section of Library)
+    {
+      const Shelf = { name: Section.name, sort_by: Section.sort_by || "", books: [] };
+      for (const Book of Section.books)
+      {
+        const Entry = { name: Book.name, link: Book.link || "", notes: Book.notes || "", done: Boolean(Book.done), added: Book.created_at || null, picture: null };
+        if (Book.picture)
+        {
+          try { Entry.picture = await PictureAsText(Book.picture); }
+          catch (error) { console.error(error); }                    // a picture that cannot be fetched is left out, the book still goes in
+          Packed++;
+          ShowLibraryStatus("Packing pictures: " + Packed + " of " + Total + "\u2026");
+        }
+        Shelf.books.push(Entry);
+      }
+      Copy.sections.push(Shelf);
+    }
+
+    // The file is handed to the browser to save, named with today's date
+    const FileName = "itsuka-library-" + new Date().toISOString().slice(0, 10) + ".json";
+    const Address = URL.createObjectURL(new Blob([JSON.stringify(Copy, null, 2)], { type: "application/json" }));
+    const Link = document.createElement("a");
+    Link.href = Address;
+    Link.download = FileName;
+    document.body.append(Link);
+    Link.click();
+    Link.remove();
+    setTimeout(() => URL.revokeObjectURL(Address), 2000);
+    const Books = Copy.sections.reduce((Sum, Shelf) => Sum + Shelf.books.length, 0);
+    ShowLibraryStatus("Saved " + FileName + " with " + Copy.sections.length + (Copy.sections.length === 1 ? " section and " : " sections and ") + Books + (Books === 1 ? " book." : " books."));
+  }
+  catch (error)
+  {
+    console.error(error);
+    ShowLibraryStatus("The copy could not be made. " + ExplainDatabase(error), true);
+  }
+  Button.disabled = false;
+}
+
+// The PictureFromText function turns a picture that travelled inside a copy back into a file that can be stored
+async function PictureFromText(Text)
+{
+  return (await fetch(Text)).blob();
+}
+
+// The LoadCopy function reads a copy made by DownloadLibrary and adds what is in it to the library
+// Sections are matched by name, and a book that is already on the same shelf (same name and link) is skipped, so loading the same copy twice adds nothing twice
+async function LoadCopy(ChosenFile)
+{
+  let Copy = null;
+  try { Copy = JSON.parse(await ChosenFile.text()); }
+  catch (error) { Copy = null; }
+  if (!Copy || Copy.app !== "Itsuka" || !Array.isArray(Copy.sections))
+  {
+    ShowLibraryStatus("That file is not an Itsuka copy. Choose a file made with Download a copy.", true);
+    return;
+  }
+
+  const Shelves = Copy.sections.filter((Shelf) => Shelf && typeof Shelf.name === "string" && Shelf.name.trim());
+  const Total = Shelves.reduce((Sum, Shelf) => Sum + (Array.isArray(Shelf.books) ? Shelf.books.length : 0), 0);
+  const Question = "Add the " + Total + (Total === 1 ? " book" : " books") + " in " + Shelves.length + (Shelves.length === 1 ? " section" : " sections") + " from this copy? Books already on the same shelf are skipped.";
+  if (!(await AskToConfirm(Question, "Add them", true))) return;
+
+  let Added = 0, Skipped = 0, Done = 0;
+  const Same = (A, B) => A.trim().toLowerCase() === B.trim().toLowerCase();
+  try
+  {
+    for (const Shelf of Shelves)
+    {
+      const Name = Shelf.name.trim().slice(0, 100);
+      let Section = SectionNamed(Name);
+      if (!Section)
+      {
+        Section = await SaveSection(Name);
+        const How = SORT_NAMES.some(([Value]) => Value && Value === Shelf.sort_by) ? Shelf.sort_by : "";
+        if (How && SectionSortIsSaved) await SetSectionSort(Section, How);
+      }
+      for (const Entry of Array.isArray(Shelf.books) ? Shelf.books : [])
+      {
+        Done++;
+        ShowLibraryStatus("Adding books: " + Done + " of " + Total + "\u2026");
+        if (!Entry || typeof Entry.name !== "string" || !Entry.name.trim()) { Skipped++; continue; }
+        const Link = TidyLink(Entry.link || "");
+        if (Section.books.some((Book) => Same(Book.name, Entry.name) && (Book.link || "") === Link)) { Skipped++; continue; }
+
+        const Details = { name: Entry.name.trim().slice(0, 200), link: Link.slice(0, 2000), notes: String(Entry.notes || "").slice(0, 10000), picture: "" };
+        if (Entry.done) Details.done = true;
+        if (Entry.added && !isNaN(Date.parse(Entry.added))) Details.created_at = Entry.added;      // it keeps the day it was first added
+        if (typeof Entry.picture === "string" && Entry.picture.startsWith("data:image/"))
+        {
+          try { Details.picture = await StorePicture(await PictureFromText(Entry.picture)); }
+          catch (error) { console.error(error); }                    // a picture that cannot be stored is left out, the book still goes in
+        }
+        await SaveBook(Section, Details);
+        Added++;
+      }
+    }
+    ShowLibraryStatus("Added " + Added + (Added === 1 ? " book" : " books") + (Skipped ? ", skipped " + Skipped + " already on your shelves." : "."));
+  }
+  catch (error)
+  {
+    console.error(error);
+    ShowLibraryStatus("Stopped after adding " + Added + (Added === 1 ? " book. " : " books. ") + ExplainDatabase(error), true);
+  }
+  RenderTabs();
+  Update();
+}
+
+// The Download a copy button, and the Load a copy button which opens the file picker
+document.getElementById("downloadCopy").addEventListener("click", (event) => DownloadLibrary(event.currentTarget));
+document.getElementById("loadCopy").addEventListener("click", () =>
+{
+  ShowLibraryStatus("");
+  CopyFile.value = "";
+  CopyFile.click();
+});
+CopyFile.addEventListener("change", () =>
+{
+  if (CopyFile.files[0]) LoadCopy(CopyFile.files[0]);
+});
+
 // Moving a book by dragging its spine:
 // With a mouse the book lifts once it is dragged a little, on a phone the finger has to rest on the spine for a moment first so that scrolling still works
 
@@ -805,14 +1006,12 @@ async function DropBook()
   // Its place is a number between the places of the books either side, so only this one book has to be saved
   const Before = Others[Index - 1];
   const After = Others[Index];
-  const Position = Before && After ? (Before.position + After.position) / 2
-    : Before ? Math.max(NowInSeconds(), Before.position + 1)
-    : After ? After.position - 1
-    : NowInSeconds();
+  const Position = PlaceBetween(Before, After);
   try
   {
     await MoveBook(Book, To, Index, Position);
     LibraryNote.hidden = true;
+    if (To.sort_by) await SetSectionSort(To, "");      // a hand-placed book means the shelf is in the member's own order now
   }
   catch (error)
   {
@@ -989,9 +1188,11 @@ async function LoadLibrary()
   });
   // Sections get a place in the same way, so they can be moved up and down
   SectionPlacesAreSaved = !Sections.data.length || Sections.data[0].position !== undefined;
+  SectionSortIsSaved = !Sections.data.length || Sections.data[0].sort_by !== undefined;
   Library = Sections.data.map((Section) => ({
     id: Section.id,
     name: Section.name,
+    sort_by: Section.sort_by || "",
     position: Number(Section.position ?? Date.parse(Section.created_at) / 1000),
     books: Books.data.filter((Book) => Book.section_id === Section.id).sort((a, b) => a.position - b.position),
   })).sort((a, b) => a.position - b.position);
@@ -1012,7 +1213,7 @@ async function SaveSection(Name)
     if (error) throw error;
     Row = Data;
   }
-  const Section = { id: Row.id, name: Row.name, position: Position, books: [] };
+  const Section = { id: Row.id, name: Row.name, sort_by: "", position: Position, books: [] };
   Library.push(Section);
   return Section;
 }
@@ -1044,7 +1245,9 @@ async function DeleteSection(Section)
 // The SaveBook function saves a new book into a section and returns it
 async function SaveBook(Section, Details)
 {
-  let Row = { id: "local-" + Date.now(), ...Details, position: EndPlace(Section) };      // a new book goes on the end of its shelf
+  // A new book goes on the end of its shelf, or into its sorted spot when the shelf keeps an order
+  const Spot = SpotFor(Section, { ...Details, added: Date.now() });
+  let Row = { id: "local-" + Date.now(), ...Details, position: Spot.Position };
   if (DB)
   {
     const New = { section_id: Section.id, ...Details };
@@ -1054,7 +1257,7 @@ async function SaveBook(Section, Details)
     Data.position = Number(Data.position ?? Row.position);
     Row = Data;
   }
-  Section.books.push(Row);
+  Section.books.splice(Spot.Index, 0, Row);
   return Row;
 }
 
@@ -1062,10 +1265,12 @@ async function SaveBook(Section, Details)
 async function UpdateBook(Book, Section, Details)
 {
   const OldSection = SectionOf(Book);
-  // A book moved to another section with the card goes on the end of that shelf
+  // A book moved to another section with the card goes on the end of that shelf (or into its sorted spot), and so does a renamed book on an A to Z shelf
   const Moved = OldSection !== Section;
+  const Renamed = Section.sort_by === "name" && Details.name !== Book.name;
   const Changes = { ...Details };
-  if (Moved) Changes.position = EndPlace(Section);
+  const Spot = Moved || Renamed ? SpotFor(Section, { ...Book, ...Details }) : null;
+  if (Spot) Changes.position = Spot.Position;
   if (DB)
   {
     const Saved = { section_id: Section.id, ...Changes };
@@ -1074,10 +1279,11 @@ async function UpdateBook(Book, Section, Details)
     if (error) throw error;
   }
   Object.assign(Book, Changes);
-  if (OldSection !== Section)
+  if (Spot)
   {
     OldSection.books = OldSection.books.filter((Other) => Other !== Book);
-    Section.books.push(Book);
+    Section.books = Section.books.filter((Other) => Other !== Book);
+    Section.books.splice(Spot.Index, 0, Book);
   }
 }
 
@@ -1104,9 +1310,7 @@ async function MoveSection(Section, Step)
 // The SortBooks function puts a section's books in order by name, newest first or oldest first, and saves each book's new place
 async function SortBooks(Section, How)
 {
-  const Added = (Book) => (Book.created_at ? Date.parse(Book.created_at) : Book.position);
-  const ByName = (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
-  const Sorted = [...Section.books].sort(How === "name" ? ByName : How === "newest" ? (a, b) => Added(b) - Added(a) : (a, b) => Added(a) - Added(b));
+  const Sorted = [...Section.books].sort(SortRule(How));
   if (DB)
   {
     const Results = await Promise.all(Sorted.map((Book, i) => DB.from("books").update({ position: i + 1 }).eq("id", Book.id)));
@@ -1115,6 +1319,17 @@ async function SortBooks(Section, How)
   }
   Sorted.forEach((Book, i) => { Book.position = i + 1; });
   Section.books = Sorted;
+}
+
+// The SetSectionSort function saves how a shelf keeps its books in order, an empty How means the member's own order
+async function SetSectionSort(Section, How)
+{
+  if (DB)
+  {
+    const { error } = await DB.from("sections").update({ sort_by: How }).eq("id", Section.id);
+    if (error) throw error;
+  }
+  Section.sort_by = How;
 }
 
 // The MoveBook function saves a book's new shelf and place after it has been dragged, Index is where it goes among the other books of that section
@@ -1161,13 +1376,16 @@ async function DeleteBook(Book)
 const ConfirmDialog = document.getElementById("confirmDialog");
 
 // The AskToConfirm function asks before something is deleted and returns true only when the delete button is pressed
-function AskToConfirm(Message, ActionLabel)
+// Calm is true for questions that are not about deleting, the button is then dark instead of red
+function AskToConfirm(Message, ActionLabel, Calm)
 {
   return new Promise((Resolve) =>
   {
     document.getElementById("confirmMessage").textContent = Message;
     const Yes = document.getElementById("confirmYes");
     Yes.textContent = ActionLabel;
+    Yes.classList.toggle("danger", !Calm);
+    document.getElementById("confirmNo").textContent = Calm ? "Not now" : "Keep it";
     const Answer = (Value) => { ConfirmDialog.onclose = null; ConfirmDialog.close(); Resolve(Value); };
     Yes.onclick = () => Answer(true);
     document.getElementById("confirmNo").onclick = () => Answer(false);
@@ -1391,7 +1609,7 @@ const SectionsNote = document.getElementById("sectionsNote");
 const SectionRows = document.getElementById("sectionRows");
 const SectionAddName = document.getElementById("sectionAddName");
 
-// The RenderSectionRows function builds one row per section on the sections card: its name in a box, then Up, Down, Sort books and Delete
+// The RenderSectionRows function builds one row per section on the sections card: its name in a box, then Up, Down, the order box and Delete
 // FocusId and FocusPart say which button to put the keyboard back on after the rows are rebuilt
 function RenderSectionRows(FocusId, FocusPart)
 {
@@ -1458,34 +1676,36 @@ function RenderSectionRows(FocusId, FocusPart)
     const Up = Mover("Up", "move-up", -1, Index === 0);
     const Down = Mover("Down", "move-down", 1, Index === Library.length - 1);
 
-    // Sort books puts the books on this shelf in order once, they can still be dragged afterwards
+    // The order box shows how this shelf keeps its books: the member's own order, or sorted, and new books follow the sorted order
     const Sorter = document.createElement("select");
     Sorter.className = "sort-books";
-    Sorter.setAttribute("aria-label", "Sort the books in " + Section.name);
-    Sorter.disabled = Section.books.length < 2;
-    [["", "Sort books\u2026"], ["name", "A to Z"], ["newest", "Newest first"], ["oldest", "Oldest first"]].forEach(([Value, Words]) =>
+    Sorter.setAttribute("aria-label", "Order of the books in " + Section.name);
+    SORT_NAMES.forEach(([Value, Words]) =>
     {
       const Choice = document.createElement("option");
       Choice.value = Value;
       Choice.textContent = Words;
       Sorter.append(Choice);
     });
+    Sorter.value = Section.sort_by || "";
     Sorter.addEventListener("change", async () =>
     {
-      if (!Sorter.value) return;
+      const How = Sorter.value;
       SectionsNote.hidden = true;
       Sorter.disabled = true;
       try
       {
-        await SortBooks(Section, Sorter.value);
+        if (How) await SortBooks(Section, How);
+        await SetSectionSort(Section, How);
         Update();
       }
       catch (error)
       {
         console.error(error);
         ShowCardNote(SectionsNote, ExplainDatabase(error));
+        Update();
       }
-      Sorter.value = "";
+      Sorter.value = Section.sort_by || "";
       Sorter.disabled = false;
     });
 
@@ -1594,6 +1814,7 @@ async function StartLibrary()
     Library.forEach((Section, Index) =>
     {
       Section.position = Index;
+      Section.sort_by = "";
       Section.books.forEach((Book, i) => { Book.position = i; });
     });
   }

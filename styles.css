@@ -873,3 +873,8 @@ body.carrying .book .spine { transform: none; }
 /* Shelf tools switched off in the settings */
 body.no-done .done-box, body.no-done .stamp, body.no-done .ribbon { display: none !important; }
 body.no-ornaments #library .ornament { display: none !important; }
+
+/* Download and load a copy of the library */
+.library-copy { display: flex; flex-wrap: wrap; gap: 10px; }
+.library-status { max-width: 40rem; margin: 10px 0 0; font-size: 0.875rem; line-height: 1.4; color: var(--gilt); }
+.library-status.problem { padding: 8px 12px; border: 2px solid #7A1E14; background: #F3D9D4; color: #7A1E14; }
