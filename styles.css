@@ -333,10 +333,10 @@ h1 a:focus-visible { outline: 3px solid var(--brass); outline-offset: 4px; }
 
 /* Opening a book by hover (mouse only) */
 @media (hover: hover) {
-  .book:hover { z-index: 30; }
-  .book:hover .open-book { visibility: visible; }
-  .book:hover .page { transform: none; }
-  .book:hover .spine { transform: translateY(calc(var(--dot) * -2)); }
+  body:not(.no-hover) .book:hover { z-index: 30; }
+  body:not(.no-hover) .book:hover .open-book { visibility: visible; }
+  body:not(.no-hover) .book:hover .page { transform: none; }
+  body:not(.no-hover) .book:hover .spine { transform: translateY(calc(var(--dot) * -2)); }
 }
 
 /* Plaque switches at the top */
@@ -658,6 +658,14 @@ h1 a:focus-visible { outline: 3px solid var(--brass); outline-offset: 4px; }
 
 /* Sections card rows */
 .section-row { grid-template-columns: 1fr auto; align-items: center; }
+.section-entry { margin-bottom: 14px; }
+.section-name { grid-template-columns: 1fr; margin-bottom: 4px; }
+.section-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 12px; font-size: 0.875rem; }
+.section-tools .link-button { font-size: 0.875rem; }
+.section-tools .link-button:disabled { opacity: 0.35; cursor: default; }
+.section-tools .danger-link { margin-left: auto; }
+.sort-books { padding: 3px 4px; border: 2px solid var(--ink); border-radius: 0; background: var(--paper); color: var(--ink); font: inherit; font-size: 0.875rem; }
+.sort-books:disabled { opacity: 0.45; }
 #sectionAddForm { margin-top: 18px; }
 
 /* Forgot password link */
@@ -848,3 +856,20 @@ body.carrying .book .spine { transform: none; }
   .tabs-row { flex-wrap: wrap; row-gap: 4px; }
   .tabs-row .tabs { flex-basis: 100%; }   /* on a phone the plaques get a row of their own under the buttons */
 }
+
+/* Settings panel */
+.settings-title { margin: 16px 0 10px; font-size: 1rem; font-weight: 600; color: var(--gilt); }
+.scenes-head + .settings-title { margin-top: 4px; }
+.settings-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 10px 20px; max-width: 52rem; }
+.setting { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+.setting input { flex: none; width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--brass); }
+.setting input:disabled + .setting-words { opacity: 0.45; }
+.setting-words { display: grid; gap: 2px; }
+.setting-words b { font-size: 0.9375rem; font-weight: 600; }
+.setting-words small { font-size: 0.8125rem; opacity: 0.75; }
+.settings-note { max-width: 34rem; margin: 12px 0 0; padding: 8px 12px; border: 2px solid #7A1E14; background: #F3D9D4; color: #7A1E14; font-size: 0.875rem; }
+.scenes { max-height: 88vh; overflow-y: auto; }
+
+/* Shelf tools switched off in the settings */
+body.no-done .done-box, body.no-done .stamp, body.no-done .ribbon { display: none !important; }
+body.no-ornaments #library .ornament { display: none !important; }

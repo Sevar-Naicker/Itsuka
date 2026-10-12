@@ -90,8 +90,28 @@ const FindButton = document.getElementById("findButton");
 // SearchText holds what is typed in the search box in small letters, empty means "show every book"
 let SearchText = "";
 
+// Settings for the shelf tools:
+
+// SETTING_LIST holds the switches shown under On the shelves in the settings, each with its key, name and a short line on what it does
+const SETTING_LIST = [
+  { key: "find", label: "Find", hint: "The Find button and search box" },
+  { key: "done", label: "Done mark", hint: "The Done tick box, ribbon and stamp" },
+  { key: "hideDone", label: "Hide done button", hint: "Tucks the done books away" },
+  { key: "pull", label: "Pull a book", hint: "Opens a random book that is not done" },
+  { key: "drag", label: "Drag to move books", hint: "Pick a book up by its spine" },
+  { key: "ornaments", label: "Shelf ornaments", hint: "The little things at the end of each shelf" },
+  { key: "hover", label: "Open books on hover", hint: "On a laptop, a book opens when you point at it" },
+];
+// ShelfSettings holds which tools are switched on, they all start on and the member's own choices are loaded over them
+const ShelfSettings = { find: true, done: true, hideDone: true, pull: true, drag: true, ornaments: true, hover: true };
+const SettingsList = document.getElementById("settingsList");
+const SettingsNote = document.getElementById("settingsNote");
+
 // PlacesAreSaved holds whether the database has the position column that remembers each book's place (added by supabase-order.sql)
 let PlacesAreSaved = true;
+
+// SectionPlacesAreSaved holds whether the database has the position column for sections (added by supabase-section-order.sql)
+let SectionPlacesAreSaved = true;
 
 // DoneSwitch is the Hide done button and HideDone holds whether the books marked as done are hidden, it uses the choice saved on this device
 const DoneSwitch = document.getElementById("doneSwitch");
@@ -163,10 +183,16 @@ function Matches(Book)
   return Words.includes(SearchText);
 }
 
+// The HidingDone function checks whether done books are hidden right now: the switch is pressed and the done mark and its button are both on in the settings
+function HidingDone()
+{
+  return HideDone && ShelfSettings.done && ShelfSettings.hideDone;
+}
+
 // The Visible function checks whether a book should be on the shelf: it must fit the search and not be a done book while those are hidden
 function Visible(Book)
 {
-  return Matches(Book) && !(HideDone && Book.done);
+  return Matches(Book) && !(HidingDone() && Book.done);
 }
 
 // The NowInSeconds function returns the time as a number, a new book uses it as its place so it goes on the end of its shelf
@@ -208,14 +234,14 @@ function ShowDoneSwitch()
     HideDone = false;                                                 // nothing left to hide, so the switch goes back to off
     Remember("library-hide-done", "no");
   }
-  DoneSwitch.hidden = !AnyDone;
+  DoneSwitch.hidden = !AnyDone || !ShelfSettings.done || !ShelfSettings.hideDone;
   DoneSwitch.setAttribute("aria-pressed", String(HideDone));
 }
 
 // The DressAsDone function gives a book on the shelf the look of a done book or takes it away again: the ribbon, the stamp and the ticked box
 function DressAsDone(Elem, Book)
 {
-  const Done = Boolean(Book.done);
+  const Done = Boolean(Book.done) && ShelfSettings.done;              // with the done mark switched off, no book looks done
   Elem.classList.toggle("is-done", Done);
   Elem.querySelector(".spine").setAttribute("aria-label", Done ? Book.name + ", done" : Book.name);
   Elem.querySelector(".done-box").setAttribute("aria-pressed", String(Done));
@@ -336,7 +362,7 @@ function RenderTabs()
 {
   TabsRoot.replaceChildren();
   const Total = Library.reduce((Sum, Section) => Sum + Section.books.length, 0);
-  FindButton.hidden = Total === 0;                                    // nothing to search until there is a book
+  FindButton.hidden = Total === 0 || !ShelfSettings.find;             // nothing to search until there is a book
   ShowDoneSwitch();
   if (Total === 0 && !SearchLine.hidden) ShowSearch(false);
   const AddTab = (Key, Label, Count, OnClick) =>
@@ -384,7 +410,7 @@ function RenderShelves()
     // While searching, a section with no matching book is left out
     if (SearchText && !Section.books.some(Visible)) return;
     // While done books are hidden, so is a section where every book is done
-    if (HideDone && Section.books.length && !Section.books.some(Visible)) return;
+    if (HidingDone() && Section.books.length && !Section.books.some(Visible)) return;
 
     const Block = Make("section", "section");
     Block.dataset.section = Section.id;                               // so a dropped book knows which shelf it landed on
@@ -406,7 +432,7 @@ function RenderShelves()
   {
     const Empty = Make("div", "empty-library");
     Empty.append(Make("h2", "", "No books match \u201C" + SearchBox.value.trim() + "\u201D"));
-    const DoneMatch = HideDone && Library.some((Section) => Section.books.some((Book) => Book.done && Matches(Book)));
+    const DoneMatch = HidingDone() && Library.some((Section) => Section.books.some((Book) => Book.done && Matches(Book)));
     const Hint = DoneMatch ? "A done book matches. Press Hide done to bring the done books back."
       : Chosen.size ? "Only the sections switched on were searched. Press All to search every shelf."
       : "Check the spelling or try a shorter word.";
@@ -416,7 +442,7 @@ function RenderShelves()
   }
 
   // Hiding the done books can leave nothing to show as well
-  if (HideDone && !LibraryRoot.children.length)
+  if (HidingDone() && !LibraryRoot.children.length)
   {
     const Empty = Make("div", "empty-library");
     Empty.append(
@@ -453,7 +479,7 @@ function Update()
     Tab.setAttribute("aria-pressed", String(On));
   });
   RenderShelves();
-  PullButton.hidden = !LibraryRoot.querySelector(".book:not(.is-done)");     // only when there is a book that is not done to pull
+  PullButton.hidden = !ShelfSettings.pull || !LibraryRoot.querySelector(".book:not(.is-done)");     // only when there is a book that is not done to pull
 }
 
 // Pulling a book at random:
@@ -560,7 +586,7 @@ LibraryRoot.addEventListener("click", async (event) =>
     await MarkDone(Book, !Book.done);
     LibraryNote.hidden = true;
     ShowDoneSwitch();
-    if (HideDone && Book.done) Update();          // it is hidden straight away, like the other done books
+    if (HidingDone() && Book.done) Update();          // it is hidden straight away, like the other done books
     else DressAsDone(Elem, Book);
   }
   catch (error)
@@ -570,6 +596,92 @@ LibraryRoot.addEventListener("click", async (event) =>
   }
   Box.disabled = false;
 });
+
+// The settings panel:
+
+// The ApplyShelfSettings function shows or hides each shelf tool to match the settings and rebuilds the shelves
+function ApplyShelfSettings()
+{
+  document.body.classList.toggle("no-done", !ShelfSettings.done);
+  document.body.classList.toggle("no-ornaments", !ShelfSettings.ornaments);
+  document.body.classList.toggle("no-hover", !ShelfSettings.hover);
+  if (!ShelfSettings.find && !SearchLine.hidden) ShowSearch(false);
+  SettingsList.querySelectorAll("input").forEach((Box) =>
+  {
+    Box.checked = ShelfSettings[Box.dataset.key];
+    if (Box.dataset.key === "hideDone") Box.disabled = !ShelfSettings.done;      // it only matters while the done mark is on
+  });
+  RenderTabs();
+  Update();
+}
+
+// The LoadShelfSettings function reads the member's saved settings, or the ones saved on this device while login is off
+function LoadShelfSettings(Member)
+{
+  let Saved = Member && Member.user_metadata ? Member.user_metadata.shelf_settings : null;
+  if (!Member)
+  {
+    try { Saved = JSON.parse(Recall("library-shelf-settings")); }
+    catch (error) { Saved = null; }
+  }
+  if (!Saved) return;
+  Object.keys(ShelfSettings).forEach((Key) =>
+  {
+    if (typeof Saved[Key] === "boolean") ShelfSettings[Key] = Saved[Key];
+  });
+}
+
+// The SaveShelfSettings function saves the settings with the member's account so they follow them to every device
+async function SaveShelfSettings()
+{
+  if (DB && SignedIn)
+  {
+    const { data: Data, error } = await DB.auth.updateUser({ data: { shelf_settings: { ...ShelfSettings } } });
+    if (error) throw error;
+    SignedIn = Data.user;
+  }
+  else
+  {
+    Remember("library-shelf-settings", JSON.stringify(ShelfSettings));
+  }
+}
+
+// The BuildSettingsList function makes one switch per shelf tool in the settings panel
+function BuildSettingsList()
+{
+  SettingsList.replaceChildren();
+  SETTING_LIST.forEach((Setting) =>
+  {
+    const Line = Make("label", "setting");
+    const Box = document.createElement("input");
+    Box.type = "checkbox";
+    Box.dataset.key = Setting.key;
+    const Words = Make("span", "setting-words");
+    Words.append(Make("b", "", Setting.label), Make("small", "", Setting.hint));
+    Line.append(Box, Words);
+    SettingsList.append(Line);
+
+    // Flipping a switch takes effect straight away and is then saved, if the save fails it flips back
+    Box.addEventListener("change", async () =>
+    {
+      SettingsNote.hidden = true;
+      ShelfSettings[Setting.key] = Box.checked;
+      ApplyShelfSettings();
+      try
+      {
+        await SaveShelfSettings();
+      }
+      catch (error)
+      {
+        console.error(error);
+        ShelfSettings[Setting.key] = !Box.checked;
+        ApplyShelfSettings();
+        SettingsNote.textContent = "That setting could not be saved. " + ExplainDatabase(error);
+        SettingsNote.hidden = false;
+      }
+    });
+  });
+}
 
 // Moving a book by dragging its spine:
 // With a mouse the book lifts once it is dragged a little, on a phone the finger has to rest on the spine for a moment first so that scrolling still works
@@ -715,7 +827,7 @@ async function DropBook()
 LibraryRoot.addEventListener("pointerdown", (event) =>
 {
   const Spine = event.target.closest(".spine");
-  if (!Spine || event.button !== 0 || Carry) return;
+  if (!Spine || event.button !== 0 || Carry || !ShelfSettings.drag) return;
   const Elem = Spine.closest(".book");
   Press = { Elem, X: event.clientX, Y: event.clientY, Touch: event.pointerType !== "mouse", Timer: null };
   if (Press.Touch) Press.Timer = setTimeout(() => LiftBook(Elem, Press.X, Press.Y), HOLD_TIME);
@@ -864,7 +976,7 @@ document.addEventListener("keydown", (event) =>
 async function LoadLibrary()
 {
   const [Sections, Books] = await Promise.all([
-    DB.from("sections").select("id, name").order("created_at"),
+    DB.from("sections").select("*").order("created_at"),   // every column, so the shelves still load before supabase-section-order.sql has been run
     DB.from("books").select("*").order("created_at"),      // every column, so the shelves still load before supabase-done.sql has been run
   ]);
   if (Sections.error) throw Sections.error;
@@ -875,24 +987,32 @@ async function LoadLibrary()
   {
     Book.position = Number(Book.position ?? Date.parse(Book.created_at) / 1000);
   });
+  // Sections get a place in the same way, so they can be moved up and down
+  SectionPlacesAreSaved = !Sections.data.length || Sections.data[0].position !== undefined;
   Library = Sections.data.map((Section) => ({
     id: Section.id,
     name: Section.name,
+    position: Number(Section.position ?? Date.parse(Section.created_at) / 1000),
     books: Books.data.filter((Book) => Book.section_id === Section.id).sort((a, b) => a.position - b.position),
-  }));
+  })).sort((a, b) => a.position - b.position);
 }
 
 // The SaveSection function saves a new section, adds it to the page's list and returns it
 async function SaveSection(Name)
 {
+  // A new section goes after the last one
+  const Last = Library[Library.length - 1];
+  const Position = Last ? Math.max(NowInSeconds(), Last.position + 1) : NowInSeconds();
   let Row = { id: "local-" + Date.now(), name: Name };
   if (DB)
   {
-    const { data: Data, error } = await DB.from("sections").insert({ name: Name }).select("id, name").single();
+    const New = { name: Name };
+    if (SectionPlacesAreSaved) New.position = Position;
+    const { data: Data, error } = await DB.from("sections").insert(New).select("id, name").single();
     if (error) throw error;
     Row = Data;
   }
-  const Section = { id: Row.id, name: Row.name, books: [] };
+  const Section = { id: Row.id, name: Row.name, position: Position, books: [] };
   Library.push(Section);
   return Section;
 }
@@ -959,6 +1079,42 @@ async function UpdateBook(Book, Section, Details)
     OldSection.books = OldSection.books.filter((Other) => Other !== Book);
     Section.books.push(Book);
   }
+}
+
+// The MoveSection function moves a section one place up (Step is -1) or down (Step is 1) and saves its new place
+async function MoveSection(Section, Step)
+{
+  const From = Library.indexOf(Section);
+  const To = From + Step;
+  if (To < 0 || To >= Library.length) return;
+  const Others = Library.filter((Other) => Other !== Section);
+  const Before = Others[To - 1];
+  const After = Others[To];
+  const Position = Before && After ? (Before.position + After.position) / 2 : Before ? Before.position + 1 : After.position - 1;
+  if (DB)
+  {
+    const { error } = await DB.from("sections").update({ position: Position }).eq("id", Section.id);
+    if (error) throw error;
+  }
+  Library.splice(From, 1);
+  Library.splice(To, 0, Section);
+  Section.position = Position;
+}
+
+// The SortBooks function puts a section's books in order by name, newest first or oldest first, and saves each book's new place
+async function SortBooks(Section, How)
+{
+  const Added = (Book) => (Book.created_at ? Date.parse(Book.created_at) : Book.position);
+  const ByName = (a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+  const Sorted = [...Section.books].sort(How === "name" ? ByName : How === "newest" ? (a, b) => Added(b) - Added(a) : (a, b) => Added(a) - Added(b));
+  if (DB)
+  {
+    const Results = await Promise.all(Sorted.map((Book, i) => DB.from("books").update({ position: i + 1 }).eq("id", Book.id)));
+    const Failed = Results.find((Result) => Result.error);
+    if (Failed) throw Failed.error;
+  }
+  Sorted.forEach((Book, i) => { Book.position = i + 1; });
+  Section.books = Sorted;
 }
 
 // The MoveBook function saves a book's new shelf and place after it has been dragged, Index is where it goes among the other books of that section
@@ -1235,16 +1391,20 @@ const SectionsNote = document.getElementById("sectionsNote");
 const SectionRows = document.getElementById("sectionRows");
 const SectionAddName = document.getElementById("sectionAddName");
 
-// The RenderSectionRows function builds one row per section on the sections card: its name in a box and a Delete link
-function RenderSectionRows()
+// The RenderSectionRows function builds one row per section on the sections card: its name in a box, then Up, Down, Sort books and Delete
+// FocusId and FocusPart say which button to put the keyboard back on after the rows are rebuilt
+function RenderSectionRows(FocusId, FocusPart)
 {
   SectionRows.replaceChildren();
-  Library.forEach((Section) =>
+  Library.forEach((Section, Index) =>
   {
-    const Row = Make("div", "card-line section-row");
+    const Row = Make("div", "section-entry");
+    Row.dataset.section = Section.id;
+    const Line = Make("div", "card-line section-name");
     const Box = document.createElement("input");
     Box.type = "text"; Box.value = Section.name; Box.maxLength = 40;
     Box.setAttribute("aria-label", "Name of the " + Section.name + " section");
+    Line.append(Box);
 
     // "change" fires when they press Enter or leave the box after editing it.
     Box.addEventListener("change", async () =>
@@ -1271,6 +1431,64 @@ function RenderSectionRows()
       }
     });
 
+    // Up and Down move the whole section, its plaque at the top moves with it
+    const Tools = Make("div", "section-tools");
+    const Mover = (Label, Part, Step, Off) =>
+    {
+      const Button = Make("button", "link-button " + Part, Label);
+      Button.type = "button";
+      Button.disabled = Off;
+      Button.setAttribute("aria-label", "Move the " + Section.name + " section " + Label.toLowerCase());
+      Button.addEventListener("click", async () =>
+      {
+        SectionsNote.hidden = true;
+        try
+        {
+          await MoveSection(Section, Step);
+          RenderSectionRows(Section.id, Part); RenderTabs(); Update();
+        }
+        catch (error)
+        {
+          console.error(error);
+          ShowCardNote(SectionsNote, ExplainDatabase(error));
+        }
+      });
+      return Button;
+    };
+    const Up = Mover("Up", "move-up", -1, Index === 0);
+    const Down = Mover("Down", "move-down", 1, Index === Library.length - 1);
+
+    // Sort books puts the books on this shelf in order once, they can still be dragged afterwards
+    const Sorter = document.createElement("select");
+    Sorter.className = "sort-books";
+    Sorter.setAttribute("aria-label", "Sort the books in " + Section.name);
+    Sorter.disabled = Section.books.length < 2;
+    [["", "Sort books\u2026"], ["name", "A to Z"], ["newest", "Newest first"], ["oldest", "Oldest first"]].forEach(([Value, Words]) =>
+    {
+      const Choice = document.createElement("option");
+      Choice.value = Value;
+      Choice.textContent = Words;
+      Sorter.append(Choice);
+    });
+    Sorter.addEventListener("change", async () =>
+    {
+      if (!Sorter.value) return;
+      SectionsNote.hidden = true;
+      Sorter.disabled = true;
+      try
+      {
+        await SortBooks(Section, Sorter.value);
+        Update();
+      }
+      catch (error)
+      {
+        console.error(error);
+        ShowCardNote(SectionsNote, ExplainDatabase(error));
+      }
+      Sorter.value = "";
+      Sorter.disabled = false;
+    });
+
     const Remove = Make("button", "link-button danger-link", "Delete");
     Remove.type = "button";
     Remove.setAttribute("aria-label", "Delete the " + Section.name + " section");
@@ -1292,10 +1510,19 @@ function RenderSectionRows()
       }
     });
 
-    Row.append(Box, Remove);
+    Tools.append(Up, Down, Sorter, Remove);
+    Row.append(Line, Tools);
     SectionRows.append(Row);
   });
   if (!Library.length) SectionRows.append(Make("p", "card-switch", "No sections yet. Add your first one below."));
+
+  // Put the keyboard back on the button that was pressed, or on its partner if that one is now greyed out
+  if (FocusId)
+  {
+    const Row = SectionRows.querySelector(`[data-section="${FocusId}"]`);
+    const Button = Row && (Row.querySelector("." + FocusPart + ":not(:disabled)") || Row.querySelector(".move-up:not(:disabled), .move-down:not(:disabled)"));
+    if (Button) Button.focus();
+  }
 }
 
 // The OpenSectionsCard function opens the sections card
@@ -1364,9 +1591,14 @@ async function StartLibrary()
   else
   {
     Library = ExampleLibrary;                    // login is off: show the examples
-    Library.forEach((Section) => Section.books.forEach((Book, i) => { Book.position = i; }));
+    Library.forEach((Section, Index) =>
+    {
+      Section.position = Index;
+      Section.books.forEach((Book, i) => { Book.position = i; });
+    });
   }
-  RenderTabs();
-  Update();
+  LoadShelfSettings(Member);
+  BuildSettingsList();
+  ApplyShelfSettings();                          // this also builds the plaques and the shelves
 }
 StartLibrary();

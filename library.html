@@ -26,7 +26,7 @@
 <header class="top">
   <h1><a href="index.html">Itsuka</a></h1>
   <div class="top-actions">
-    <button class="plain-button" id="sceneButton" type="button">Change background</button>
+    <button class="plain-button" id="sceneButton" type="button">Settings</button>
     <!-- The signed-in member's card. Hidden until member.js knows who is signed in -->
     <button class="member-chip" id="memberChip" type="button" hidden>
       <canvas class="chip-photo" id="chipPhoto" aria-hidden="true"></canvas>
@@ -55,17 +55,21 @@
 <!-- The developer tag at the bottom of the page -->
 <footer class="credit">Developed By Sav</footer>
 
-<!-- The background picker, its thumbnails are added by backgrounds.js -->
+<!-- The settings: the background for this device (thumbnails added by backgrounds.js) and the shelf tools for this member (switches added by library.js) -->
 <dialog class="scenes" id="scenePicker" aria-labelledby="sceneTitle">
   <div class="scenes-inner">
     <div class="scenes-head">
-      <h2 id="sceneTitle">Choose a background</h2>
+      <h2 id="sceneTitle">Settings</h2>
       <button class="plain-button" id="sceneDone" type="button">Done</button>
     </div>
+    <h3 class="settings-title">Background on this device</h3>
     <label class="motion-switch">
       <input type="checkbox" id="motionSwitch"> Moving backgrounds
     </label>
     <div class="scene-list" id="sceneList"></div>
+    <h3 class="settings-title">On the shelves</h3>
+    <div class="settings-list" id="settingsList"></div>
+    <p class="settings-note" id="settingsNote" role="alert" hidden></p>
   </div>
 </dialog>
 
