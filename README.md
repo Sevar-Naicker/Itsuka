@@ -15,6 +15,7 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 - **Sections:** shelves are grouped under plaques such as Artists or Work Ideas. Each plaque switches its section on or off, so you can view one, a few or all of them.
 - **Library Card:** members register and sign in with a library card, and can add a profile photo to it.
 - **Private Shelves:** each member only ever sees their own sections, books, notes and pictures.
+- **Pull a Book:** the Pull a book button picks a random book that is not done. A light hops along a few spines before the chosen book rises off its shelf and opens.
 - **Done Mark:** tick Done inside a book once you have visited, bought or used it. The book gets a ribbon on its spine and a stamp inside, and the Hide done button tucks the finished books away.
 - **Pictures:** one picture per book, shrunk before upload and drawn in a pixel style to match the library.
 - **Backgrounds:** four animated pixel scenes (cabin fireplace, green woodland, campfire night, snowy cabin). The shelves, books and plaques change colour to match the one you pick.

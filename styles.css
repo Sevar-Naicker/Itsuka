@@ -830,3 +830,21 @@ body.checking > *:not(.backdrop) { visibility: hidden; }
 body.carrying { cursor: grabbing; user-select: none; -webkit-user-select: none; }
 body.carrying .open-book { visibility: hidden !important; }
 body.carrying .book .spine { transform: none; }
+
+/* Pulling a book at random */
+.pull-button { flex: none; margin: 2px 0 8px; padding: 7px 12px; box-shadow: none; }
+.pull-button:disabled { opacity: 0.6; cursor: default; }
+.book.is-hopped .spine { transform: translateY(calc(var(--dot) * -2)); filter: brightness(1.35); }
+.book.is-pulled .spine { animation: pull-up 0.42s steps(6) both; }
+@keyframes pull-up {
+  0%   { transform: translateY(0); }
+  45%  { transform: translateY(calc(var(--dot) * -6)); }
+  100% { transform: translateY(calc(var(--dot) * -2)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .book.is-pulled .spine { animation: none; }
+}
+@media (max-width: 640px) {
+  .tabs-row { flex-wrap: wrap; row-gap: 4px; }
+  .tabs-row .tabs { flex-basis: 100%; }   /* on a phone the plaques get a row of their own under the buttons */
+}

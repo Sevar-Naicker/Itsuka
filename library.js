@@ -453,7 +453,70 @@ function Update()
     Tab.setAttribute("aria-pressed", String(On));
   });
   RenderShelves();
+  PullButton.hidden = !LibraryRoot.querySelector(".book:not(.is-done)");     // only when there is a book that is not done to pull
 }
+
+// Pulling a book at random:
+
+// PullButton is the Pull a book button and Pulling holds whether a pick is under way
+const PullButton = document.getElementById("pullButton");
+let Pulling = false;
+
+// The Pause function waits for a number of milliseconds
+function Pause(Milliseconds)
+{
+  return new Promise((Resolve) => setTimeout(Resolve, Milliseconds));
+}
+
+// The OnScreen function checks whether a book's spine can be seen without scrolling
+function OnScreen(Elem)
+{
+  const Box = Elem.querySelector(".spine").getBoundingClientRect();
+  return Box.bottom > 0 && Box.top < window.innerHeight && Box.right > 0 && Box.left < window.innerWidth;
+}
+
+// The PullBook function picks a book that is not done from the shelves on show, lifts it off the shelf and opens it
+async function PullBook()
+{
+  const Choices = [...LibraryRoot.querySelectorAll(".book:not(.is-done)")];
+  if (!Choices.length || Pulling) return;
+  Pulling = true;
+  PullButton.disabled = true;
+  CloseAll();
+
+  const Picked = Choices[Math.floor(Math.random() * Choices.length)];
+  const Calm = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  Picked.querySelector(".spine").scrollIntoView({ block: "center", behavior: Calm ? "auto" : "smooth" });
+  await Pause(Calm ? 0 : 350);
+
+  // The hop: a light runs along a few of the books on screen, slowing down, before it stops on the picked one
+  if (!Calm)
+  {
+    const Near = Choices.filter((Elem) => Elem !== Picked && OnScreen(Elem));
+    const Hops = Math.min(6, Near.length);
+    let Last = null;
+    for (let i = 0; i < Hops; i++)
+    {
+      let Next = Near[Math.floor(Math.random() * Near.length)];
+      if (Next === Last && Near.length > 1) Next = Near[(Near.indexOf(Next) + 1) % Near.length];
+      Next.classList.add("is-hopped");
+      await Pause(90 + i * 35);
+      Next.classList.remove("is-hopped");
+      Last = Next;
+    }
+  }
+
+  // The picked book rises off the shelf, then falls open
+  Picked.classList.add("is-pulled");
+  await Pause(Calm ? 0 : 420);
+  Picked.classList.remove("is-pulled");
+  OpenBook(Picked);
+  Picked.querySelector(".spine").focus({ preventScroll: true });
+  PullButton.disabled = false;
+  Pulling = false;
+}
+
+PullButton.addEventListener("click", PullBook);
 
 // Typing in the search box rebuilds the shelves with only the books that match
 SearchBox.addEventListener("input", () =>
