@@ -890,6 +890,8 @@ body.no-ornaments #library .ornament { display: none !important; }
 /* Download and load a copy of the library */
 .library-copy { display: flex; flex-wrap: wrap; gap: 10px; }
 .library-status { max-width: 40rem; margin: 10px 0 0; font-size: 0.875rem; line-height: 1.4; color: var(--gilt); }
+.settings-help { max-width: 40rem; margin: 0 0 8px; font-size: 0.875rem; line-height: 1.45; color: var(--gilt); }
+.settings-help a { color: var(--brass); font-weight: 600; }
 .library-status.problem { padding: 8px 12px; border: 2px solid #7A1E14; background: #F3D9D4; color: #7A1E14; }
 
 /* Links dressed as buttons */
@@ -935,3 +937,37 @@ a.card-button { display: block; box-sizing: border-box; text-align: center; text
 .delete-line span { padding-bottom: 0; }
 .delete-line input { padding-top: 2px; text-transform: uppercase; letter-spacing: 0.08em; }
 .card-text .link-button { padding: 0; font-size: inherit; }
+
+/* Dusty books: dust settles on the top of a spine that has not been opened for a while */
+.dust { display: none; }
+.book[data-dust] .dust {
+  display: block;
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 24%;
+  border-top: var(--dot) solid rgba(228, 220, 198, 0.75);
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 5 7' shape-rendering='crispEdges'><g fill='%23E4DCC6'><rect x='1' y='0' width='1' height='1'/><rect x='4' y='2' width='1' height='1'/><rect x='0' y='4' width='1' height='1' opacity='.7'/><rect x='3' y='5' width='1' height='1' opacity='.8'/></g></svg>") 0 0 / calc(var(--dot) * 5) calc(var(--dot) * 7);
+  image-rendering: pixelated;
+  -webkit-mask-image: linear-gradient(to bottom, #000 45%, transparent);
+  mask-image: linear-gradient(to bottom, #000 45%, transparent);
+  pointer-events: none;
+}
+.book[data-dust] .spine span { position: relative; z-index: 1; }   /* the title stays readable over the dust */
+.book[data-dust="2"] .dust { height: 46%; }
+.book[data-dust="3"] .dust { height: 70%; }
+.book.is-dusting .dust { animation: dust-off 0.7s steps(5) forwards; }
+@keyframes dust-off {
+  to { opacity: 0; transform: translateY(calc(var(--dot) * -4)); }
+}
+/* The cover fades a little as the dust thickens, and the dustiest books get a cobweb in the top corner */
+.book[data-dust="1"] .spine { filter: saturate(0.8); }
+.book[data-dust="2"] .spine, .book[data-dust="3"] .spine { filter: saturate(0.55) brightness(0.88); }
+.book[data-dust="3"] .dust::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--dot) * -1);
+  left: 0;
+  width: calc(var(--dot) * 8);
+  height: calc(var(--dot) * 8);
+  background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'><g fill='%23EEE8D8' opacity='.85'><rect x='0' y='0' width='8' height='1'/><rect x='0' y='0' width='1' height='8'/><rect x='1' y='1' width='1' height='1'/><rect x='2' y='2' width='1' height='1'/><rect x='3' y='3' width='1' height='1'/><rect x='4' y='4' width='1' height='1'/><rect x='4' y='1' width='1' height='1'/><rect x='5' y='1' width='1' height='1'/><rect x='5' y='2' width='1' height='2'/><rect x='1' y='4' width='1' height='1'/><rect x='1' y='5' width='2' height='1'/><rect x='3' y='5' width='1' height='1'/></g></svg>") 0 0 / 100% 100%;
+}

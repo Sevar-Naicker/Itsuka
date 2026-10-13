@@ -14,7 +14,7 @@ create table public.sections
   constraint sections_name_length check (char_length(name) <= 100)
 );
 
--- Books Table Creation (done turns true when the member ticks Done, position decides where a book stands on its shelf):
+-- Books Table Creation (done turns true when the member ticks Done, position decides where a book stands on its shelf, opened_at is when it was last opened so it can gather dust):
 create table public.books
 (
   id         uuid primary key default gen_random_uuid(),
@@ -27,6 +27,7 @@ create table public.books
   created_at timestamptz not null default now(),
   done       boolean not null default false,
   position   double precision not null default extract(epoch from now()),
+  opened_at  timestamptz,
   constraint books_name_length    check (char_length(name) <= 200),
   constraint books_link_length    check (char_length(link) <= 2000),
   constraint books_notes_length   check (char_length(notes) <= 10000),

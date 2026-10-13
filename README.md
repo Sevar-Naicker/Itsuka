@@ -21,6 +21,8 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 - **Private Shelves:** each member only ever sees their own sections, books, notes and pictures, unless they choose to share a shelf.
 - **Share a Shelf:** the Share button on the Edit sections card makes a private link to one shelf. Anyone with the link can look at its books and add them to their own library, without seeing the owner's other shelves, email or done marks. Stop sharing turns the link off straight away.
 - **Pull a Book:** the Pull a book button picks a random book that is not done. A light hops along a few spines before the chosen book rises off its shelf and opens.
+- **Dusty Books:** a book that has not been opened for 2 months gathers dust on its spine, more at 4 months and a cobweb at 8 months. Opening it blows the dust off. Done books never gather dust, and the Settings switch turns it off.
+- **Share Into Itsuka:** on Android, once Itsuka is on the home screen it appears in the Share menu of Instagram, Pinterest and other apps. Sharing a link opens a new catalogue card with the link and name filled in. `library.html?add=` followed by a link does the same, ready for an iPhone shortcut.
 - **Done Mark:** tick Done inside a book once you have visited, bought or used it. The book gets a ribbon on its spine and a stamp inside, and the Hide done button tucks the finished books away.
 - **Pictures:** one picture per book, shrunk before upload and drawn in a pixel style to match the library.
 - **Backgrounds:** four animated pixel scenes (cabin fireplace, green woodland, campfire night, snowy cabin). The shelves, books and plaques change colour to match the one you pick.
@@ -56,7 +58,7 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 | `backgrounds.js` | The pixel scenes, background picker and colour themes (used by every page) |
 | `.github/workflows/keep-awake.yml` | Visits the Supabase project once a day so the free project never pauses for inactivity |
 | `supabase.sql` | Sets up the database, the picture storage, shelf sharing and account deleting in a new Supabase project. Run once |
-| `manifest.json` | Lets a phone add the site to its home screen like an app |
+| `manifest.json` | Lets a phone add the site to its home screen like an app, and puts Itsuka in the Share menu on Android |
 | `icons/` | The tab icon, the home screen icons and the picture shown when the link is shared |
 | `fonts/` | The pixel font files and their licence |
 
@@ -90,5 +92,4 @@ If both values in `config.js` are left empty, login is off and the library shows
 The publishable key in `config.js` (it starts with `sb_publishable_`) is meant to be seen by browsers, so it is safe to publish.
 
 ## Credits:
-
 Developed by Sav.

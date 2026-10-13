@@ -44,9 +44,10 @@ const SETTING_LIST = [
   { key: "drag", label: "Drag to move books", hint: "Pick a book up by its spine" },
   { key: "ornaments", label: "Shelf ornaments", hint: "The little things at the end of each shelf" },
   { key: "hover", label: "Open books on hover", hint: "On a laptop, a book opens when you point at it" },
+  { key: "dust", label: "Dusty books", hint: "Books you have not opened in a while gather dust" },
 ];
 // ShelfSettings holds which tools are switched on, they all start on and the member's own choices are loaded over them
-const ShelfSettings = { find: true, done: true, hideDone: true, pull: true, drag: true, ornaments: true, hover: true };
+const ShelfSettings = { find: true, done: true, hideDone: true, pull: true, drag: true, ornaments: true, hover: true, dust: true };
 const SettingsList = document.getElementById("settingsList");
 const SettingsNote = document.getElementById("settingsNote");
 
@@ -122,6 +123,50 @@ function DressAsDone(Elem, Book)
   Elem.classList.toggle("is-done", Done);
   Elem.querySelector(".spine").setAttribute("aria-label", Done ? Book.name + ", done" : Book.name);
   Elem.querySelector(".done-box").setAttribute("aria-pressed", String(Done));
+  ShowDust(Elem, Book);                                                // a done book is finished with, so it never looks dusty
+}
+
+// Dusty books:
+
+// DUST_DAYS holds how many days a book can go unopened before it gathers a little dust, more dust and finally a cobweb
+const DUST_DAYS = [60, 120, 240];
+// DAY is one day in milliseconds
+const DAY = 24 * 60 * 60 * 1000;
+
+// The DustLevel function returns how dusty a book is: 0 for none up to 3, from the last time it was opened (or added, if it never has been)
+function DustLevel(Book)
+{
+  if (!ShelfSettings.dust || Book.done) return 0;
+  const Last = Date.parse(Book.opened_at || Book.created_at || "");
+  if (isNaN(Last)) return 0;
+  const Days = (Date.now() - Last) / DAY;
+  return DUST_DAYS.filter((Limit) => Days >= Limit).length;
+}
+
+// The ShowDust function puts the right amount of dust on a book's spine, or takes it away
+function ShowDust(Elem, Book)
+{
+  const Level = DustLevel(Book);
+  if (Level) Elem.dataset.dust = Level;
+  else delete Elem.dataset.dust;
+}
+
+// The NoteOpened function blows the dust off a book that has just been opened and remembers when it was opened, at most once a day
+async function NoteOpened(Elem)
+{
+  const Book = BookWithId(Elem.dataset.id);
+  if (!Book) return;
+  if (Elem.dataset.dust)
+  {
+    Elem.classList.add("is-dusting");                                  // the dust puffs away (styles.css)
+    setTimeout(() => { Elem.classList.remove("is-dusting"); delete Elem.dataset.dust; }, 700);
+  }
+  const Last = Date.parse(Book.opened_at || "");
+  if (!isNaN(Last) && Date.now() - Last < DAY) return;
+  Book.opened_at = new Date().toISOString();
+  if (!DB) return;
+  const { error } = await DB.from("books").update({ opened_at: Book.opened_at }).eq("id", Book.id);
+  if (error) console.error(error);                                     // only the dust depends on it, so the page carries on
 }
 
 // The ClearSearch function empties the search box so every book shows again
@@ -172,6 +217,10 @@ function MakeLibraryBook(Book, ColourNumber)
   const DoneBox = Make("button", "link-button done-box", "Done");
   DoneBox.type = "button";
   Foot.append(Edit, DoneBox);
+  // The dust that gathers on a book that has not been opened for a while, drawn by styles.css
+  const Dust = Make("i", "dust");
+  Dust.setAttribute("aria-hidden", "true");
+  Elem.querySelector(".spine").append(Dust);
   DressAsDone(Elem, Book);
   return Elem;
 }
@@ -344,6 +393,7 @@ async function PullBook()
   await Pause(Calm ? 0 : 420);
   Picked.classList.remove("is-pulled");
   OpenBook(Picked);
+  NoteOpened(Picked);
   Picked.querySelector(".spine").focus({ preventScroll: true });
   PullButton.disabled = false;
   Pulling = false;
@@ -402,6 +452,14 @@ LibraryRoot.addEventListener("click", async (event) =>
     ShowLibraryNote(ExplainDatabase(error));
   }
   Box.disabled = false;
+});
+
+// A click or tap that opens a book counts as opening it, so its dust blows away (opening by hover does not count)
+LibraryRoot.addEventListener("click", (event) =>
+{
+  const Spine = event.target.closest(".spine");
+  const Elem = Spine && Spine.closest(".book");
+  if (Elem && Elem.classList.contains("is-open")) NoteOpened(Elem);
 });
 
 // The settings panel:
@@ -1131,6 +1189,7 @@ function OpenCatalogueCard(Book)
   EditingBook = Book || null;
   CatalogueForm.reset();
   CatalogueNote.hidden = true;
+  CatalogueNote.classList.remove("good");
   ChosenPicture = null;
   KeptPicture = Book ? Book.picture || "" : "";
 
@@ -1153,7 +1212,7 @@ function OpenCatalogueCard(Book)
   if (Book)
   {
     BookName.value = Book.name;
-    BookLink.value = Book.link ? ShortLink(Book.link) : "";
+    BookLink.value = (Book.link || "").replace(/^https:\/\//i, "");    // the whole link, so its ?extras and www. are kept when it is saved again
     BookNotes.value = Book.notes || "";
     BookSection.value = Library.find((Section) => Section.books.includes(Book)).id;
   }
@@ -1600,6 +1659,90 @@ document.getElementById("shareClose").addEventListener("click", () => ShareDialo
   Dialog.addEventListener("click", (event) => { if (event.target === Dialog) Dialog.close(); });
 });
 
+// Adding a link shared from another app:
+// On Android the home screen app appears in the Share menu (manifest.json), on iPhone the Add to Itsuka shortcut opens library.html?add=
+
+// SHARED_KEY is the note this device keeps of a shared link until the library is ready, which may be after signing in
+const SHARED_KEY = "library-adding";
+
+// The FirstLink function finds the first web address in a piece of text, apps often send a sentence with the link at the end
+function FirstLink(Text)
+{
+  const Found = String(Text || "").match(/https?:\/\/[^\s<>"']+/i);
+  return Found ? Found[0].replace(/[).,!?]+$/, "") : "";
+}
+
+// The CleanLink function removes the tracking extras apps add to a shared link, such as igsh and utm_source
+function CleanLink(Link)
+{
+  try
+  {
+    const Address = new URL(Link);
+    [...Address.searchParams.keys()].forEach((Key) =>
+    {
+      if (/^(utm_.*|igsh|igshid|si|fbclid|mibextid|share_id|ref|ref_src)$/i.test(Key)) Address.searchParams.delete(Key);
+    });
+    return Address.href;
+  }
+  catch (error)
+  {
+    return Link;
+  }
+}
+
+// The NameFromLink function guesses a book's name from a shared link: the account name on Instagram, TikTok, Pinterest and similar sites, otherwise nothing
+function NameFromLink(Link)
+{
+  try
+  {
+    const Address = new URL(Link);
+    const Host = Address.hostname.replace(/^(www|m)\./, "");
+    const First = decodeURIComponent(Address.pathname.split("/").filter(Boolean)[0] || "");
+    const Social = /^(instagram\.com|tiktok\.com|pinterest\.[a-z.]+|x\.com|twitter\.com|threads\.net|youtube\.com|facebook\.com|behance\.net|dribbble\.com)$/.test(Host);
+    if (!Social || !First || /^(p|reel|reels|pin|watch|stories|explore|shorts|share|profile\.php)$/i.test(First)) return "";
+    return First.replace(/^@/, "").slice(0, 80);
+  }
+  catch (error)
+  {
+    return "";
+  }
+}
+
+// The NoteSharedArrival function keeps a link that arrived from another app and tidies the address bar
+// It runs straight away, before member.js may send a signed-out visitor to sign in, so the link is still waiting when they come back
+function NoteSharedArrival()
+{
+  const Params = new URLSearchParams(location.search);
+  const Link = FirstLink(Params.get("add")) || FirstLink(Params.get("url")) || FirstLink(Params.get("text")) || FirstLink(Params.get("title"));
+  if (!Link) return;
+  const Title = (Params.get("title") || "").trim();
+  Remember(SHARED_KEY, JSON.stringify({ link: CleanLink(Link), name: Title && !FirstLink(Title) ? Title.slice(0, 80) : "", at: Date.now() }));
+  history.replaceState(null, "", location.pathname + location.hash);
+}
+NoteSharedArrival();
+
+// The OpenSharedArrival function opens a new catalogue card with the shared link filled in, once the shelves are loaded
+function OpenSharedArrival()
+{
+  let Note = null;
+  try { Note = JSON.parse(Recall(SHARED_KEY)); }
+  catch (error) { Note = null; }
+  if (!Note) return;
+  Remember(SHARED_KEY, "");
+  if (!Note.link || Date.now() - Number(Note.at) > 24 * 60 * 60 * 1000) return;      // a link left waiting for more than a day is forgotten
+
+  OpenCatalogueCard();
+  BookLink.value = Note.link.replace(/^https:\/\//i, "");
+  BookName.value = Note.name || NameFromLink(Note.link);
+  // If the same link is already on a shelf we say where, so it is not added twice by accident
+  const Same = TidyLink(Note.link);
+  const Section = Library.find((Shelf) => Shelf.books.some((Book) => Book.link === Same));
+  const Already = Section && Section.books.find((Book) => Book.link === Same);
+  CatalogueNote.classList.toggle("good", !Already);
+  ShowCardNote(CatalogueNote, Already ? "This link is already on your \u201C" + Section.name + "\u201D shelf as " + Already.name + "." : "Shared from another app. Check the name, pick a shelf and add a picture if you like.");
+  (BookName.value ? BookSection : BookName).focus();
+}
+
 // Start:
 
 // The StartLibrary function runs when the page opens, it waits for the member and then loads and shows their shelves
@@ -1636,5 +1779,6 @@ async function StartLibrary()
   LoadShelfSettings(Member);
   BuildSettingsList();
   ApplyShelfSettings();                          // this also builds the plaques and the shelves
+  OpenSharedArrival();                           // a link shared from another app opens on a new catalogue card
 }
 StartLibrary();
