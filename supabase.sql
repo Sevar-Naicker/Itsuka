@@ -126,3 +126,27 @@ grant execute on function public.picture_is_shared(text) to anon, authenticated;
 create policy "anyone sees pictures on shared shelves" on storage.objects
   for select to anon, authenticated
   using (bucket_id = 'pictures' and public.picture_is_shared(name));
+
+-- Delete My Account Function (deletes the signed-in member, the database then removes their sections and books with them, the website deletes their pictures first):
+-- The website first calls it with any other word to check it is set up, only the word DELETE deletes the account
+create or replace function public.delete_my_account(confirm text)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'Not signed in';
+  end if;
+  if confirm is distinct from 'DELETE' then
+    return false;
+  end if;
+  delete from auth.users where id = auth.uid();
+  return true;
+end;
+$$;
+
+-- Allowing only signed-in members to use it, and only on their own account:
+revoke all on function public.delete_my_account(text) from public;
+grant execute on function public.delete_my_account(text) to authenticated;

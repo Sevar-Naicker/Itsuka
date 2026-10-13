@@ -56,8 +56,8 @@
 <!-- The shared shelf, built by shelf.js -->
 <main class="sections" id="library"></main>
 
-<!-- The developer tag at the bottom of the page -->
-<footer class="credit">Developed By Sav</footer>
+<!-- The developer tag and the privacy link at the bottom of the page -->
+<footer class="credit"><span>Developed By Sav</span><a href="privacy.html">Privacy</a></footer>
 
 <!-- The card shown when someone without a library card presses an Add button -->
 <dialog class="card-dialog" id="cardAsk" aria-labelledby="cardAskTitle">
@@ -68,7 +68,7 @@
         <span class="card-kind">Itsuka</span>
       </div>
       <div class="card-body">
-        <p class="share-about">Books are added to your own Itsuka library. Get a free library card or sign in, and you will come straight back to this shelf.</p>
+        <p class="card-text">Books are added to your own Itsuka library. Get a free library card or sign in, and you will come straight back to this shelf.</p>
         <a class="card-button" id="cardAskRegister" href="login.html?mode=register">Get a library card</a>
         <p class="card-switch card-ends">
           <button class="link-button" id="cardAskClose" type="button">Not now</button>

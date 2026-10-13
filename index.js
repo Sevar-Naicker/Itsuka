@@ -352,5 +352,12 @@ async function StartWelcomePage()
     ActionsRow.classList.add("member");
   }
   ActionsRow.classList.remove("waiting");      // we know who it is, so the buttons can be shown
+
+  // Someone who has just deleted their account arrives with deleted=1 on the address and gets a goodbye line
+  if (ArrivedWith.includes("deleted=1"))
+  {
+    document.getElementById("goneNote").hidden = false;
+    history.replaceState(null, "", location.pathname);           // tidy the address bar
+  }
 }
 StartWelcomePage();

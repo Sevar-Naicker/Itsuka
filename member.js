@@ -157,6 +157,89 @@ MemberDialog.addEventListener("click", (event) =>
 {
   if (event.target === MemberDialog) MemberDialog.close();      // a click outside the card closes it
 });
+// Deleting the account:
+
+// The parts of the delete card
+const DeleteDialog = document.getElementById("deleteDialog");
+const DeleteNote = document.getElementById("deleteNote");
+const DeleteWord = document.getElementById("deleteWord");
+const DeleteYes = document.getElementById("deleteYes");
+
+// The ShowDeleteNote function shows a message on the delete card, Good makes it green instead of red
+function ShowDeleteNote(Message, Good)
+{
+  DeleteNote.textContent = Message;
+  DeleteNote.classList.toggle("good", Boolean(Good));
+  DeleteNote.hidden = !Message;
+}
+
+// The RemoveAllPictures function deletes every file in the member's picture folder: book pictures and card photos
+async function RemoveAllPictures()
+{
+  const Folder = SignedIn.id;
+  for (let Round = 0; Round < 100; Round++)                 // a member has far fewer than 10000 files, this only stops a loop that never ends
+  {
+    const { data: Files, error } = await DB.storage.from(PICTURE_BUCKET).list(Folder, { limit: 100 });
+    if (error) throw error;
+    if (!Files.length) return;
+    const { data: Removed, error: RemoveError } = await DB.storage.from(PICTURE_BUCKET).remove(Files.map((File) => Folder + "/" + File.name));
+    if (RemoveError) throw RemoveError;
+    if (!Removed || !Removed.length) return;                  // nothing more could be removed, so we stop asking
+  }
+}
+
+// The DeleteAccount function deletes the member's pictures and then their account, the database removes their shelves and books with it
+async function DeleteAccount()
+{
+  DeleteYes.disabled = true;
+  DeleteWord.disabled = true;
+  try
+  {
+    // First a check that deleting is set up, so no picture is removed when the account itself cannot be
+    ShowDeleteNote("Checking\u2026", true);
+    const Check = await DB.rpc("delete_my_account", { confirm: "check" });
+    if (Check.error) throw Check.error;
+    ShowDeleteNote("Deleting your pictures\u2026", true);
+    await RemoveAllPictures();
+    ShowDeleteNote("Deleting your account\u2026", true);
+    const Result = await DB.rpc("delete_my_account", { confirm: "DELETE" });
+    if (Result.error) throw Result.error;
+    try { await DB.auth.signOut({ scope: "local" }); }
+    catch (error) { console.error(error); }                   // the account is already gone, so forgetting it on this device is all that is left
+    location.replace("index.html?deleted=1");
+  }
+  catch (error)
+  {
+    console.error(error);
+    ShowDeleteNote("Your account was not deleted. " + ExplainDatabase(error));
+    DeleteWord.disabled = false;
+    DeleteYes.disabled = DeleteWord.value.trim().toUpperCase() !== "DELETE";
+  }
+}
+
+// Delete my account on the library card opens the delete card
+document.getElementById("deleteAccount").addEventListener("click", () =>
+{
+  MemberDialog.close();
+  ShowDeleteNote("");
+  DeleteWord.value = "";
+  DeleteYes.disabled = true;
+  DeleteDialog.showModal();
+});
+// The delete button only wakes up once DELETE has been typed
+DeleteWord.addEventListener("input", () => { DeleteYes.disabled = DeleteWord.value.trim().toUpperCase() !== "DELETE"; });
+DeleteYes.addEventListener("click", DeleteAccount);
+// Download a copy saves the whole library first (DownloadLibrary is in library.js) and shows how it went on this card
+document.getElementById("deleteDownload").addEventListener("click", async (event) =>
+{
+  ShowDeleteNote("Packing your library\u2026", true);
+  await DownloadLibrary(event.currentTarget);
+  ShowDeleteNote(LibraryStatus.textContent, !LibraryStatus.classList.contains("problem"));
+});
+// Keep my account, or a click outside the card, closes it
+document.getElementById("deleteNo").addEventListener("click", () => DeleteDialog.close());
+DeleteDialog.addEventListener("click", (event) => { if (event.target === DeleteDialog && !DeleteWord.disabled) DeleteDialog.close(); });
+
 // Sign out forgets the sign-in on this device and goes to the login page
 document.getElementById("signOut").addEventListener("click", async () =>
 {

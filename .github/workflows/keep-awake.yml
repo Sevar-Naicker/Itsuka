@@ -1,0 +1,31 @@
+# This file contains a small GitHub Actions job that visits the Supabase project once a day, so the free project is never counted as inactive and paused
+
+name: Keep Supabase awake
+
+# When it runs: every day at 06:17 UTC (08:17 in South Africa), and whenever Run workflow is pressed on the Actions tab
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+# It does not need to change anything in the repository
+permissions:
+  contents: read
+
+jobs:
+  visit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      # Reads the project address and publishable key from the live site's config.js, then asks the database one small question
+      # A failed run means the site or Supabase did not answer, and GitHub emails about it
+      - name: Visit the library database
+        run: |
+          CONFIG=$(curl --fail --silent --show-error --max-time 30 https://itsuka.co.za/config.js)
+          URL=$(echo "$CONFIG" | grep -oE 'supabaseUrl: *"[^"]+"' | cut -d'"' -f2)
+          KEY=$(echo "$CONFIG" | grep -oE 'supabaseKey: *"[^"]+"' | cut -d'"' -f2)
+          if [ -z "$URL" ] || [ -z "$KEY" ]; then echo "config.js has no project address or key"; exit 1; fi
+          curl --fail --silent --show-error --max-time 30 -X POST "$URL/rest/v1/rpc/shared_shelf" \
+            -H "apikey: $KEY" -H "Content-Type: application/json" -d '{"key":"keep-awake"}'
+          echo
+          echo "Supabase answered, so the project stays awake"

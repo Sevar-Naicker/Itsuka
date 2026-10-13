@@ -56,6 +56,9 @@
 
   <p class="welcome-note">A cozy place for your favorite ideas and inspirations to stay, till you need them someday.</p>
 
+  <!-- Shown once after a member deletes their account -->
+  <p class="welcome-note gone-note" id="goneNote" role="status" hidden>Your account and library have been deleted. Thank you for using Itsuka.</p>
+
   <!-- The three buttons: two lead to the library card on login.html and one opens the how it works card -->
   <!-- For a signed-in member index.js hides the first one and turns Sign in into a Library button -->
   <div class="welcome-actions waiting">
@@ -66,8 +69,8 @@
 
 </main>
 
-<!-- The developer tag at the bottom of the page -->
-<footer class="credit">Developed By Sav</footer>
+<!-- The developer tag and the privacy link at the bottom of the page -->
+<footer class="credit"><span>Developed By Sav</span><a href="privacy.html">Privacy</a></footer>
 
 <!-- The how it works card, opened by the How it works button -->
 <dialog class="card-dialog how-dialog" id="howDialog" aria-labelledby="howTitle">

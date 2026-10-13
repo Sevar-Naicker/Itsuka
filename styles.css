@@ -466,7 +466,8 @@ h1 a:focus-visible { outline: 3px solid var(--brass); outline-offset: 4px; }
 }
 .card-button:focus-visible, .link-button:focus-visible, .member-chip:focus-visible { outline: 3px solid #B5483C; outline-offset: 2px; }
 
-/* Card messages */
+/* Card messages and plain text on a card */
+.card-text { margin: 0 0 12px; font-size: 0.9375rem; line-height: 1.4; color: var(--faded); }
 .card-note { margin: 0 0 12px; padding: 8px 10px; background: #F3D9D4; color: #7A1E14; font-size: 0.9375rem; line-height: 1.35; }
 .card-note.good { background: #DDEBD6; color: #23502A; }
 
@@ -686,10 +687,16 @@ h1 a:focus-visible { outline: 3px solid var(--brass); outline-offset: 4px; }
   left: calc(16px + env(safe-area-inset-left, 0px));
   bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   z-index: 35;
-  padding: 6px 12px;
-  background: rgba(20, 14, 10, 0.8);
-  color: var(--gilt);
+  display: flex;
+  gap: 8px;
   font-size: 0.8125rem;
+}
+.credit > * { padding: 6px 12px; background: rgba(20, 14, 10, 0.8); color: var(--gilt); }
+.credit a { border: 1px solid var(--gilt); text-decoration: none; }
+.credit a:hover { background: rgba(20, 14, 10, 0.95); color: var(--brass); }
+.credit a:focus-visible { outline: 3px solid var(--brass); outline-offset: 2px; }
+@media (max-width: 420px) {
+  .credit { flex-direction: column-reverse; align-items: flex-start; gap: 6px; }   /* on a narrow phone the two tags stack so they clear the Add a book button */
 }
 
 /* Library hidden while checking who is signed in */
@@ -772,6 +779,7 @@ body.checking > *:not(.backdrop) { visibility: hidden; }
   .welcome-actions:not(.member) .sign-in { order: 1; }   /* Sign in moves to the second row */
 }
 .welcome-actions.waiting { visibility: hidden; }   /* hidden until we know who is signed in */
+.gone-note { border-color: var(--brass); color: var(--brass); }   /* the goodbye line after deleting an account */
 
 /* Landing page shelf picker */
 .shelf-title { margin: 16px 0 8px; font-size: 1.125rem; font-weight: 500; }
@@ -890,7 +898,6 @@ a.card-button { display: block; box-sizing: border-box; text-align: center; text
 
 /* Share card */
 .share-section.is-shared { padding: 1px 6px; background: var(--brass); text-decoration: none; }
-.share-about { margin: 0 0 12px; font-size: 0.9375rem; line-height: 1.4; color: var(--faded); }
 .share-link { grid-template-columns: 1fr; }
 .share-link input { font-size: 0.875rem; }
 .share-actions { display: flex; gap: 10px; }
@@ -912,3 +919,19 @@ a.card-button { display: block; box-sizing: border-box; text-align: center; text
 .add-one:disabled { color: var(--faded); text-decoration: none; cursor: default; }
 .gone-home { margin-top: 14px; }
 
+
+/* Privacy page */
+.privacy-card { max-width: 44rem; margin: 26px auto 24px; }
+.privacy-page .credit { position: static; display: inline-flex; }   /* the long page ends with the tag instead of it sitting over the words */
+.privacy-body { padding-bottom: 20px; color: var(--ink); line-height: 1.5; }
+.privacy-body h3 { margin: 22px 0 8px; font-size: 1.0625rem; font-weight: 700; }
+.privacy-body p { margin: 0 0 10px; font-size: 0.9375rem; }
+.privacy-body ul { margin: 0 0 10px; padding-left: 18px; list-style: square; font-size: 0.9375rem; }
+.privacy-body li { margin-bottom: 6px; }
+.privacy-body a { color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
+
+/* Delete account card */
+.delete-line { grid-template-columns: 1fr; }
+.delete-line span { padding-bottom: 0; }
+.delete-line input { padding-top: 2px; text-transform: uppercase; letter-spacing: 0.08em; }
+.card-text .link-button { padding: 0; font-size: inherit; }

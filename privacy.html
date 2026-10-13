@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy: Itsuka</title>
+<meta name="description" content="What Itsuka keeps about you, who can see it and how to delete it.">
+<!-- The tab icon, the home screen icon and the settings file for adding the site to a phone -->
+<meta name="theme-color" content="#1F3A2E">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Itsuka">
+<!-- The pixel font is hosted with the site, fetching it early makes the lettering appear sooner -->
+<link rel="preload" href="fonts/pixelify-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="privacy-page">
+
+<!-- The same moving background as the other pages, showing whichever scene was chosen last -->
+<canvas class="backdrop" id="backdrop" aria-hidden="true"></canvas>
+
+<!-- The top of the page: the title, which leads back to the landing page -->
+<header class="top">
+  <h1><a href="index.html">Itsuka</a></h1>
+  <div class="top-actions">
+    <a class="plain-button" href="library.html">Library</a>
+  </div>
+</header>
+
+<!-- The privacy notice, written as a catalogue card -->
+<main class="card-shadow privacy-card">
+  <article class="member-card catalogue-card">
+    <div class="catalogue-head">
+      <h2>Privacy</h2>
+      <span class="card-kind">Last updated 13 October 2026</span>
+    </div>
+    <div class="card-body privacy-body">
+
+      <p>Itsuka is a small, free library for saving the artists, creators and shops you want to come back to someday. This page explains, in plain words, what it keeps about you, who can see it and how to delete it.</p>
+
+      <h3>What Itsuka keeps</h3>
+      <ul>
+        <li><b>Your library card:</b> your email address, the name you registered with, the date you joined and your card photo if you add one.</li>
+        <li><b>Your password:</b> Itsuka never sees it. It is stored scrambled by Supabase, the service that runs the accounts, and cannot be read back by anyone.</li>
+        <li><b>Your shelves:</b> your sections, books, links, notes and book pictures, and whether a book is marked done. Pictures are shrunk before they are stored.</li>
+        <li><b>Your settings:</b> which shelf tools you have switched on, so they follow you to every device.</li>
+      </ul>
+
+      <h3>What stays on your device</h3>
+      <p>Your browser keeps your sign-in and a few small choices, such as your background and whether done books are hidden. They never leave your device. Itsuka has no adverts, no tracking and no analytics.</p>
+
+      <h3>Who can see it</h3>
+      <ul>
+        <li><b>Only you</b> can see your shelves, books and pictures.</li>
+        <li><b>A shelf you share</b> can be seen by anyone with its link: the shelf's name, its books, links, notes and pictures, and your first name. Never your email, your other shelves or your done marks. Stop sharing turns the link off straight away.</li>
+        <li><b>The developer</b> can reach the database to keep the site running and fix problems, and does not look through anyone's library.</li>
+      </ul>
+
+      <h3>The services Itsuka uses</h3>
+      <ul>
+        <li><b>Supabase</b> stores the accounts, shelves and pictures. Its servers may be outside South Africa.</li>
+        <li><b>Resend</b> sends the emails Itsuka needs, such as confirming your email address and resetting a password. It is only given your email address.</li>
+        <li><b>GitHub Pages</b> hosts the website and <b>jsDelivr</b> delivers one of its code files. Like any website host, they see your device's internet address when a page loads.</li>
+      </ul>
+      <p>Your information is never sold, shared for advertising or used for anything other than running your library.</p>
+
+      <h3>Your choices</h3>
+      <ul>
+        <li><b>Take a copy:</b> Settings, then Download a copy, saves your whole library as one file at any time.</li>
+        <li><b>Change things:</b> edit or delete any book, section or photo whenever you like.</li>
+        <li><b>Delete your account:</b> open your library card and press Delete my account. Your card, shelves, books, pictures and share links are deleted straight away, and this cannot be undone.</li>
+      </ul>
+
+      <h3>Questions</h3>
+      <p>Itsuka is run by Sav and is written with South Africa's Protection of Personal Information Act (POPIA) in mind. For any question about your information, or to ask for it to be corrected or deleted, email <a href="mailto:sevarn24@gmail.com">sevarn24@gmail.com</a>.</p>
+
+    </div>
+    <div class="catalogue-hole" aria-hidden="true"></div>
+  </article>
+</main>
+
+<!-- The developer tag at the bottom of the page -->
+<footer class="credit"><span>Developed By Sav</span></footer>
+
+<script src="backgrounds.js"></script>
+
+</body>
+</html>

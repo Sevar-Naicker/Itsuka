@@ -52,8 +52,8 @@
 <p class="library-note" id="libraryNote" role="alert" hidden></p>
 <main class="sections" id="library"></main>
 
-<!-- The developer tag at the bottom of the page -->
-<footer class="credit">Developed By Sav</footer>
+<!-- The developer tag and the privacy link at the bottom of the page -->
+<footer class="credit"><span>Developed By Sav</span><a href="privacy.html">Privacy</a></footer>
 
 <!-- The settings: the background for this device (thumbnails added by backgrounds.js) and the shelf tools for this member (switches added by library.js) -->
 <dialog class="scenes" id="scenePicker" aria-labelledby="sceneTitle">
@@ -162,7 +162,7 @@
       </div>
       <div class="card-body">
         <p class="card-note" id="shareNote" role="alert" hidden></p>
-        <p class="share-about" id="shareAbout"></p>
+        <p class="card-text" id="shareAbout"></p>
         <label class="card-line share-link" id="shareLinkLine" hidden>
           <span class="visually-hidden">Link to this shelf</span>
           <input id="shareLink" type="text" readonly spellcheck="false">
@@ -219,12 +219,39 @@
           <button class="link-button" id="photoRemove" type="button" hidden>Remove photo</button>
         </div>
         <button class="card-button" id="signOut" type="button">Sign out</button>
-        <p class="card-switch"><button class="link-button" id="memberClose" type="button" autofocus>Close</button></p>
+        <p class="card-switch card-ends">
+          <button class="link-button" id="memberClose" type="button" autofocus>Close</button>
+          <button class="link-button danger-link" id="deleteAccount" type="button">Delete my account</button>
+        </p>
       </div>
       <div class="card-foot" aria-hidden="true">
         <div class="barcode"></div>
         <span class="card-number" id="memberNumber"></span>
       </div>
+    </div>
+  </div>
+</dialog>
+
+<!-- The card for deleting the member's account, opened from their library card -->
+<dialog class="card-dialog" id="deleteDialog" aria-labelledby="deleteTitle">
+  <div class="card-shadow">
+    <div class="member-card catalogue-card">
+      <div class="catalogue-head">
+        <h2 id="deleteTitle">Delete your account</h2>
+        <span class="card-kind">Library card</span>
+      </div>
+      <div class="card-body">
+        <p class="card-note" id="deleteNote" role="alert" hidden></p>
+        <p class="card-text">This deletes your library card, every shelf and book, all your pictures and your photo, and turns off any shelves you have shared. It cannot be undone.</p>
+        <p class="card-text">Want to keep your books? <button class="link-button" id="deleteDownload" type="button">Download a copy</button> first.</p>
+        <label class="card-line delete-line">
+          <span>Type DELETE to confirm</span>
+          <input id="deleteWord" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="10">
+        </label>
+        <button class="card-button danger" id="deleteYes" type="button" disabled>Delete my account</button>
+        <p class="card-switch"><button class="link-button" id="deleteNo" type="button">Keep my account</button></p>
+      </div>
+      <div class="catalogue-hole" aria-hidden="true"></div>
     </div>
   </div>
 </dialog>
