@@ -1123,3 +1123,40 @@ a.card-button { display: block; box-sizing: border-box; text-align: center; text
   .side-list .page-split > .tabs-row { grid-column: 1; grid-row: 1 / span 2; }
   .side-list .page-split > .sections { margin-top: -22px; }
 }
+
+/* Live notes: a small taped note, like the welcome tour's, when someone else changes a joint shelf */
+.live-notes { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 60; display: grid; justify-items: center; gap: 14px; width: min(24rem, calc(100% - 32px)); transform: translateX(-50%); pointer-events: none; }
+.live-note {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 14px 14px 10px;
+  background: linear-gradient(to bottom, #F6ECD2 0, #F6ECD2 var(--dot), #EFE2C2 var(--dot));
+  color: #4A4436;
+  box-shadow: inset 0 0 0 2px #160E08, var(--dot) var(--dot) 0 rgba(0, 0, 0, 0.5);
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1.35;
+  animation: note-in 0.3s steps(3) both;
+}
+.live-note::after {
+  content: "";
+  position: absolute;
+  top: calc(var(--dot) * -3);
+  left: calc(50% - 22px);
+  width: 44px;
+  height: calc(var(--dot) * 5);
+  background: color-mix(in srgb, var(--brass) 75%, transparent);
+  transform: rotate(-4deg);
+  clip-path: polygon(0 0, 100% 0, 96% 25%, 100% 50%, 96% 75%, 100% 100%, 0 100%, 4% 75%, 0 50%, 4% 25%);
+}
+.live-note .face { flex: none; width: 16px; height: 16px; border: 2px solid #160E08; background: var(--who); }
+.live-note.is-leaving { animation: note-out 0.3s steps(3) both; }
+@keyframes note-in { from { opacity: 0; transform: translateY(10px); } }
+@keyframes note-out { to { opacity: 0; transform: translateY(10px); } }
+@media (prefers-reduced-motion: reduce) {
+  .live-note, .live-note.is-leaving { animation: none; }
+}
+

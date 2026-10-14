@@ -305,6 +305,7 @@ function RenderTabs()
   EditSections.textContent = Library.length ? "Edit sections" : "+ Section";
   BoardCount.textContent = String(Library.length);
   requestAnimationFrame(CheckArrows);
+  if (typeof SyncLive === "function") SyncLive();     // live.js listens on the joint shelves now showing, it loads after this file so it is not there for the very first build
 }
 
 // Sliding the plaques:
@@ -1090,28 +1091,31 @@ async function LoadLibrary()
   const Mine = JointIsSetUp ? Rows.data.filter((Row) => Row.member_id === MyId()) : [];
   const Everyone = JointIsSetUp && Array.isArray(People.data) ? People.data : [];
   // Every section and book has a place, a number that decides its spot, so they are put in that order
-  // On a shelf someone else owns, the member's own row holds where it sits among their plaques and how they like it sorted
-  Library = Sections.data.map((Section) =>
-  {
-    const Owner = !Section.member_id || Section.member_id === MyId();
-    const Row = Mine.find((Other) => Other.section_id === Section.id) || {};
-    const Here = Everyone.filter((Person) => Person.section_id === Section.id);
-    const Keys = ColourKeys(Here);
-    const Shelf = {
-      id: Section.id,
-      name: Section.name,
-      owner: Owner,
-      joint: Here.length > 1,
-      people: Here.map((Person, i) => ({ ...Person, key: Keys[i] })),
-      sort_by: (Owner ? Section.sort_by : Row.sort_by) || "",
-      share_key: Section.share_key || "",                  // empty until the shelf is shared
-      invite_key: Section.invite_key || "",                // empty until the owner turns on the invite link
-      position: Owner ? Section.position : Row.position ?? Section.position,
-      books: Books.data.filter((Book) => Book.section_id === Section.id).sort((a, b) => a.position - b.position),
-    };
-    if (Shelf.joint && Shelf.sort_by) Shelf.books.sort(SortRule(Shelf.sort_by));     // sorted for this member only, the shared order stays as it is
-    return Shelf;
-  }).sort((a, b) => a.position - b.position);
+  Library = Sections.data.map((Section) => MakeShelf(Section, Books.data, Mine, Everyone)).sort((a, b) => a.position - b.position);
+}
+
+// The MakeShelf function turns a section from the database into a shelf on the page, with its books, its people and the member's own place and sort for it
+// On a shelf someone else owns, the member's own row holds where it sits among their plaques and how they like it sorted
+function MakeShelf(Section, AllBooks, Mine, Everyone)
+{
+  const Owner = !Section.member_id || Section.member_id === MyId();
+  const Row = Mine.find((Other) => Other.section_id === Section.id) || {};
+  const Here = Everyone.filter((Person) => Person.section_id === Section.id);
+  const Keys = ColourKeys(Here);
+  const Shelf = {
+    id: Section.id,
+    name: Section.name,
+    owner: Owner,
+    joint: Here.length > 1,
+    people: Here.map((Person, i) => ({ ...Person, key: Keys[i] })),
+    sort_by: (Owner ? Section.sort_by : Row.sort_by) || "",
+    share_key: Section.share_key || "",                  // empty until the shelf is shared
+    invite_key: Section.invite_key || "",                // empty until the owner turns on the invite link
+    position: Owner ? Section.position : Row.position ?? Section.position,
+    books: AllBooks.filter((Book) => Book.section_id === Section.id).sort((a, b) => a.position - b.position),
+  };
+  if (Shelf.joint && Shelf.sort_by) Shelf.books.sort(SortRule(Shelf.sort_by));     // sorted for this member only, the shared order stays as it is
+  return Shelf;
 }
 
 // The SaveSection function saves a new section, adds it to the page's list and returns it

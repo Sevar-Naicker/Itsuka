@@ -463,3 +463,119 @@ grant execute on function public.invite_info(text) to anon, authenticated;
 grant execute on function public.join_shelf(text) to authenticated;
 grant execute on function public.pictures_to_keep() to authenticated;
 grant execute on function public.delete_my_account(text) to authenticated;
+
+-- Live Shelves Addition (people on a joint shelf see each other's changes straight away, the website listens on a private channel for each joint shelf):
+
+-- Shelf Has Others Check (true when someone apart from the owner is on the shelf, only those shelves send their changes):
+create or replace function public.shelf_has_others(shelf uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (select 1 from public.shelf_members m where m.section_id = shelf);
+$$;
+
+-- Shelf Change Sending (tells everyone on a joint shelf what changed and who changed it, a hiccup here never stops the change itself being saved):
+create or replace function public.send_shelf_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  item jsonb;
+  before jsonb;
+  shelf uuid;
+  shelves uuid[];
+  message jsonb;
+begin
+  if TG_OP = 'DELETE' then item := to_jsonb(OLD); else item := to_jsonb(NEW); end if;
+  if TG_OP = 'UPDATE' then before := to_jsonb(OLD); end if;
+
+  -- Opening a book only shifts its dust, and where a shelf sits among someone's plaques or how they sort it is theirs alone, those are not worth telling anyone about
+  if TG_TABLE_NAME = 'books' and TG_OP = 'UPDATE' and (item - 'opened_at') = (before - 'opened_at') then
+    return null;
+  end if;
+  if TG_TABLE_NAME = 'sections' and TG_OP = 'UPDATE' and (item - 'position' - 'sort_by') = (before - 'position' - 'sort_by') then
+    return null;
+  end if;
+  if TG_TABLE_NAME = 'shelf_members' and TG_OP = 'UPDATE' then
+    return null;
+  end if;
+
+  -- The shelf the change is on, and the shelf a book came from when it moved between shelves
+  if TG_TABLE_NAME = 'sections' then
+    shelves := array[(item ->> 'id')::uuid];
+  else
+    shelves := array[(item ->> 'section_id')::uuid];
+    if before is not null and before ->> 'section_id' is distinct from item ->> 'section_id' then
+      shelves := shelves || (before ->> 'section_id')::uuid;
+    end if;
+  end if;
+
+  message := jsonb_build_object(
+    'table', TG_TABLE_NAME,
+    'op', TG_OP,
+    'by', auth.uid(),
+    'id', item ->> 'id',
+    'name', item ->> 'name',
+    'member', item ->> 'member_id',
+    'done', item -> 'done',
+    'was_done', before -> 'done',
+    'was_name', before ->> 'name');
+
+  foreach shelf in array shelves loop
+    -- Only joint shelves send, a deleted shelf and people joining or leaving always do
+    if TG_TABLE_NAME = 'shelf_members' or (TG_TABLE_NAME = 'sections' and TG_OP = 'DELETE') or public.shelf_has_others(shelf) then
+      begin
+        perform realtime.send(message || jsonb_build_object('section', shelf), 'change', 'shelf:' || shelf::text, true);
+      exception when others then
+        null;
+      end;
+    end if;
+  end loop;
+  return null;
+end;
+$$;
+
+-- Addition of the Shelf Change Triggers on sections, books and the people on shelves:
+drop trigger if exists sections_live on public.sections;
+create trigger sections_live
+  after insert or update or delete on public.sections
+  for each row execute function public.send_shelf_change();
+drop trigger if exists books_live on public.books;
+create trigger books_live
+  after insert or update or delete on public.books
+  for each row execute function public.send_shelf_change();
+drop trigger if exists shelf_members_live on public.shelf_members;
+create trigger shelf_members_live
+  after insert or update or delete on public.shelf_members
+  for each row execute function public.send_shelf_change();
+
+-- Can Hear Shelf Check (true when the channel is shelf:<id> for a shelf the signed-in member is on):
+create or replace function public.can_hear_shelf(topic text)
+returns boolean
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+  if topic is null or topic !~ '^shelf:[0-9a-fA-F-]{36}$' then
+    return false;
+  end if;
+  return public.on_shelf(substr(topic, 7)::uuid);
+end;
+$$;
+
+revoke all on function public.shelf_has_others(uuid) from public;
+revoke all on function public.can_hear_shelf(text) from public;
+grant execute on function public.can_hear_shelf(text) to authenticated;
+
+-- Ensuring only the people on a joint shelf can listen to its channel, and nobody can send on it from a browser:
+drop policy if exists "people on a joint shelf hear its changes" on realtime.messages;
+create policy "people on a joint shelf hear its changes" on realtime.messages
+  for select to authenticated
+  using (realtime.messages.extension = 'broadcast' and public.can_hear_shelf((select realtime.topic())));

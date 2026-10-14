@@ -23,6 +23,9 @@ const NEWS = [
     { title: "Sliding plaques", text: "When your shelves don't all fit along the top, brass arrows appear at each end. Press them, or scroll, to slide along. Edit sections now always stays in view.", show: "#editSections" },
     { title: "Shelves down the side", text: "On a laptop, switch on Shelves down the side in Settings to stand your plaques in a list beside the shelves.", show: "settings" },
   ] },
+  { number: 4, title: "Live joint shelves", items: [
+    { title: "Changes straight away", text: "On a joint shelf, books your friends add, move, tick done or remove now show up on your screen as it happens, no reloading. A small note says who did what.", show: "" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -52,6 +55,7 @@ const GUIDE = [
   { group: "Sharing", lines: [
     ["Share a shelf", "Edit sections, then Share, then Make a link. Anyone with the link can look at that one shelf and add its books to their own library. Stop sharing turns the link off."],
     ["Joint shelves", "Edit sections, then Invite, makes a link that lets up to four friends join one shelf. Everyone can add books, move them and tick them done. Only you and whoever added a book can change it, and only you can rename or delete the shelf. Anyone can leave whenever they like."],
+    ["Live changes", "Changes on a joint shelf show up for everyone straight away, with a small note saying who did what. They wait while you're dragging a book or have one open."],
     ["Your colour", "In Settings, pick the colour that marks the books you add to joint shelves. The ribbon on a joint shelf's plaque is its owner's colour."],
     ["Copies", "In Settings, Download a copy saves your whole library as one file, joint shelves included, and Load a copy adds one back."],
   ] },
