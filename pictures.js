@@ -81,11 +81,12 @@ function PaintFigure(Canvas, [DotsWide, DotsHigh])
 }
 
 // The StorePicture function uploads a shrunken picture and returns the path that is saved with the book or the member
-async function StorePicture(ImageBlob)
+// Folder is left out for the member's own folder, a joint shelf's pictures go in shelves/<shelf id> so they stay with the shelf
+async function StorePicture(ImageBlob, Folder)
 {
   if (!DB) return URL.createObjectURL(ImageBlob);               // login is off: keep it in this tab only, nothing is uploaded
   const Member = await CurrentMember();
-  const Path = Member.id + "/" + crypto.randomUUID() + ".jpg";
+  const Path = (Folder || Member.id) + "/" + crypto.randomUUID() + ".jpg";
   const { error } = await DB.storage.from(PICTURE_BUCKET).upload(Path, ImageBlob, {
     contentType: "image/jpeg",
     cacheControl: "31536000",                              // browsers may keep their copy for a year: a path never changes its picture

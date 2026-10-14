@@ -1029,3 +1029,50 @@ a.card-button { display: block; box-sizing: border-box; text-align: center; text
   clip-path: polygon(0 0, 100% 0, 96% 25%, 100% 50%, 96% 75%, 100% 100%, 0 100%, 4% 75%, 0 50%, 4% 25%);
 }
 .tour-got-it { position: fixed; left: 0; right: 0; bottom: 84px; width: max-content; margin: 0 auto; }
+
+/* Joint shelves: one ribbon on the plaque in the owner's colour, with how many people are on the shelf */
+.plaque.is-joint { position: relative; padding-right: 42px; }
+.plaque.is-joint::after {
+  content: attr(data-people);
+  position: absolute;
+  top: 0;
+  right: 10px;
+  width: calc(var(--dot) * 5);
+  height: 100%;
+  padding-top: 6px;
+  background: var(--owner);
+  color: #1C140C;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-align: center;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% calc(100% - var(--dot) * 2), 0 100%);
+}
+
+/* Joint shelves: a stripe across the top of each spine and an Added by line inside, in the colour of whoever added the book */
+.spine-stripe { position: absolute; top: calc(var(--dot) * 2); left: var(--dot); right: var(--dot); height: var(--dot); background: var(--who); box-shadow: 0 var(--dot) 0 rgba(0, 0, 0, 0.25); pointer-events: none; }
+.added-by { display: flex; align-items: center; gap: 6px; margin: -4px 0 10px !important; font-size: 0.8125rem !important; }
+.added-by i { flex: none; width: 12px; height: 12px; border: 2px solid var(--ink); background: var(--who); }
+.edit-book[hidden] { display: none; }
+
+/* People on a joint shelf, on the Invite card */
+.people-head { display: flex; justify-content: space-between; align-items: baseline; margin: 14px 0 0; font-size: 0.875rem; color: var(--faded); }
+.people-head[hidden] { display: none; }
+.people-head b { color: var(--ink); font-size: 1rem; }
+.people { margin: 4px 0 12px; padding: 0; list-style: none; }
+.people li { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 2px solid #D9D3C2; font-size: 0.9375rem; }
+.people li:last-child { border-bottom: 0; }
+.people .face { flex: none; width: 22px; height: 22px; border: 2px solid #160E08; background: var(--who); }
+.people b { flex: 1; font-weight: 600; }
+.people small { color: var(--faded); font-size: 0.8125rem; }
+.section-name input:disabled { color: var(--ink); opacity: 1; }
+
+/* Your colour on joint shelves, in Settings */
+.colour-picker { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 8px; }
+.swatch { width: 34px; height: 34px; padding: 0; border: 2px solid #160E08; background: var(--who); cursor: pointer; box-shadow: inset var(--dot) var(--dot) 0 rgba(255, 255, 255, 0.25); }
+.swatch[aria-pressed="true"] { outline: 3px solid var(--gilt); outline-offset: 2px; }
+.swatch:disabled { cursor: not-allowed; background: repeating-linear-gradient(45deg, var(--who) 0 6px, rgba(0, 0, 0, 0.45) 6px 9px); }
+
+/* Join page */
+.join-faces { display: flex; gap: 6px; margin: 10px 0 2px; }
+.join-faces i { width: 22px; height: 22px; border: 2px solid #160E08; background: var(--who); }
+.join-small { margin-top: 10px !important; font-size: 0.8125rem; line-height: 1.45; opacity: 0.85; }

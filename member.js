@@ -33,7 +33,7 @@ async function ShowMemberPhoto()
   }
 }
 
-// The TakeShelfReturn function reads and forgets the shared shelf a visitor left to sign in (noted by shelf.js), it only returns it when it was noted in the last day
+// The TakeShelfReturn function reads and forgets the shared shelf or invite a visitor left to sign in (noted by shelf.js or join.js), it only returns it when it was noted in the last day
 function TakeShelfReturn()
 {
   let Note = null;
@@ -42,7 +42,7 @@ function TakeShelfReturn()
   if (!Note) return "";
   Remember("library-return", "");
   const Fresh = Date.now() - Number(Note.at) < 24 * 60 * 60 * 1000;
-  return Fresh && /^shelf\.html\?k=[A-Za-z0-9_-]{24,64}$/.test(Note.to) ? Note.to : "";
+  return Fresh && /^(shelf|join)\.html\?k=[A-Za-z0-9_-]{24,64}$/.test(Note.to) ? Note.to : "";
 }
 
 // The StartMemberArea function checks who is signed in and returns the member, when nobody is signed in it sends them to the landing page
@@ -177,14 +177,25 @@ function ShowDeleteNote(Message, Good)
 async function RemoveAllPictures()
 {
   const Folder = SignedIn.id;
-  for (let Round = 0; Round < 100; Round++)                 // a member has far fewer than 10000 files, this only stops a loop that never ends
+  // Pictures on a joint shelf that carries on without the member are kept (supabase-joint.sql lists them)
+  const Keep = new Set();
+  let Needed = { error: true };
+  try { Needed = await DB.rpc("pictures_to_keep"); }
+  catch (error) { console.error(error); }                    // before supabase-joint.sql there is nothing to keep
+  if (!Needed.error && Array.isArray(Needed.data)) Needed.data.forEach((Path) => Keep.add(typeof Path === "string" ? Path : Object.values(Path)[0]));
+  // Every file in the folder is listed a page at a time, then the ones no joint shelf needs are removed a hundred at a time
+  const Paths = [];
+  for (let Offset = 0; Offset < 10000; Offset += 100)               // a member has far fewer than 10000 files, this only stops a loop that never ends
   {
-    const { data: Files, error } = await DB.storage.from(PICTURE_BUCKET).list(Folder, { limit: 100 });
+    const { data: Files, error } = await DB.storage.from(PICTURE_BUCKET).list(Folder, { limit: 100, offset: Offset });
     if (error) throw error;
-    if (!Files.length) return;
-    const { data: Removed, error: RemoveError } = await DB.storage.from(PICTURE_BUCKET).remove(Files.map((File) => Folder + "/" + File.name));
-    if (RemoveError) throw RemoveError;
-    if (!Removed || !Removed.length) return;                  // nothing more could be removed, so we stop asking
+    Files.forEach((File) => { if (!Keep.has(Folder + "/" + File.name)) Paths.push(Folder + "/" + File.name); });
+    if (Files.length < 100) break;
+  }
+  for (let Start = 0; Start < Paths.length; Start += 100)
+  {
+    const { error } = await DB.storage.from(PICTURE_BUCKET).remove(Paths.slice(Start, Start + 100));
+    if (error) throw error;
   }
 }
 

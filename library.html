@@ -71,6 +71,12 @@
     <h3 class="settings-title">On the shelves</h3>
     <div class="settings-list" id="settingsList"></div>
     <p class="settings-note" id="settingsNote" role="alert" hidden></p>
+    <div id="colourSection" hidden>
+      <h3 class="settings-title">Your colour on joint shelves</h3>
+      <div class="colour-picker" id="colourPicker"></div>
+      <p class="settings-help">The colour of your books' stripes on joint shelves, and of your ribbon on shelves you own. The colours follow the background, so they always fit.</p>
+      <p class="settings-note" id="colourNote" role="alert" hidden></p>
+    </div>
     <h3 class="settings-title">Your library</h3>
     <div class="library-copy">
       <button class="plain-button" id="downloadCopy" type="button">Download a copy</button>
@@ -138,7 +144,7 @@
   </div>
 </dialog>
 
-<!-- The sections card: Rename, move, sort, share and delete sections and add new ones. The rows are built by library.js -->
+<!-- The sections card: Rename, move, sort, invite, share and delete (or leave) sections and add new ones. The rows are built by library.js -->
 <dialog class="card-dialog" id="sectionsDialog" aria-labelledby="sectionsTitle">
   <div class="card-shadow">
     <div class="member-card catalogue-card">
@@ -183,6 +189,38 @@
         <p class="card-switch card-ends">
           <button class="link-button" id="shareClose" type="button">Back</button>
           <button class="link-button danger-link" id="shareStop" type="button" hidden>Stop sharing</button>
+        </p>
+      </div>
+      <div class="catalogue-hole" aria-hidden="true"></div>
+    </div>
+  </div>
+</dialog>
+
+<!-- The Invite card: a link that lets friends join one shelf and add books to it, and the people already on it, filled in by joint.js -->
+<dialog class="card-dialog" id="inviteDialog" aria-labelledby="inviteTitle">
+  <div class="card-shadow">
+    <div class="member-card catalogue-card">
+      <div class="catalogue-head">
+        <h2 id="inviteTitle">Invite</h2>
+        <span class="card-kind">Joint shelf</span>
+      </div>
+      <div class="card-body">
+        <p class="card-note" id="inviteNote" role="alert" hidden></p>
+        <p class="card-text" id="inviteAbout"></p>
+        <label class="card-line share-link" id="inviteLinkLine" hidden>
+          <span class="visually-hidden">Invite link</span>
+          <input id="inviteLink" type="text" readonly spellcheck="false">
+        </label>
+        <button class="card-button" id="inviteMake" type="button">Make an invite link</button>
+        <div class="share-actions" id="inviteActions" hidden>
+          <button class="card-button" id="inviteCopy" type="button">Copy invite link</button>
+          <button class="card-button" id="inviteSend" type="button" hidden>Send</button>
+        </div>
+        <p class="people-head" id="peopleHead" hidden><b>On this shelf</b><span id="peopleCount"></span></p>
+        <ul class="people" id="peopleList"></ul>
+        <p class="card-switch card-ends">
+          <button class="link-button" id="inviteClose" type="button">Back</button>
+          <button class="link-button danger-link" id="inviteStop" type="button" hidden>Turn off invite link</button>
         </p>
       </div>
       <div class="catalogue-hole" aria-hidden="true"></div>
@@ -289,6 +327,7 @@
       <div class="card-body">
         <p class="card-note" id="deleteNote" role="alert" hidden></p>
         <p class="card-text">This deletes your library card, every shelf and book, all your pictures and your photo, and turns off any shelves you have shared. It cannot be undone.</p>
+        <p class="card-text">A joint shelf you own passes to whoever joined it first, and books you added to other people's joint shelves stay there.</p>
         <p class="card-text">Want to keep your books? <button class="link-button" id="deleteDownload" type="button">Download a copy</button> first.</p>
         <label class="card-line delete-line">
           <span>Type DELETE to confirm</span>
@@ -311,6 +350,7 @@
 <script src="shelves.js"></script>
 <script src="member.js"></script>
 <script src="library.js"></script>
+<script src="joint.js"></script>
 <script src="guide.js"></script>
 
 </body>

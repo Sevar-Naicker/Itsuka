@@ -63,6 +63,37 @@ const LibraryRoot = document.getElementById("library");
 // SORT_NAMES holds the ways a shelf can keep its books in order, an empty key means the member's own order (set by dragging)
 const SORT_NAMES = [["", "Your own order"], ["name", "A to Z"], ["newest", "Newest first"], ["oldest", "Oldest first"]];
 
+// Colours on joint shelves:
+
+// SHELF_COLOURS holds the colours a member can choose for joint shelves (key, name, base colour)
+// Each one is blended with the background's plaque colour (the --c-key variables), so it suits whichever scene is on
+const SHELF_COLOURS = [
+  ["rose", "Rose", "#C2505E"], ["clay", "Clay", "#C96F4A"], ["amber", "Amber", "#D9A23C"], ["sage", "Sage", "#7FA36C"],
+  ["teal", "Teal", "#3F8F8C"], ["sky", "Sky", "#6F93C8"], ["plum", "Plum", "#8E6AA8"], ["ivory", "Ivory", "#E8DFC8"],
+];
+SHELF_COLOURS.forEach(([Key, , Base]) => document.documentElement.style.setProperty("--c-" + Key, `color-mix(in srgb, ${Base} 80%, var(--brass))`));
+
+// The ColourKeys function gives everyone on a joint shelf a colour: their own choice, or the first colour nobody else on the shelf has
+function ColourKeys(People)
+{
+  const Valid = (Key) => SHELF_COLOURS.some(([Other]) => Other === Key);
+  const Used = new Set(People.map((Person) => Person.colour).filter(Valid));
+  return People.map((Person) =>
+  {
+    if (Valid(Person.colour)) return Person.colour;
+    const Free = SHELF_COLOURS.find(([Key]) => !Used.has(Key));
+    const Key = Free ? Free[0] : SHELF_COLOURS[0][0];
+    Used.add(Key);
+    return Key;
+  });
+}
+
+// The ColourOf function returns the colour (as a CSS value) for one of the shelf's colour keys
+function ColourOf(Key)
+{
+  return "var(--c-" + (Key || "clay") + ")";
+}
+
 // Small helpers:
 
 // The Make function creates an element with a class and some text

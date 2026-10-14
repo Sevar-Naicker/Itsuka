@@ -112,6 +112,10 @@ function ExplainDatabase(error)
   {
     return "The shelves are not set up in Supabase yet. Run supabase.sql in the SQL Editor, then reload this page.";
   }
+  if (Text.includes("shelf is full")) return "This shelf is full, it already has five people on it.";
+  if (Text.includes("invite link is not turned on")) return "This invite link is turned off. Ask the shelf's owner for a fresh one.";
+  if (Text.includes("only the shelf owner")) return "Only the shelf's owner and whoever added this book can change it.";
+  if (Text.includes("shelf_members") || Text.includes("invite_key") || Text.includes("join_shelf") || Text.includes("invite_info") || Text.includes("shelf_people")) return "Joint shelves are not set up in Supabase yet. Run supabase-joint.sql in the SQL Editor, then try again.";
   // A missing column or function means only part of supabase.sql is in the project
   if (Text.includes("could not find the") && (Text.includes("column") || Text.includes("function"))) return "Part of the library is not set up in Supabase yet. Run supabase.sql in the SQL Editor, then try again.";
   if (Text.includes("could not be read as a picture")) return "That file could not be read as a picture. Try a JPG or PNG.";

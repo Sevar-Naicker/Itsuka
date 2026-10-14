@@ -46,6 +46,8 @@ const SETTING_LIST = [
   { key: "hover", label: "Open books on hover", hint: "On a laptop, a book opens when you point at it" },
   { key: "dust", label: "Dusty books", hint: "Books you have not opened in a while gather dust" },
 ];
+// JointIsSetUp holds whether the database has joint shelves (supabase-joint.sql), until then the Invite button explains what to run
+let JointIsSetUp = true;
 // ShelfSettings holds which tools are switched on, they all start on and the member's own choices are loaded over them
 const ShelfSettings = { find: true, done: true, hideDone: true, pull: true, drag: true, ornaments: true, hover: true, dust: true };
 const SettingsList = document.getElementById("settingsList");
@@ -84,6 +86,25 @@ function HidingDone()
 function Visible(Book)
 {
   return Matches(Book) && !(HidingDone() && Book.done);
+}
+
+// The MyId function returns the signed-in member's account id, or an empty string while login is off
+function MyId()
+{
+  return typeof SignedIn !== "undefined" && SignedIn ? SignedIn.id : "";
+}
+
+// The CanEdit function checks whether the member may change a book's words, picture or shelf: always on their own shelves, and on a joint shelf only when they own it or added the book
+function CanEdit(Book)
+{
+  const Section = SectionOf(Book);
+  return !DB || !Section || Section.owner || Book.added_by === MyId();
+}
+
+// The PersonOf function finds who added a book on a joint shelf, as one of the shelf's people
+function PersonOf(Section, Book)
+{
+  return Section.people.find((Person) => Person.member_id === Book.added_by) || null;
 }
 
 // The SectionOf function finds the section a book is in
@@ -217,12 +238,40 @@ function MakeLibraryBook(Book, ColourNumber)
   const DoneBox = Make("button", "link-button done-box", "Done");
   DoneBox.type = "button";
   Foot.append(Edit, DoneBox);
+  Edit.hidden = !CanEdit(Book);                                        // on a joint shelf only the owner and whoever added it can edit it
+  // On a joint shelf: who added it, in their colour, and the stripe across the top of the spine
+  const Section = SectionOf(Book);
+  if (Section && Section.joint)
+  {
+    const Person = PersonOf(Section, Book);
+    const Colour = Person ? ColourOf(Person.key) : "var(--faded)";
+    const Line = Make("p", "added-by");
+    const Face = Make("i");
+    Face.style.setProperty("--who", Colour);
+    Line.append(Face, "Added by " + (!Person ? "a former member" : Person.member_id === MyId() ? "you" : Person.name));
+    Elem.querySelector(".page.right h3").after(Line);
+    const Stripe = Make("i", "spine-stripe");
+    Stripe.setAttribute("aria-hidden", "true");
+    Stripe.style.setProperty("--who", Colour);
+    Elem.querySelector(".spine").append(Stripe);
+  }
   // The dust that gathers on a book that has not been opened for a while, drawn by styles.css
   const Dust = Make("i", "dust");
   Dust.setAttribute("aria-hidden", "true");
   Elem.querySelector(".spine").append(Dust);
   DressAsDone(Elem, Book);
   return Elem;
+}
+
+// The MarkJoint function gives a joint shelf's plaque its ribbon, in the owner's colour and with how many people are on it
+function MarkJoint(Plaque, Section)
+{
+  if (!Section.joint) return Plaque;
+  Plaque.classList.add("is-joint");
+  Plaque.dataset.people = Section.people.length;
+  Plaque.style.setProperty("--owner", ColourOf(Section.people[0].key));
+  Plaque.setAttribute("aria-label", Section.name + ", a joint shelf with " + Section.people.length + " people");
+  return Plaque;
 }
 
 // The RenderTabs function builds the plaques at the top, each one is an on/off switch for its section and All switches them all off again
@@ -241,14 +290,15 @@ function RenderTabs()
     Button.append(Make("span", "count", String(Count)));
     Button.addEventListener("click", OnClick);
     TabsRoot.append(Button);
+    return Button;
   };
   if (Library.length) AddTab("all", "All", Total, () => { Chosen.clear(); Update(); });
-  Library.forEach((Section) => AddTab(Section.id, Section.name, Section.books.length, () =>
+  Library.forEach((Section) => MarkJoint(AddTab(Section.id, Section.name, Section.books.length, () =>
   {
     if (Chosen.has(Section.id)) Chosen.delete(Section.id); else Chosen.add(Section.id);
     if (Chosen.size === Library.length) Chosen.clear();                 // every section switched on is the same as "All"
     Update();
-  }));
+  }), Section));
 
   const EditSections = Make("button", "plain-button new-section", Library.length ? "Edit sections" : "+ Section");
   EditSections.type = "button";
@@ -283,7 +333,7 @@ function RenderShelves()
     const Block = Make("section", "section");
     Block.dataset.section = Section.id;                               // so a dropped book knows which shelf it landed on
     // With exactly one section switched on, its plaque at the top already names it. Otherwise each shelf gets a label.
-    if (Chosen.size !== 1) Block.append(Make("h2", "plaque", Section.name));
+    if (Chosen.size !== 1) Block.append(MarkJoint(Make("h2", "plaque", Section.name), Section));
     const Shelf = Make("div", "shelf");
     // i is the book's place in its section, so a book keeps its colour while the search hides the books around it
     Section.books.forEach((Book, i) =>
@@ -676,7 +726,7 @@ async function LoadCopy(ChosenFile)
         if (Entry.added && !isNaN(Date.parse(Entry.added))) Details.created_at = Entry.added;      // it keeps the day it was first added
         if (typeof Entry.picture === "string" && Entry.picture.startsWith("data:image/"))
         {
-          try { Details.picture = await StorePicture(await PictureFromText(Entry.picture)); }
+          try { Details.picture = await StorePicture(await PictureFromText(Entry.picture), Section.joint ? "shelves/" + Section.id : ""); }
           catch (error) { console.error(error); }                    // a picture that cannot be stored is left out, the book still goes in
         }
         await SaveBook(Section, Details);
@@ -826,15 +876,30 @@ async function DropBook()
   // Put down where it was picked up: nothing to save
   if (SectionOf(Book) === To && To.books.indexOf(Book) === Index) return;
 
+  // A book someone else added stays on its joint shelf, and a joint shelf sorted A to Z (or by date) for this member cannot be rearranged by hand
+  const From = SectionOf(Book);
+  const Refuse = From !== To && !CanEdit(Book) ? "Only " + (From.people[0] ? From.people[0].name : "the owner") + " and whoever added this book can move it to another shelf."
+    : To.joint && To.sort_by && From === To ? "You have this shelf sorted. Switch it to Your own order in Edit sections to move its books by hand."
+    : "";
+  if (Refuse)
+  {
+    ShowLibraryNote(Refuse);
+    Update();
+    return;
+  }
+
   // Its place is a number between the places of the books either side, so only this one book has to be saved
   const Before = Others[Index - 1];
   const After = Others[Index];
-  const Position = PlaceBetween(Before, After);
+  // On a joint shelf that is sorted just for this member, a book brought from another shelf goes on the end of the shared order
+  const ByPlace = [...Others].sort((a, b) => a.position - b.position);
+  const Position = To.joint && To.sort_by ? PlaceBetween(ByPlace[ByPlace.length - 1], null) : PlaceBetween(Before, After);
   try
   {
     await MoveBook(Book, To, Index, Position);
     LibraryNote.hidden = true;
-    if (To.sort_by) await SetSectionSort(To, "");      // a hand-placed book means the shelf is in the member's own order now
+    if (To.joint && To.sort_by) To.books.sort(SortRule(To.sort_by));
+    else if (To.sort_by) await SetSectionSort(To, "");   // a hand-placed book means the shelf is in the member's own order now
   }
   catch (error)
   {
@@ -908,24 +973,57 @@ LibraryRoot.addEventListener("click", (event) =>
 // Loading from and saving to the database:
 // Each of these talks to Supabase when someone is signed in, when login is off they only change the list in memory
 
+// The Softly function runs a request that may fail before supabase-joint.sql has been run, a failure comes back as { error } instead of stopping the page
+function Softly(Request)
+{
+  try
+  {
+    return Promise.resolve(Request()).catch((error) => ({ error }));
+  }
+  catch (error)
+  {
+    return Promise.resolve({ error });
+  }
+}
+
 // The LoadLibrary function fetches the member's sections and books and puts each book inside its section
 async function LoadLibrary()
 {
-  const [Sections, Books] = await Promise.all([
+  const [Sections, Books, Rows, People] = await Promise.all([
     DB.from("sections").select("*"),
     DB.from("books").select("*"),
+    Softly(() => DB.from("shelf_members").select("*")),
+    Softly(() => DB.rpc("shelf_people")),
   ]);
   if (Sections.error) throw Sections.error;
   if (Books.error) throw Books.error;
+  // Joint shelves need supabase-joint.sql, until it has been run every shelf is simply the member's own
+  JointIsSetUp = !Rows.error && !People.error;
+  const Mine = JointIsSetUp ? Rows.data.filter((Row) => Row.member_id === MyId()) : [];
+  const Everyone = JointIsSetUp && Array.isArray(People.data) ? People.data : [];
   // Every section and book has a place, a number that decides its spot, so they are put in that order
-  Library = Sections.data.map((Section) => ({
-    id: Section.id,
-    name: Section.name,
-    sort_by: Section.sort_by || "",
-    share_key: Section.share_key || "",                    // empty until the shelf is shared
-    position: Section.position,
-    books: Books.data.filter((Book) => Book.section_id === Section.id).sort((a, b) => a.position - b.position),
-  })).sort((a, b) => a.position - b.position);
+  // On a shelf someone else owns, the member's own row holds where it sits among their plaques and how they like it sorted
+  Library = Sections.data.map((Section) =>
+  {
+    const Owner = !Section.member_id || Section.member_id === MyId();
+    const Row = Mine.find((Other) => Other.section_id === Section.id) || {};
+    const Here = Everyone.filter((Person) => Person.section_id === Section.id);
+    const Keys = ColourKeys(Here);
+    const Shelf = {
+      id: Section.id,
+      name: Section.name,
+      owner: Owner,
+      joint: Here.length > 1,
+      people: Here.map((Person, i) => ({ ...Person, key: Keys[i] })),
+      sort_by: (Owner ? Section.sort_by : Row.sort_by) || "",
+      share_key: Section.share_key || "",                  // empty until the shelf is shared
+      invite_key: Section.invite_key || "",                // empty until the owner turns on the invite link
+      position: Owner ? Section.position : Row.position ?? Section.position,
+      books: Books.data.filter((Book) => Book.section_id === Section.id).sort((a, b) => a.position - b.position),
+    };
+    if (Shelf.joint && Shelf.sort_by) Shelf.books.sort(SortRule(Shelf.sort_by));     // sorted for this member only, the shared order stays as it is
+    return Shelf;
+  }).sort((a, b) => a.position - b.position);
 }
 
 // The SaveSection function saves a new section, adds it to the page's list and returns it
@@ -941,7 +1039,7 @@ async function SaveSection(Name)
     if (error) throw error;
     Row = Data;
   }
-  const Section = { id: Row.id, name: Row.name, sort_by: "", share_key: "", position: Position, books: [] };
+  const Section = { id: Row.id, name: Row.name, owner: true, joint: false, people: [], sort_by: "", share_key: "", invite_key: "", position: Position, books: [] };
   Library.push(Section);
   return Section;
 }
@@ -1022,7 +1120,10 @@ async function MoveSection(Section, Step)
   const Position = Before && After ? (Before.position + After.position) / 2 : Before ? Before.position + 1 : After.position - 1;
   if (DB)
   {
-    const { error } = await DB.from("sections").update({ position: Position }).eq("id", Section.id);
+    // A shelf someone else owns keeps its place in the member's own row, so moving it does not move it for anyone else
+    const { error } = Section.owner
+      ? await DB.from("sections").update({ position: Position }).eq("id", Section.id)
+      : await DB.from("shelf_members").update({ position: Position }).eq("section_id", Section.id).eq("member_id", MyId());
     if (error) throw error;
   }
   Library.splice(From, 1);
@@ -1034,6 +1135,11 @@ async function MoveSection(Section, Step)
 async function SortBooks(Section, How)
 {
   const Sorted = [...Section.books].sort(SortRule(How));
+  if (Section.joint)
+  {
+    Section.books = Sorted;                      // a joint shelf is only sorted for this member, the shared order is left as it is
+    return;
+  }
   if (DB)
   {
     const Results = await Promise.all(Sorted.map((Book, i) => DB.from("books").update({ position: i + 1 }).eq("id", Book.id)));
@@ -1049,10 +1155,14 @@ async function SetSectionSort(Section, How)
 {
   if (DB)
   {
-    const { error } = await DB.from("sections").update({ sort_by: How }).eq("id", Section.id);
+    // On a shelf someone else owns, the sort is kept in the member's own row
+    const { error } = Section.owner
+      ? await DB.from("sections").update({ sort_by: How }).eq("id", Section.id)
+      : await DB.from("shelf_members").update({ sort_by: How }).eq("section_id", Section.id).eq("member_id", MyId());
     if (error) throw error;
   }
   Section.sort_by = How;
+  if (Section.joint && !How) Section.books.sort((a, b) => a.position - b.position);     // back to the shared order
 }
 
 // The MoveBook function saves a book's new shelf and place after it has been dragged, Index is where it goes among the other books of that section
@@ -1258,7 +1368,7 @@ CatalogueForm.addEventListener("submit", async (event) =>
     if (BookSection.value === "new") Section = SectionNamed(SectionName) || await SaveSection(SectionName);
 
     // A newly chosen picture is shrunk and stored first; the book then remembers where it is.
-    const Picture = ChosenPicture ? await StorePicture(await ShrinkPicture(ChosenPicture, 800)) : KeptPicture;
+    const Picture = ChosenPicture ? await StorePicture(await ShrinkPicture(ChosenPicture, 800), Section.joint ? "shelves/" + Section.id : "") : KeptPicture;
 
     let Book = EditingBook;
     if (Book)
@@ -1345,6 +1455,7 @@ function RenderSectionRows(FocusId, FocusPart)
     const Line = Make("div", "card-line section-name");
     const Box = document.createElement("input");
     Box.type = "text"; Box.value = Section.name; Box.maxLength = 40;
+    Box.disabled = Section.owner === false;                          // only the owner can rename a joint shelf
     Box.setAttribute("aria-label", "Name of the " + Section.name + " section");
     Line.append(Box);
 
@@ -1440,11 +1551,16 @@ function RenderSectionRows(FocusId, FocusPart)
     {
       const Count = Section.books.length;
       const Inside = Count === 0 ? "" : Count === 1 ? " and the 1 book in it" : " and the " + Count + " books in it";
-      if (!(await AskToConfirm("Delete \u201C" + Section.name + "\u201D" + Inside + " for good?", "Delete section"))) return;
+      const Others = Section.joint ? " Everyone else on it loses it too." : "";
+      const Question = Section.owner === false
+        ? "Leave \u201C" + Section.name + "\u201D? The books you added stay on the shelf for the others, and " + Section.people[0].name + " can invite you again."
+        : "Delete \u201C" + Section.name + "\u201D" + Inside + " for good?" + Others;
+      if (!(await AskToConfirm(Question, Section.owner === false ? "Leave shelf" : "Delete section"))) return;
       SectionsNote.hidden = true;
       try
       {
-        await DeleteSection(Section);
+        if (Section.owner === false) await LeaveShelf(Section);
+        else await DeleteSection(Section);
         RenderSectionRows(); RenderTabs(); Update();
       }
       catch (error)
@@ -1459,10 +1575,22 @@ function RenderSectionRows(FocusId, FocusPart)
     Share.type = "button";
     Share.classList.toggle("is-shared", Boolean(Section.share_key));
     Share.setAttribute("aria-label", (Section.share_key ? "Sharing the " : "Share the ") + Section.name + " section");
-    Share.hidden = !DB;                                        // sharing needs the database, so it is left out while login is off
+    Share.hidden = !DB || Section.owner === false;             // sharing needs the database, and only the owner can share a joint shelf
     Share.addEventListener("click", () => OpenShareCard(Section));
 
-    Tools.append(Up, Down, Sorter, Share, Remove);
+    // Invite (for the owner) asks friends to add books to this shelf too, someone who joined gets Leave instead of Delete
+    const Invite = Make("button", "link-button invite-section", Section.joint ? "Invite (" + Section.people.length + "/5)" : "Invite");
+    Invite.type = "button";
+    Invite.hidden = !DB || Section.owner === false;
+    Invite.setAttribute("aria-label", "Invite friends to add books to the " + Section.name + " section");
+    Invite.addEventListener("click", () => OpenInviteCard(Section));
+    if (Section.owner === false)
+    {
+      Remove.textContent = "Leave";
+      Remove.setAttribute("aria-label", "Leave the " + Section.name + " section");
+    }
+
+    Tools.append(Up, Down, Sorter, Invite, Share, Remove);
     Row.append(Line, Tools);
     SectionRows.append(Row);
   });

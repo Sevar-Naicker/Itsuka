@@ -15,6 +15,10 @@ const NEWS = [
     { title: "Dusty books", text: "Books you haven't opened in two months gather dust, and cobwebs after eight. Open one to blow it off.", show: "" },
     { title: "Share into Itsuka", text: "On Android, add Itsuka to your home screen, then Share any Instagram or Pinterest link to it.", show: "" },
   ] },
+  { number: 2, title: "Joint shelves", items: [
+    { title: "Joint shelves", text: "Fill a shelf together with up to four friends. Edit sections, then Invite, makes a link they can join with. Joint shelves have a ribbon on their plaque.", show: "sections" },
+    { title: "Your colour", text: "Pick your colour in Settings. It marks the books you add to joint shelves, with a stripe on the spine and an Added by line inside.", show: "settings" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -34,7 +38,7 @@ const GUIDE = [
   ] },
   { group: "Arranging", lines: [
     ["Move a book", "Drag a book by its spine. On a phone, rest your finger on the spine until it lifts, then drag."],
-    ["Edit sections", "Rename shelves, move them up or down, sort their books (A to Z, newest or oldest first), share or delete them."],
+    ["Edit sections", "Rename shelves, move them up or down, sort their books (A to Z, newest or oldest first), invite friends, share or delete them."],
   ] },
   { group: "Keeping track", lines: [
     ["Done", "Open a book and tick Done. It gets a ribbon and a stamp, and Hide done tucks it away."],
@@ -42,7 +46,9 @@ const GUIDE = [
   ] },
   { group: "Sharing", lines: [
     ["Share a shelf", "Edit sections, then Share, then Make a link. Anyone with the link can look at that one shelf and add its books to their own library. Stop sharing turns the link off."],
-    ["Copies", "In Settings, Download a copy saves your whole library as one file, and Load a copy adds one back."],
+    ["Joint shelves", "Edit sections, then Invite, makes a link that lets up to four friends join one shelf. Everyone can add books, move them and tick them done. Only you and whoever added a book can change it, and only you can rename or delete the shelf. Anyone can leave whenever they like."],
+    ["Your colour", "In Settings, pick the colour that marks the books you add to joint shelves. The ribbon on a joint shelf's plaque is its owner's colour."],
+    ["Copies", "In Settings, Download a copy saves your whole library as one file, joint shelves included, and Load a copy adds one back."],
   ] },
   { group: "Your library", lines: [
     ["Settings", "Choose a background and switch the shelf tools on or off. Your choices follow you to every device."],
