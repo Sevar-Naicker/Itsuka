@@ -521,8 +521,13 @@ h1 a:focus-visible { outline: 3px solid var(--brass); outline-offset: 4px; }
   background: transparent;
   font-family: var(--font);
   font-variant-ligatures: none;
-  overflow: visible;
+  max-height: calc(100dvh - 16px);
+  overflow-x: visible;
+  overflow-y: auto;          /* a card taller than the screen scrolls instead of being cut off */
+  overscroll-behavior: contain;
+  scrollbar-width: none;
 }
+.card-dialog::-webkit-scrollbar { display: none; }
 .card-dialog::backdrop { background: rgba(10, 6, 3, 0.6); }
 
 /* Add a book button */
@@ -676,6 +681,7 @@ h1 a:focus-visible { outline: 3px solid var(--brass); outline-offset: 4px; }
 .sort-books { padding: 3px 4px; border: 2px solid var(--ink); border-radius: 0; background: var(--paper); color: var(--ink); font: inherit; font-size: 0.875rem; }
 .sort-books:disabled { opacity: 0.45; }
 #sectionAddForm { margin-top: 18px; }
+#sectionRows { max-height: min(52dvh, 30rem); margin: 0 -4px; padding: 0 4px; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: var(--ink) transparent; }   /* a long list of sections scrolls inside the card, so New section and Done stay in view */
 
 /* Forgot password link */
 .card-forgot { margin: -4px 0 6px; text-align: right; font-size: 0.875rem; }
