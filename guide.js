@@ -19,6 +19,10 @@ const NEWS = [
     { title: "Joint shelves", text: "Fill a shelf together with up to four friends. Edit sections, then Invite, makes a link they can join with. Joint shelves have a ribbon on their plaque.", show: "sections" },
     { title: "Your colour", text: "Pick your colour in Settings. It marks the books you add to joint shelves, with a stripe on the spine and an Added by line inside.", show: "settings" },
   ] },
+  { number: 3, title: "Lots of shelves", items: [
+    { title: "Sliding plaques", text: "When your shelves don't all fit along the top, brass arrows appear at each end. Press them, or scroll, to slide along. Edit sections now always stays in view.", show: "#editSections" },
+    { title: "Shelves down the side", text: "On a laptop, switch on Shelves down the side in Settings to stand your plaques in a list beside the shelves.", show: "settings" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -32,7 +36,8 @@ const GUIDE = [
     ["From other apps", "On Android, add Itsuka to your home screen, then press Share in Instagram, Pinterest or any app and choose Itsuka."],
   ] },
   { group: "Finding", lines: [
-    ["Plaques", "The plaques at the top switch shelves on and off, All shows every shelf."],
+    ["Plaques", "The plaques at the top switch shelves on and off, All shows every shelf. With lots of shelves, the brass arrows at each end slide the row along."],
+    ["Shelves down the side", "On a laptop, switch this on in Settings to stand the plaques in a list beside your shelves instead."],
     ["Find", "Find searches the names and notes of every book."],
     ["Pull a book", "Picks a book you haven't finished, for when you can't decide."],
   ] },

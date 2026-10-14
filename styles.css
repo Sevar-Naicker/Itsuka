@@ -174,8 +174,8 @@ h1 a:focus-visible { outline: 3px solid var(--brass); outline-offset: 4px; }
 .search-box::-webkit-search-cancel-button { filter: grayscale(1) brightness(3); cursor: pointer; }
 
 /* Find button and plaque row */
-.tabs-row { display: flex; align-items: stretch; gap: 10px; margin-top: 26px; }
-.tabs-row .tabs { flex: 1; min-width: 0; margin-top: 0; }
+.tabs-row { display: flex; align-items: flex-start; gap: 10px; margin-top: 26px; }
+.tabs-buttons { display: contents; }   /* the buttons sit in the row itself, they only get a box of their own beside the shelves */
 .find-button, .done-switch { flex: none; margin: 2px 0 8px; padding: 7px 12px; box-shadow: none; }
 .find-button[aria-expanded="true"], .done-switch[aria-pressed="true"] { background: var(--brass); border-color: var(--brass); color: #2A1A10; }
 
@@ -544,7 +544,7 @@ h1 a:focus-visible { outline: 3px solid var(--brass); outline-offset: 4px; }
 .add-button:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.55); }
 .add-button:focus-visible { outline: 3px solid var(--gilt); outline-offset: 2px; }
 
-.new-section { flex: none; padding: 7px 12px; box-shadow: none; white-space: nowrap; }
+.new-section { flex: none; margin: 2px 0 8px; padding: 7px 12px; box-shadow: none; white-space: nowrap; }
 
 /* Catalogue card */
 .catalogue-head {
@@ -868,7 +868,6 @@ body.carrying .book .spine { transform: none; }
 }
 @media (max-width: 640px) {
   .tabs-row { flex-wrap: wrap; row-gap: 4px; }
-  .tabs-row .tabs { flex-basis: 100%; }   /* on a phone the plaques get a row of their own under the buttons */
 }
 
 /* Settings panel */
@@ -1076,3 +1075,45 @@ a.card-button { display: block; box-sizing: border-box; text-align: center; text
 .join-faces { display: flex; gap: 6px; margin: 10px 0 2px; }
 .join-faces i { width: 22px; height: 22px; border: 2px solid #160E08; background: var(--who); }
 .join-small { margin-top: 10px !important; font-size: 0.8125rem; line-height: 1.45; opacity: 0.85; }
+
+/* Sliding plaques: the row slides once the plaques do not all fit, with a brass arrow at each end and a soft fade where more are hidden */
+.tabs-slide { display: flex; align-items: flex-start; gap: 8px; flex: 1; min-width: 0; }
+.tabs-slide .tabs { flex: 1; min-width: 0; margin-top: 0; }
+.tabs-slide.can-slide .tabs { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%); mask-image: linear-gradient(to right, transparent 0, #000 28px, #000 calc(100% - 28px), transparent 100%); }
+.tabs-slide.at-start .tabs { -webkit-mask-image: linear-gradient(to left, transparent 0, #000 28px); mask-image: linear-gradient(to left, transparent 0, #000 28px); }
+.tabs-slide.at-end .tabs { -webkit-mask-image: linear-gradient(to right, transparent 0, #000 28px); mask-image: linear-gradient(to right, transparent 0, #000 28px); }
+.slide-arrow { display: none; flex: none; width: 36px; height: 38px; margin: 2px 0 0; padding: 0; border: 0; background: none; cursor: pointer; }
+.can-slide .slide-arrow { display: block; }
+.slide-arrow svg { display: block; width: 100%; height: 100%; filter: drop-shadow(2px 2px 0 rgba(0, 0, 0, 0.45)); }
+.slide-arrow:disabled { cursor: default; filter: brightness(0.5) saturate(0.6); }
+.slide-arrow:not(:disabled):active { transform: translate(2px, 2px); }
+.slide-arrow:focus-visible { outline: 3px solid var(--gilt); outline-offset: 2px; }
+.board-head { display: none; }
+@media (max-width: 640px) {
+  .tabs-row > .new-section { order: 1; }   /* on a phone Edit sections joins the buttons, and the plaques get a row of their own under them */
+  .tabs-slide { order: 2; flex-basis: 100%; }
+  .slide-arrow { width: 32px; }
+}
+
+/* Shelves down the side (a setting, laptops only): the plaques stand on a wooden index board beside the shelves */
+.page-split { display: contents; }
+@media (min-width: 900px) {
+  .side-list .page-split { display: grid; grid-template-columns: 15.5rem minmax(0, 1fr); column-gap: 30px; align-items: start; margin-top: 26px; }
+  .side-list .tabs-row { position: sticky; top: 14px; flex-direction: column; align-items: stretch; gap: 0; margin: 0; }
+  .side-list .tabs-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .side-list .tabs-buttons:not(:has(> :not([hidden]))) { display: none; }
+  .side-list .tabs-buttons .plain-button { margin: 0; }
+  .side-list .slide-arrow { display: none; }
+  .side-list .tabs-slide { display: block; padding: 12px 10px 10px; background: var(--shelf); border-top: var(--dot) solid var(--edge); box-shadow: inset calc(var(--dot) * -1) 0 0 rgba(0, 0, 0, 0.35), var(--dot) var(--dot) 0 rgba(0, 0, 0, 0.5); }
+  .side-list .tabs-slide .tabs { flex-direction: column; gap: 6px; max-height: calc(100vh - 290px); padding: 2px 6px 2px 2px; overflow-x: hidden; overflow-y: auto; -webkit-mask-image: none; mask-image: none; scrollbar-width: thin; scrollbar-color: var(--brass) transparent; }
+  .side-list .tabs::-webkit-scrollbar { display: block; width: 6px; }
+  .side-list .tabs::-webkit-scrollbar-thumb { background: var(--brass); }
+  .side-list .board-head { display: flex; justify-content: space-between; margin: 0 2px 10px; color: var(--gilt); font-size: 0.875rem; font-weight: 600; letter-spacing: 0.06em; }
+  .side-list .tab { display: flex; justify-content: space-between; gap: 10px; width: 100%; padding: 8px 12px; text-align: left; white-space: normal; overflow-wrap: anywhere; }
+  .side-list .tab.is-joint { padding-right: 42px; }
+  .side-list .tab .count { flex: none; }
+  .side-list .tabs-row > .new-section { width: 100%; margin: 12px 0 0; }
+  .side-list .page-split > :not(.tabs-row) { grid-column: 2; }
+  .side-list .page-split > .tabs-row { grid-column: 1; grid-row: 1 / span 2; }
+  .side-list .page-split > .sections { margin-top: -22px; }
+}

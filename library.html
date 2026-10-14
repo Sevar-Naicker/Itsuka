@@ -42,16 +42,27 @@
   <input class="search-box" id="searchBox" type="search" maxlength="80" autocomplete="off" placeholder="Find a book by name or notes">
 </div>
 
-<!-- The Find button, the Hide done switch, the Pull a book button and the plaques (one switch per section), the plaques and the shelves are both built by library.js -->
+<!-- The plaques and the shelves, side by side when Shelves down the side is switched on -->
+<div class="page-split">
+<!-- The Find button, the Hide done switch, the Pull a book button, the plaques (one switch per section) between two arrows, and Edit sections, the plaques and the shelves are both built by library.js -->
 <div class="tabs-row">
-  <button class="plain-button find-button" id="findButton" type="button" aria-expanded="false" aria-controls="searchLine" hidden>Find</button>
-  <button class="plain-button done-switch" id="doneSwitch" type="button" aria-pressed="false" hidden>Hide done</button>
-  <button class="plain-button pull-button" id="pullButton" type="button" hidden>Pull a book</button>
-  <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+  <div class="tabs-buttons">
+    <button class="plain-button find-button" id="findButton" type="button" aria-expanded="false" aria-controls="searchLine" hidden>Find</button>
+    <button class="plain-button done-switch" id="doneSwitch" type="button" aria-pressed="false" hidden>Hide done</button>
+    <button class="plain-button pull-button" id="pullButton" type="button" hidden>Pull a book</button>
+  </div>
+  <div class="tabs-slide" id="tabsSlide">
+    <p class="board-head"><span>Shelves</span><span id="boardCount"></span></p>
+    <button class="slide-arrow is-left" id="slideLeft" type="button" aria-label="Slide to earlier shelves" aria-controls="tabs"></button>
+    <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+    <button class="slide-arrow is-right" id="slideRight" type="button" aria-label="Slide to later shelves" aria-controls="tabs"></button>
+  </div>
+  <button class="plain-button new-section" id="editSections" type="button">Edit sections</button>
 </div>
 <!-- A red message box for when the shelves cannot be loaded -->
 <p class="library-note" id="libraryNote" role="alert" hidden></p>
 <main class="sections" id="library"></main>
+</div>
 
 <!-- The developer tag and the privacy link at the bottom of the page -->
 <footer class="credit"><span>Developed By Sav</span><a href="privacy.html">Privacy</a></footer>

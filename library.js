@@ -45,11 +45,12 @@ const SETTING_LIST = [
   { key: "ornaments", label: "Shelf ornaments", hint: "The little things at the end of each shelf" },
   { key: "hover", label: "Open books on hover", hint: "On a laptop, a book opens when you point at it" },
   { key: "dust", label: "Dusty books", hint: "Books you have not opened in a while gather dust" },
+  { key: "sideList", label: "Shelves down the side", hint: "On a laptop, the plaques stand in a list beside the shelves" },
 ];
 // JointIsSetUp holds whether the database has joint shelves (supabase-joint.sql), until then the Invite button explains what to run
 let JointIsSetUp = true;
-// ShelfSettings holds which tools are switched on, they all start on and the member's own choices are loaded over them
-const ShelfSettings = { find: true, done: true, hideDone: true, pull: true, drag: true, ornaments: true, hover: true, dust: true };
+// ShelfSettings holds which tools are switched on, they all start on apart from Shelves down the side, and the member's own choices are loaded over them
+const ShelfSettings = { find: true, done: true, hideDone: true, pull: true, drag: true, ornaments: true, hover: true, dust: true, sideList: false };
 const SettingsList = document.getElementById("settingsList");
 const SettingsNote = document.getElementById("settingsNote");
 
@@ -289,6 +290,7 @@ function RenderTabs()
     Button.dataset.section = Key;
     Button.append(Make("span", "count", String(Count)));
     Button.addEventListener("click", OnClick);
+    Button.addEventListener("click", () => Button.scrollIntoView({ inline: "nearest", block: "nearest" }));     // a plaque half hidden at the end of the row slides fully into view
     TabsRoot.append(Button);
     return Button;
   };
@@ -300,11 +302,96 @@ function RenderTabs()
     Update();
   }), Section));
 
-  const EditSections = Make("button", "plain-button new-section", Library.length ? "Edit sections" : "+ Section");
-  EditSections.type = "button";
-  EditSections.addEventListener("click", OpenSectionsCard);
-  TabsRoot.append(EditSections);
+  EditSections.textContent = Library.length ? "Edit sections" : "+ Section";
+  BoardCount.textContent = String(Library.length);
+  requestAnimationFrame(CheckArrows);
 }
+
+// Sliding the plaques:
+
+// The plaque row's parts: the box the plaques slide in, its two arrows, Edit sections and the shelf count on the side board
+const TabsSlide = document.getElementById("tabsSlide");
+const SlideLeft = document.getElementById("slideLeft");
+const SlideRight = document.getElementById("slideRight");
+const EditSections = document.getElementById("editSections");
+const BoardCount = document.getElementById("boardCount");
+
+// SLIDE_ARROW is the arrow pointing right, drawn as rows of letters like the shelf ornaments: a small brass plaque with an arrow pressed into it (the left arrow is the same picture flipped)
+const SLIDE_ARROW = { rows: [
+  ".bbbbbbbbbbbb.",
+  "bhhhhhhhhhhhhs",
+  "bhbbbbbbbbbbbs",
+  "bhbbbdbbbbbbbs",
+  "bhbbbddbbbbbbs",
+  "bhbbbdddbbbbbs",
+  "bhbbbddddbbbbs",
+  "bhbbbdddddbbbs",
+  "bhbbbddddbbbbs",
+  "bhbbbdddbbbbbs",
+  "bhbbbddbbbbbbs",
+  "bhbbbdbbbbbbbs",
+  "bhbbbbbbbbbbbs",
+  ".ssssssssssss.",
+], colours: { b: "var(--brass)", h: "color-mix(in srgb, var(--brass), white 40%)", s: "color-mix(in srgb, var(--brass), black 30%)", d: "#2A1A10" } };
+
+// The DrawArrow function turns the rows of letters into a crisp pixel picture, its colours come from the background so it changes with the scene
+function DrawArrow(Left)
+{
+  const Width = SLIDE_ARROW.rows[0].length;
+  const Picture = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  Picture.setAttribute("viewBox", `0 0 ${Width} ${SLIDE_ARROW.rows.length}`);
+  Picture.setAttribute("shape-rendering", "crispEdges");
+  Picture.setAttribute("aria-hidden", "true");
+  SLIDE_ARROW.rows.forEach((Row, y) => [...Row].forEach((Letter, x) =>
+  {
+    if (!SLIDE_ARROW.colours[Letter]) return;
+    const Dot = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    Dot.setAttribute("x", Left ? Width - 1 - x : x);
+    Dot.setAttribute("y", y);
+    Dot.setAttribute("width", 1.02);       // a hair wider than one dot, so no gaps show between them
+    Dot.setAttribute("height", 1.02);
+    Dot.style.fill = SLIDE_ARROW.colours[Letter];
+    Picture.append(Dot);
+  }));
+  return Picture;
+}
+SlideLeft.append(DrawArrow(true));
+SlideRight.append(DrawArrow(false));
+
+// The CheckArrows function shows the arrows only when the plaques do not all fit, and dims the arrow at whichever end has been reached
+function CheckArrows()
+{
+  const Standing = getComputedStyle(TabsRoot).flexDirection === "column";       // Shelves down the side is showing, so nothing slides sideways
+  const Slides = !Standing && TabsRoot.scrollWidth > TabsRoot.clientWidth + 2;
+  const AtStart = TabsRoot.scrollLeft <= 2;
+  const AtEnd = TabsRoot.scrollLeft + TabsRoot.clientWidth >= TabsRoot.scrollWidth - 2;
+  TabsSlide.classList.toggle("can-slide", Slides);
+  TabsSlide.classList.toggle("at-start", Slides && AtStart);
+  TabsSlide.classList.toggle("at-end", Slides && AtEnd);
+  SlideLeft.disabled = !Slides || AtStart;
+  SlideRight.disabled = !Slides || AtEnd;
+}
+
+// The SlideBy function slides the row by part of its width, gently unless the device asks for less motion
+function SlideBy(Share)
+{
+  const Calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  TabsRoot.scrollBy({ left: TabsRoot.clientWidth * Share, behavior: Calm ? "auto" : "smooth" });
+}
+
+// Each arrow slides the row about three quarters of its width
+SlideLeft.addEventListener("click", () => SlideBy(-0.75));
+SlideRight.addEventListener("click", () => SlideBy(0.75));
+TabsRoot.addEventListener("scroll", CheckArrows);
+window.addEventListener("resize", CheckArrows);
+// On a laptop the mouse wheel slides the row too, once there are more plaques than fit
+TabsRoot.addEventListener("wheel", (event) =>
+{
+  if (!TabsSlide.classList.contains("can-slide") || Math.abs(event.deltaY) < Math.abs(event.deltaX)) return;
+  event.preventDefault();
+  TabsRoot.scrollLeft += event.deltaY;
+}, { passive: false });
+EditSections.addEventListener("click", OpenSectionsCard);
 
 // The RenderShelves function builds the shelves for whichever sections are switched on
 function RenderShelves()
@@ -520,6 +607,7 @@ function ApplyShelfSettings()
   document.body.classList.toggle("no-done", !ShelfSettings.done);
   document.body.classList.toggle("no-ornaments", !ShelfSettings.ornaments);
   document.body.classList.toggle("no-hover", !ShelfSettings.hover);
+  document.body.classList.toggle("side-list", ShelfSettings.sideList);
   if (!ShelfSettings.find && !SearchLine.hidden) ShowSearch(false);
   SettingsList.querySelectorAll("input").forEach((Box) =>
   {
