@@ -22,10 +22,11 @@
 <!-- The moving background is drawn onto this canvas by backgrounds.js -->
 <canvas class="backdrop" id="backdrop" aria-hidden="true"></canvas>
 
-<!-- The top of the page: The title the two buttons -->
+<!-- The top of the page: the title, the Guide and Settings buttons and the member's card -->
 <header class="top">
   <h1><a href="index.html">Itsuka</a></h1>
   <div class="top-actions">
+    <button class="plain-button" id="guideButton" type="button">Guide</button>
     <button class="plain-button" id="sceneButton" type="button">Settings</button>
     <!-- The signed-in member's card. Hidden until member.js knows who is signed in -->
     <button class="member-chip" id="memberChip" type="button" hidden>
@@ -79,6 +80,11 @@
     <p class="library-status" id="libraryStatus" role="status" hidden></p>
     <h3 class="settings-title">Adding from other apps</h3>
     <p class="settings-help"><b>Android:</b> add Itsuka to your home screen, then in Instagram, Pinterest or any app press Share and choose Itsuka. A new catalogue card opens with the link filled in.</p>
+    <h3 class="settings-title">Help</h3>
+    <div class="library-copy">
+      <button class="plain-button" id="settingsGuide" type="button">Guide</button>
+      <button class="plain-button" id="settingsNews" type="button">What's new</button>
+    </div>
   </div>
 </dialog>
 
@@ -234,6 +240,44 @@
   </div>
 </dialog>
 
+<!-- The Guide card: every feature and how to use it, filled in by guide.js -->
+<dialog class="card-dialog guide-dialog" id="guideDialog" aria-labelledby="guideTitle">
+  <div class="card-shadow">
+    <div class="member-card catalogue-card">
+      <div class="catalogue-head">
+        <h2 id="guideTitle">Guide</h2>
+        <span class="card-kind">How to use Itsuka</span>
+      </div>
+      <div class="card-body">
+        <div class="guide-body" id="guideBody"></div>
+        <button class="card-button" id="guideDone" type="button">Got it</button>
+        <p class="card-switch"><button class="link-button" id="guideTour" type="button">Take the tour</button></p>
+      </div>
+      <div class="catalogue-hole" aria-hidden="true"></div>
+    </div>
+  </div>
+</dialog>
+
+<!-- The What's new card, shown once after an update with only the things a member has not seen yet -->
+<dialog class="card-dialog news-dialog" id="newsDialog" aria-labelledby="newsTitle">
+  <div class="card-shadow">
+    <div class="member-card catalogue-card">
+      <div class="catalogue-head">
+        <h2 id="newsTitle">What's new</h2>
+        <span class="card-kind">Library notice</span>
+      </div>
+      <div class="card-body">
+        <ul class="news-list" id="newsList"></ul>
+        <button class="card-button" id="newsDone" type="button">Got it</button>
+      </div>
+      <div class="catalogue-hole" aria-hidden="true"></div>
+    </div>
+  </div>
+</dialog>
+
+<!-- The welcome tour's taped notes are placed here by guide.js -->
+<div class="tour-layer" id="tourLayer" hidden></div>
+
 <!-- The card for deleting the member's account, opened from their library card -->
 <dialog class="card-dialog" id="deleteDialog" aria-labelledby="deleteTitle">
   <div class="card-shadow">
@@ -267,5 +311,7 @@
 <script src="shelves.js"></script>
 <script src="member.js"></script>
 <script src="library.js"></script>
+<script src="guide.js"></script>
+
 </body>
 </html>

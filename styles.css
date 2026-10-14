@@ -971,3 +971,61 @@ a.card-button { display: block; box-sizing: border-box; text-align: center; text
   height: calc(var(--dot) * 8);
   background: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' shape-rendering='crispEdges'><g fill='%23EEE8D8' opacity='.85'><rect x='0' y='0' width='8' height='1'/><rect x='0' y='0' width='1' height='8'/><rect x='1' y='1' width='1' height='1'/><rect x='2' y='2' width='1' height='1'/><rect x='3' y='3' width='1' height='1'/><rect x='4' y='4' width='1' height='1'/><rect x='4' y='1' width='1' height='1'/><rect x='5' y='1' width='1' height='1'/><rect x='5' y='2' width='1' height='2'/><rect x='1' y='4' width='1' height='1'/><rect x='1' y='5' width='2' height='1'/><rect x='3' y='5' width='1' height='1'/></g></svg>") 0 0 / 100% 100%;
 }
+
+/* Guide card */
+.guide-body { max-height: min(52vh, 30rem); margin: 0 -4px 4px; padding: 0 4px; overflow-y: auto; }
+.guide-group { margin: 14px 0 6px; padding-bottom: 4px; border-bottom: 2px solid #D9D3C2; font-size: 1rem; font-weight: 700; }
+.guide-group:first-child { margin-top: 0; }
+.guide-line { margin: 0 0 8px; font-size: 0.9375rem; line-height: 1.4; color: var(--faded); }
+.guide-line b { color: var(--ink); }
+
+/* What's new card */
+.news-list { max-height: min(56vh, 32rem); margin: 0 -4px 4px; padding: 0 4px; overflow-y: auto; list-style: none; }
+.news-item { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; border-bottom: 2px solid #D9D3C2; }
+.news-item:last-child { border-bottom: 0; }
+.news-words { display: grid; gap: 2px; flex: 1; font-size: 0.9375rem; line-height: 1.4; }
+.news-words span { color: var(--faded); }
+.news-show { flex: none; padding: 2px; font-size: 0.875rem; white-space: nowrap; }
+
+/* Show me: a pulsing brass outline on the part being pointed at */
+.is-pointed { animation: point-at 0.65s steps(2) 4; }
+@keyframes point-at {
+  50% { box-shadow: inset 0 0 0 var(--dot) var(--brass); filter: brightness(1.25); }
+}
+
+/* Welcome tour: taped paper notes beside each part, the tape takes the plaque colour of the background */
+.tour-layer { position: fixed; inset: 0; z-index: 70; pointer-events: none; }
+.tour-layer > * { pointer-events: auto; }
+.tour-target { box-shadow: inset 0 0 0 var(--dot) var(--brass) !important; }   /* drawn inside the part, so a scrolling row cannot cut it off */
+.tour-note { position: fixed; z-index: 72; width: min(14rem, calc(100vw - 16px)); padding: 14px 12px 12px; }
+.tour-note.tour-step { width: min(17rem, calc(100vw - 16px)); }   /* on a phone the notes come one at a time */
+.tour-note::before { content: ""; position: absolute; left: calc(var(--arrow, 50%) - 8px); width: 16px; height: 8px; bottom: 100%; clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.tour-note:not(.points-up)::before { top: 100%; bottom: auto; clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.tour-note.points-left::before { top: calc(50% - 8px); bottom: auto; left: -8px; width: 8px; height: 16px; clip-path: polygon(100% 0, 100% 100%, 0 50%); }
+.tour-note::after { content: ""; position: absolute; pointer-events: none; }
+.tour-note h3 { margin: 0 0 6px; font-size: 1rem; }
+.tour-note p { margin: 0; font-size: 0.8125rem; line-height: 1.4; }
+.tour-count { margin-bottom: 2px !important; font-size: 0.8125rem !important; font-weight: 600; letter-spacing: 0.04em; }
+.tour-buttons { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
+.tour-buttons .link-button { color: inherit; }
+.tour-buttons .card-button { width: auto; margin: 0; padding: 7px 16px; background: var(--brass); color: #2A1A10; }
+/* The note's paper and its slightly crooked strip of tape */
+.tour-note {
+  padding-top: 18px;
+  background: linear-gradient(to bottom, #F6ECD2 0, #F6ECD2 var(--dot), #EFE2C2 var(--dot));
+  color: var(--ink);
+  box-shadow: inset 0 0 0 2px #160E08, var(--dot) var(--dot) 0 rgba(0, 0, 0, 0.5);
+}
+.tour-note::before { background: #160E08; }
+.tour-note p:not(.tour-count) { color: #4A4436; }
+.tour-note .tour-count { color: #8A6A2A; }
+.tour-note::after {
+  top: calc(var(--dot) * -3);
+  left: calc(50% - 26px);
+  width: 52px;
+  height: calc(var(--dot) * 5);
+  background: color-mix(in srgb, var(--brass) 75%, transparent);
+  transform: rotate(-4deg);
+  clip-path: polygon(0 0, 100% 0, 96% 25%, 100% 50%, 96% 75%, 100% 100%, 0 100%, 4% 75%, 0 50%, 4% 25%);
+}
+.tour-got-it { position: fixed; left: 0; right: 0; bottom: 84px; width: max-content; margin: 0 auto; }

@@ -1781,4 +1781,5 @@ async function StartLibrary()
   ApplyShelfSettings();                          // this also builds the plaques and the shelves
   OpenSharedArrival();                           // a link shared from another app opens on a new catalogue card
 }
-StartLibrary();
+// LibraryReady is what guide.js waits on before showing What's new or the welcome tour
+const LibraryReady = StartLibrary();
