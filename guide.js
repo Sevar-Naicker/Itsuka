@@ -26,6 +26,9 @@ const NEWS = [
   { number: 4, title: "Live joint shelves", items: [
     { title: "Changes straight away", text: "On a joint shelf, books your friends add, move, tick done or remove now show up on your screen as it happens, no reloading. A small note says who did what.", show: "" },
   ] },
+  { number: 5, title: "Sharing from iPhone", items: [
+    { title: "Share into Itsuka on iPhone", text: "Add the Itsuka shortcut from Settings once. Then in Instagram, Pinterest or Safari press Share, then More, and choose Itsuka to open a new catalogue card with the link filled in.", show: "settings" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -36,7 +39,7 @@ const LATEST_NEWS = NEWS[NEWS.length - 1].number;
 const GUIDE = [
   { group: "Adding", lines: [
     ["Add a book", "Press + Add a book. Give it a name, a link, a few notes (one point per line), a shelf and a picture if you like."],
-    ["From other apps", "On Android, add Itsuka to your home screen, then press Share in Instagram, Pinterest or any app and choose Itsuka."],
+    ["From other apps", "On Android, add Itsuka to your home screen, then press Share in Instagram, Pinterest or any app and choose Itsuka. On iPhone, add the shortcut from Settings first, then Share, More, Itsuka."],
   ] },
   { group: "Finding", lines: [
     ["Plaques", "The plaques at the top switch shelves on and off, All shows every shelf. With lots of shelves, the brass arrows at each end slide the row along."],
