@@ -64,6 +64,24 @@
 <main class="sections" id="library"></main>
 </div>
 
+<!-- The Add to home screen card, its steps are filled in by install.js for the phone being used -->
+<dialog class="card-dialog how-dialog" id="installDialog" aria-labelledby="installTitle">
+  <div class="card-shadow">
+    <div class="member-card catalogue-card">
+      <div class="catalogue-head">
+        <h2 id="installTitle">Home screen</h2>
+        <span class="card-kind">Three steps</span>
+      </div>
+      <div class="card-body">
+        <div id="installSteps"></div>
+        <p class="card-text install-after">Itsuka then opens from its own icon like an app, with no browser bars.</p>
+        <button class="card-button" id="installDone" type="button">Got it</button>
+      </div>
+      <div class="catalogue-hole" aria-hidden="true"></div>
+    </div>
+  </div>
+</dialog>
+
 <!-- Small taped notes about changes other people make to joint shelves, filled in by live.js -->
 <div class="live-notes" id="liveNotes" role="status" aria-live="polite"></div>
 
@@ -98,6 +116,11 @@
       <input id="copyFile" type="file" accept=".json,application/json" hidden>
     </div>
     <p class="library-status" id="libraryStatus" role="status" hidden></p>
+    <h3 class="settings-title">On your phone</h3>
+    <p class="settings-help">Add Itsuka to your home screen and it opens from its own icon like an app.</p>
+    <div class="library-copy">
+      <button class="plain-button install-button" type="button" data-install="Add to home screen" data-steps="How to add it to your home screen" hidden>Add to home screen</button>
+    </div>
     <h3 class="settings-title">Adding from other apps</h3>
     <p class="settings-help"><b>Android:</b> add Itsuka to your home screen, then in Instagram, Pinterest or any app press Share and choose Itsuka. A new catalogue card opens with the link filled in.</p>
     <p class="settings-help"><b>iPhone:</b> add the Itsuka shortcut once, then in Instagram, Pinterest or any app press Share, then More, and choose Itsuka.</p>
@@ -370,6 +393,7 @@
 <script src="library.js"></script>
 <script src="joint.js"></script>
 <script src="live.js"></script>
+<script src="install.js"></script>
 <script src="guide.js"></script>
 
 </body>

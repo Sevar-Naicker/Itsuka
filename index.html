@@ -85,8 +85,26 @@
         <div class="card-line"><span>Shelve</span><b>Give them a book with a link, a picture and your notes.</b></div>
         <div class="card-line"><span>Return</span><b>Open the book again when you are ready to buy, or need the idea.</b></div>
         <div class="card-line"><span>Private</span><b>Only you can see your shelves, unless you share one with a link.</b></div>
-        <div class="card-line"><span>Phone</span><b>Add Itsuka to your home screen from your browser's menu and it opens like an app.</b></div>
+        <div class="card-line"><span>Phone</span><b>Add Itsuka to your home screen and it opens like an app. <button class="link-button install-button" type="button" data-install="Add it now" data-steps="Show me how" hidden>Show me how</button></b></div>
         <button class="card-button" id="howDone" type="button">Got it</button>
+      </div>
+      <div class="catalogue-hole" aria-hidden="true"></div>
+    </div>
+  </div>
+</dialog>
+
+<!-- The Add to home screen card, its steps are filled in by install.js for the phone being used -->
+<dialog class="card-dialog how-dialog" id="installDialog" aria-labelledby="installTitle">
+  <div class="card-shadow">
+    <div class="member-card catalogue-card">
+      <div class="catalogue-head">
+        <h2 id="installTitle">Home screen</h2>
+        <span class="card-kind">Three steps</span>
+      </div>
+      <div class="card-body">
+        <div id="installSteps"></div>
+        <p class="card-text install-after">Itsuka then opens from its own icon like an app, with no browser bars.</p>
+        <button class="card-button" id="installDone" type="button">Got it</button>
       </div>
       <div class="catalogue-hole" aria-hidden="true"></div>
     </div>
@@ -115,5 +133,6 @@
 <script src="config.js"></script>
 <script src="auth.js"></script>
 <script src="index.js"></script>
+<script src="install.js"></script>
 </body>
 </html>

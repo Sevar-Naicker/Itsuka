@@ -28,7 +28,7 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 - **Done Mark:** tick Done inside a book once you have visited, bought or used it. The book gets a ribbon on its spine and a stamp inside, and the Hide done button tucks the finished books away.
 - **Pictures:** one picture per book, shrunk before upload and drawn in a pixel style to match the library.
 - **Backgrounds:** four animated pixel scenes (cabin fireplace, green woodland, campfire night, snowy cabin). The shelves, books and plaques change colour to match the one you pick.
-- **Phone and Laptop:** the layout and the backgrounds fit both. On a phone the site can be added to the home screen, where it opens like an app.
+- **Phone and Laptop:** the layout and the backgrounds fit both. On a phone the site can be added to the home screen, where it opens like an app. An Add to home screen button, in How it works on the landing page and under On your phone in Settings, installs it in one tap where the browser allows (Chrome, Edge and Samsung Internet, on Android and laptops) and shows the steps for that phone everywhere else, like on iPhone. It hides once Itsuka is on the home screen.
 
 ## How it is built:
 
@@ -65,6 +65,7 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 | `backgrounds.js` | The pixel scenes, background picker and colour themes (used by every page) |
 | `.github/workflows/keep-awake.yml` | Visits the Supabase project once a day so the free project never pauses for inactivity |
 | `supabase.sql` | Sets up the database, the picture storage, shelf sharing, joint shelves, live joint shelves and account deleting in a new Supabase project. Run once |
+| `install.js` | The Add to home screen buttons on the landing page and in Settings: a one-tap install where the browser allows it, the steps for each phone everywhere else |
 | `manifest.json` | Lets a phone add the site to its home screen like an app, and puts Itsuka in the Share menu on Android |
 | `icons/` | The tab icon, the home screen icons and the picture shown when the link is shared |
 | `fonts/` | The pixel font files and their licence |

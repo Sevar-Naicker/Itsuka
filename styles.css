@@ -1160,3 +1160,8 @@ a.card-button { display: block; box-sizing: border-box; text-align: center; text
   .live-note, .live-note.is-leaving { animation: none; }
 }
 
+
+/* Add to home screen: the button in How it works sits inside its line, and the steps card numbers its lines */
+.card-line b .install-button { padding: 0; font-size: inherit; }
+#installSteps .card-line { grid-template-columns: 1.75rem 1fr; }
+.install-after { margin: 14px 0 0; }

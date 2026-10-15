@@ -29,6 +29,9 @@ const NEWS = [
   { number: 5, title: "Sharing from iPhone", items: [
     { title: "Share into Itsuka on iPhone", text: "Add the Itsuka shortcut from Settings once. Then in Instagram, Pinterest or Safari press Share, then More, and choose Itsuka to open a new catalogue card with the link filled in.", show: "settings" },
   ] },
+  { number: 6, title: "Itsuka on your home screen", items: [
+    { title: "Add to home screen", text: "Settings now has an Add to home screen button under On your phone. On many Android phones it adds Itsuka in one tap, on iPhone it shows you the three steps. Itsuka then opens from its own icon like an app.", show: "settings" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -65,7 +68,7 @@ const GUIDE = [
   { group: "Your library", lines: [
     ["Settings", "Choose a background and switch the shelf tools on or off. Your choices follow you to every device."],
     ["Your card", "The card in the top corner holds your photo, Sign out and Delete my account."],
-    ["On your phone", "Use your browser's menu to add Itsuka to your home screen, and it opens like an app."],
+    ["On your phone", "In Settings, under On your phone, Add to home screen puts Itsuka on your home screen, or shows you the steps for your phone. It then opens like an app."],
   ] },
 ];
 
