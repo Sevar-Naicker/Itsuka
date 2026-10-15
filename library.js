@@ -1460,7 +1460,7 @@ CatalogueForm.addEventListener("submit", async (event) =>
     if (BookSection.value === "new") Section = SectionNamed(SectionName) || await SaveSection(SectionName);
 
     // A newly chosen picture is shrunk and stored first; the book then remembers where it is.
-    const Picture = ChosenPicture ? await StorePicture(await ShrinkPicture(ChosenPicture, 800), Section.joint ? "shelves/" + Section.id : "") : KeptPicture;
+    const Picture = ChosenPicture ? await StorePicture(await ShrinkPicture(ChosenPicture, 352), Section.joint ? "shelves/" + Section.id : "") : KeptPicture;
 
     let Book = EditingBook;
     if (Book)
@@ -1963,6 +1963,27 @@ function OpenSharedArrival()
   (BookName.value ? BookSection : BookName).focus();
 }
 
+// Counting visits:
+
+// VISIT_KEY is the note this device keeps of the last day it counted a visit, so the database is only asked once a day
+const VISIT_KEY = "library-visit-day";
+
+// The NoteVisit function tells the database the member opened their library today, only the date of their latest visit is kept, for the Ledger's totals
+async function NoteVisit()
+{
+  const Today = new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Johannesburg" });
+  if (Recall(VISIT_KEY) === Today + ":" + MyId()) return;
+  try
+  {
+    const { error } = await DB.rpc("note_visit", {});
+    if (!error) Remember(VISIT_KEY, Today + ":" + MyId());
+  }
+  catch (error)
+  {
+    console.error(error);                    // without supabase-ledger.sql visits are simply not counted
+  }
+}
+
 // Start:
 
 // The StartLibrary function runs when the page opens, it waits for the member and then loads and shows their shelves
@@ -1996,6 +2017,7 @@ async function StartLibrary()
       Section.books.forEach((Book, i) => { Book.position = i; });
     });
   }
+  if (Member) NoteVisit();
   LoadShelfSettings(Member);
   BuildSettingsList();
   ApplyShelfSettings();                          // this also builds the plaques and the shelves

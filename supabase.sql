@@ -579,3 +579,170 @@ drop policy if exists "people on a joint shelf hear its changes" on realtime.mes
 create policy "people on a joint shelf hear its changes" on realtime.messages
   for select to authenticated
   using (realtime.messages.extension = 'broadcast' and public.can_hear_shelf((select realtime.topic())));
+
+-- Ledger Addition (a page only the library keeper can open: how full the free plan is, how many members use Itsuka and how it is growing, totals only):
+
+-- Site Admins Table Creation (the library keeper's account, added by hand in the SQL Editor, nobody can read or change it from a browser):
+create table if not exists public.site_admins
+(
+  member_id uuid primary key references auth.users (id) on delete cascade
+);
+alter table public.site_admins enable row level security;
+
+-- Last Visits Table Creation (only the date of each member's latest visit, it is replaced each new day and deleted with the account, never shown to anyone):
+create table if not exists public.last_visits
+(
+  member_id uuid primary key references auth.users (id) on delete cascade,
+  day       date not null
+);
+alter table public.last_visits enable row level security;
+
+-- Daily Visits Table Creation (how many members opened their library each day, a number per day with no names):
+create table if not exists public.daily_visits
+(
+  day     date primary key,
+  members integer not null default 0
+);
+alter table public.daily_visits enable row level security;
+
+-- Ledger Snapshots Table Creation (the totals once a day, saved by the keep-awake job, so the Ledger can tell the job is still running):
+create table if not exists public.ledger_snapshots
+(
+  day           date primary key,
+  taken_at      timestamptz not null default now(),
+  members       integer not null,
+  books         integer not null,
+  pictures      integer not null,
+  picture_bytes bigint not null,
+  database_bytes bigint not null
+);
+alter table public.ledger_snapshots enable row level security;
+
+-- Is Keeper Check (true when the signed-in member is the library keeper, used to show the Ledger button):
+create or replace function public.is_keeper()
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (select 1 from public.site_admins a where a.member_id = auth.uid());
+$$;
+
+-- Note Visit Function (notes that the signed-in member opened their library today, the day's count only goes up the first time each day):
+create or replace function public.note_visit()
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  today date := (now() at time zone 'Africa/Johannesburg')::date;
+  changed integer;
+begin
+  if auth.uid() is null then
+    return;
+  end if;
+  insert into public.last_visits (member_id, day) values (auth.uid(), today)
+  on conflict (member_id) do update set day = excluded.day
+  where public.last_visits.day is distinct from excluded.day;
+  get diagnostics changed = row_count;
+  if changed > 0 then
+    insert into public.daily_visits (day, members) values (today, 1)
+    on conflict (day) do update set members = public.daily_visits.members + 1;
+  end if;
+end;
+$$;
+
+-- Take Snapshot Function (saves today's totals, called by the keep-awake job each morning, running it again the same day only refreshes the numbers):
+create or replace function public.take_snapshot()
+returns void
+language sql
+security definer
+set search_path = ''
+as $$
+  insert into public.ledger_snapshots (day, taken_at, members, books, pictures, picture_bytes, database_bytes)
+  select (now() at time zone 'Africa/Johannesburg')::date, now(),
+         (select count(*) from auth.users),
+         (select count(*) from public.books),
+         (select count(*) from storage.objects o where o.bucket_id = 'pictures'),
+         (select coalesce(sum((o.metadata ->> 'size')::bigint), 0) from storage.objects o where o.bucket_id = 'pictures'),
+         pg_database_size(current_database())
+  on conflict (day) do update set
+    taken_at = excluded.taken_at, members = excluded.members, books = excluded.books,
+    pictures = excluded.pictures, picture_bytes = excluded.picture_bytes, database_bytes = excluded.database_bytes;
+$$;
+
+-- Ledger Function (every number on the Ledger page in one answer, only for the library keeper, totals only):
+create or replace function public.ledger()
+returns json
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  today date := (now() at time zone 'Africa/Johannesburg')::date;
+  week_start date := date_trunc('week', (now() at time zone 'Africa/Johannesburg'))::date;
+  result json;
+begin
+  if not public.is_keeper() then
+    raise exception 'Only the library keeper can open the Ledger';
+  end if;
+  select json_build_object(
+    'counted_at', now(),
+    'today', today,
+    'members', (select count(*) from auth.users),
+    'new_this_month', (select count(*) from auth.users u where u.created_at >= date_trunc('month', now())),
+    'active_today', (select count(*) from public.last_visits v where v.day = today),
+    'active_week', (select count(*) from public.last_visits v where v.day > today - 7),
+    'active_month', (select count(*) from public.last_visits v where v.day > today - 30),
+    'daily_active', (select coalesce(json_agg(json_build_object('day', d.day, 'members', coalesce(v.members, 0)) order by d.day), '[]'::json)
+                     from generate_series(today - 29, today, interval '1 day') as d(day)
+                     left join public.daily_visits v on v.day = d.day::date),
+    'new_members_weeks', (select json_agg(coalesce(c.n, 0) order by w.start)
+                          from generate_series(week_start - 77, week_start, interval '7 days') as w(start)
+                          left join (select date_trunc('week', u.created_at at time zone 'Africa/Johannesburg')::date as start, count(*) as n
+                                     from auth.users u group by 1) c on c.start = w.start::date),
+    'books_weeks', (select json_agg(coalesce(c.n, 0) order by w.start)
+                    from generate_series(week_start - 77, week_start, interval '7 days') as w(start)
+                    left join (select date_trunc('week', b.created_at at time zone 'Africa/Johannesburg')::date as start, count(*) as n
+                               from public.books b group by 1) c on c.start = w.start::date),
+    'week_starts', (select json_agg(w.start::date order by w.start) from generate_series(week_start - 77, week_start, interval '7 days') as w(start)),
+    'pictures', (select count(*) from storage.objects o where o.bucket_id = 'pictures'),
+    'picture_bytes', (select coalesce(sum((o.metadata ->> 'size')::bigint), 0) from storage.objects o where o.bucket_id = 'pictures'),
+    'recent_picture_bytes', (select coalesce(sum((o.metadata ->> 'size')::bigint), 0) from storage.objects o where o.bucket_id = 'pictures' and o.created_at > now() - interval '28 days'),
+    'recent_pictures', (select count(*) from storage.objects o where o.bucket_id = 'pictures' and o.created_at > now() - interval '28 days'),
+    'database_bytes', pg_database_size(current_database()),
+    'shelves', (select count(*) from public.sections),
+    'books', (select count(*) from public.books),
+    'done_books', (select count(*) from public.books b where b.done),
+    'joint_shelves', (select count(distinct m.section_id) from public.shelf_members m),
+    'share_links', (select count(*) from public.sections s where s.share_key is not null),
+    'emails_day', (select count(*) filter (where u.confirmation_sent_at > now() - interval '1 day')
+                        + count(*) filter (where u.recovery_sent_at > now() - interval '1 day')
+                        + count(*) filter (where u.email_change_sent_at > now() - interval '1 day') from auth.users u),
+    'emails_month', (select count(*) filter (where u.confirmation_sent_at >= date_trunc('month', now()))
+                          + count(*) filter (where u.recovery_sent_at >= date_trunc('month', now()))
+                          + count(*) filter (where u.email_change_sent_at >= date_trunc('month', now())) from auth.users u),
+    'last_snapshot', (select max(s.taken_at) from public.ledger_snapshots s),
+    'history_since', (select min(s.day) from public.ledger_snapshots s)
+  ) into result;
+  return result;
+end;
+$$;
+
+-- Allowing members to note their visit and the keeper to read the Ledger, and the keep-awake job (signed out) to save the day's totals:
+revoke all on function public.is_keeper() from public;
+revoke all on function public.note_visit() from public;
+revoke all on function public.take_snapshot() from public;
+revoke all on function public.ledger() from public;
+grant execute on function public.is_keeper() to authenticated;
+grant execute on function public.note_visit() to authenticated;
+grant execute on function public.take_snapshot() to anon, authenticated;
+grant execute on function public.ledger() to authenticated;
+
+-- Library Keeper Addition (makes your own account the library keeper, so the Ledger opens for it: register on the site first, put your email in place of the one below, then run these three lines):
+-- insert into public.site_admins (member_id)
+-- select u.id from auth.users u where lower(u.email) = lower('you@example.com')
+-- on conflict (member_id) do nothing;

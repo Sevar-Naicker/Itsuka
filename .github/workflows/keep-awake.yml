@@ -1,4 +1,4 @@
-# This file contains a small GitHub Actions job that visits the Supabase project once a day, so the free project is never counted as inactive and paused
+# This file contains a small GitHub Actions job that visits the Supabase project once a day, so the free project is never counted as inactive and paused, and saves the day's totals for the Ledger
 
 name: Keep Supabase awake
 
@@ -29,3 +29,7 @@ jobs:
             -H "apikey: $KEY" -H "Content-Type: application/json" -d '{"key":"keep-awake"}'
           echo
           echo "Supabase answered, so the project stays awake"
+          # Saves today's totals for the Ledger, a failure here (before supabase-ledger.sql is run) does not fail the visit
+          curl --silent --show-error --max-time 30 -X POST "$URL/rest/v1/rpc/take_snapshot" \
+            -H "apikey: $KEY" -H "Content-Type: application/json" -d '{}' || echo "The snapshot could not be saved"
+          echo "Snapshot saved for the Ledger"

@@ -17,6 +17,7 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 - **Download and Load a Copy:** under Settings, Download a copy saves the whole library, pictures included, as one file. Load a copy adds the books from such a file back in, skipping any already on the same shelf.
 - **Library Card:** members register and sign in with a library card, and can add a profile photo to it.
 - **Delete My Account:** the library card has a Delete my account button. After typing DELETE, the member's pictures, shelves, books, share links and account are all deleted.
+- **Ledger:** a page only the library keeper can open, from a Ledger button on their library card. It shows totals only: how full the free plan's picture storage, database and member limits are (amber from 70%, red from 90%), when the pictures will fill up at the current rate, how many members visited today, this week and this month, new members and books added each week, emails sent against Resend's limits, whether the daily keep-awake visit came in, and when the pinned Supabase library is due its three-monthly check (change `VERSION_CHECKED` in `ledger.js` after each check). Visits are counted by keeping only the date of each member's latest visit, as the privacy page explains.
 - **Privacy Page:** a plain-language page explaining what Itsuka keeps, who can see it and how to delete it, linked from the tag at the bottom of every page.
 - **Private Shelves:** each member only ever sees their own sections, books, notes and pictures, unless they choose to share a shelf.
 - **Joint Shelves:** the Invite button on the Edit sections card makes a link that lets up to four friends join one shelf. Everyone on it can add books, move them and tick them done, only the owner and whoever added a book can change it, and only the owner can rename, share or delete the shelf or remove people. Each person picks a colour in Settings: it marks the books they add (a stripe on the spine and an Added by line inside), and the ribbon on a joint shelf's plaque is its owner's colour. Sorting and where the shelf sits among the plaques are each person's own. Books stay when someone leaves, and the shelf passes to whoever joined first if its owner deletes their account. Changes show up for everyone on the shelf straight away, with a small taped note saying who did what, and wait while someone is dragging a book, has one open or has a card open.
@@ -63,8 +64,10 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 | `join.js` | The Join page: shows the invite and adds the visitor to the shelf |
 | `shelf.js` | The shared shelf page: shows the shelf and adds its books to the visitor's library |
 | `backgrounds.js` | The pixel scenes, background picker and colour themes (used by every page) |
-| `.github/workflows/keep-awake.yml` | Visits the Supabase project once a day so the free project never pauses for inactivity |
-| `supabase.sql` | Sets up the database, the picture storage, shelf sharing, joint shelves, live joint shelves and account deleting in a new Supabase project. Run once |
+| `.github/workflows/keep-awake.yml` | Visits the Supabase project once a day so the free project never pauses for inactivity, and saves the day's totals for the Ledger |
+| `supabase.sql` | Sets up the database, the picture storage, shelf sharing, joint shelves, live joint shelves, the Ledger and account deleting in a new Supabase project. Run once |
+| `ledger.html` | The Ledger, only for the library keeper |
+| `ledger.js` | Fills the Ledger from the database: the gauges, the charts and the upkeep checks |
 | `install.js` | The Add to home screen buttons on the landing page and in Settings: a one-tap install where the browser allows it, the steps for each phone everywhere else |
 | `manifest.json` | Lets a phone add the site to its home screen like an app, and puts Itsuka in the Share menu on Android |
 | `icons/` | The tab icon, the home screen icons and the picture shown when the link is shared |
@@ -89,6 +92,8 @@ The `config.js` in this repository points at the live Itsuka project. To run you
 4. Under **Authentication > Sign In / Providers**, **Confirm email** decides whether new members must confirm their email address before their first sign-in. Switching it off is handy while building. Switch it on before you share the site.
 5. Supabase's built-in email only delivers to people on your own Supabase team. To let anyone register, connect an email provider such as Resend under **Authentication > Emails > SMTP Settings**. The provider's key is a secret and belongs only in the Supabase dashboard.
 6. In `index.html`, `shelf.html` and `join.html`, change the `https://itsuka.co.za` addresses near the top (`og:url` and `og:image`) to your own site's address, so shared links show your preview. Do the same in `.github/workflows/keep-awake.yml`, and change the contact email in `privacy.html` to your own.
+
+7. To open the Ledger, register on your site, then in the SQL Editor run the three Library Keeper lines at the end of `supabase.sql` with your own email in them. A Ledger button then appears on your library card.
 
 If both values in `config.js` are left empty, login is off and the library shows a few example shelves that are not saved anywhere.
 

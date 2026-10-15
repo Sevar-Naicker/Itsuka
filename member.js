@@ -124,7 +124,7 @@ document.getElementById("photoFile").addEventListener("change", async (event) =>
   PhotoPickLabel.textContent = "Saving photo\u2026";
   try
   {
-    const Path = await StorePicture(await ShrinkPicture(ChosenFile, 400));
+    const Path = await StorePicture(await ShrinkPicture(ChosenFile, 200));
     await SetMemberPhoto(Path);
   }
   catch (error)
@@ -258,5 +258,22 @@ document.getElementById("signOut").addEventListener("click", async () =>
   location.replace("login.html");
 });
 
+// The library keeper:
+
+// The ShowKeeperButton function shows the Ledger button on the card, only for the library keeper, the database decides who that is
+async function ShowKeeperButton()
+{
+  try
+  {
+    const { data: Keeper, error } = await DB.rpc("is_keeper", {});
+    document.getElementById("ledgerButton").hidden = Boolean(error) || Keeper !== true;
+  }
+  catch (error)
+  {
+    console.error(error);                    // without supabase-ledger.sql there is simply no Ledger button
+  }
+}
+
 // MemberReady is what library.js waits on before it loads anyone's shelves
 const MemberReady = StartMemberArea();
+MemberReady.then((Member) => { if (Member && DB) ShowKeeperButton(); });

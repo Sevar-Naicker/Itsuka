@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ledger: Itsuka</title>
+<meta name="robots" content="noindex">
+<!-- The tab icon, the home screen icon and the settings file for adding the site to a phone -->
+<meta name="theme-color" content="#1F3A2E">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/icon-32.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="manifest" href="manifest.json">
+<!-- The pixel font is hosted with the site, fetching it early makes the lettering appear sooner -->
+<link rel="preload" href="fonts/pixelify-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="ledger-page">
+
+<!-- The same moving background as the other pages, showing whichever scene was chosen last -->
+<canvas class="backdrop" id="backdrop" aria-hidden="true"></canvas>
+
+<!-- The top of the page: the title with its Ledger plaque, and the way back to the library -->
+<header class="top">
+  <div class="ledger-title">
+    <h1><a href="index.html">Itsuka</a></h1>
+    <span class="plaque ledger-plaque">Ledger</span>
+  </div>
+  <div class="top-actions">
+    <a class="plain-button" href="library.html">Library</a>
+  </div>
+</header>
+
+<!-- A message in place of the Ledger, for anyone who is not the library keeper or when the numbers cannot be loaded -->
+<div class="empty-library ledger-message" id="ledgerMessage" role="alert" hidden>
+  <h2 id="ledgerMessageTitle"></h2>
+  <p id="ledgerMessageText"></p>
+</div>
+
+<!-- The Ledger: how full the free plan is, how many members use Itsuka and how it is growing, totals only -->
+<main class="ledger" id="ledger" hidden>
+
+  <!-- How full each limit of the free plan is -->
+  <section class="ledger-card card-shadow" aria-labelledby="roomTitle">
+    <div class="member-card catalogue-card">
+      <div class="catalogue-head">
+        <h2 id="roomTitle">Room left</h2>
+        <span class="card-kind">Free plan</span>
+      </div>
+      <div class="card-body">
+        <div class="gauge" id="gaugePictures"></div>
+        <p class="gauge-extra" id="pictureAverage"></p>
+        <div class="gauge" id="gaugeDatabase"></div>
+        <div class="gauge" id="gaugeMembers"></div>
+        <p class="ledger-forecast" id="forecast"></p>
+        <div class="ledger-elsewhere">
+          <p><b>Data sent out and live connections</b> are only shown in Supabase: open your organisation, then Usage.</p>
+          <a class="card-button ledger-link" href="https://supabase.com/dashboard/organizations" target="_blank" rel="noopener">Open Supabase</a>
+        </div>
+      </div>
+      <div class="catalogue-hole" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- How many members use Itsuka -->
+  <section class="ledger-card card-shadow" aria-labelledby="membersTitle">
+    <div class="member-card catalogue-card">
+      <div class="catalogue-head">
+        <h2 id="membersTitle">Members</h2>
+        <span class="card-kind" id="memberTotal"></span>
+      </div>
+      <div class="card-body">
+        <div class="ledger-tiles" id="activeTiles"></div>
+        <h3 class="ledger-sub">Active each day <small>last 30 days</small></h3>
+        <div class="ledger-chart"><canvas id="chartActive" width="120" height="36" aria-hidden="true"></canvas><p class="chart-read" id="readActive"></p></div>
+      </div>
+      <div class="catalogue-hole" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- How Itsuka is growing, week by week -->
+  <section class="ledger-card card-shadow" aria-labelledby="growthTitle">
+    <div class="member-card catalogue-card">
+      <div class="catalogue-head">
+        <h2 id="growthTitle">Growth</h2>
+        <span class="card-kind">Last 12 weeks</span>
+      </div>
+      <div class="card-body">
+        <h3 class="ledger-sub">New members <small id="newWeek"></small></h3>
+        <div class="ledger-chart"><canvas id="chartMembers" width="120" height="30" aria-hidden="true"></canvas><p class="chart-read" id="readMembers"></p></div>
+        <h3 class="ledger-sub">Books added <small id="booksWeek"></small></h3>
+        <div class="ledger-chart"><canvas id="chartBooks" width="120" height="30" aria-hidden="true"></canvas><p class="chart-read" id="readBooks"></p></div>
+      </div>
+      <div class="catalogue-hole" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- Keeping Itsuka running: the daily visit, emails sent and the Supabase version check -->
+  <section class="ledger-card card-shadow" aria-labelledby="upkeepTitle">
+    <div class="member-card catalogue-card">
+      <div class="catalogue-head">
+        <h2 id="upkeepTitle">Upkeep</h2>
+        <span class="card-kind">Behind the scenes</span>
+      </div>
+      <div class="card-body">
+        <div class="upkeep-line" id="upkeepAwake"></div>
+        <div class="gauge" id="gaugeEmailsDay"></div>
+        <div class="gauge" id="gaugeEmailsMonth"></div>
+        <p class="gauge-extra">Confirmations, password resets and email changes, counted from Supabase. Resend's free plan resets each day at 02:00 here.</p>
+        <div class="upkeep-line" id="upkeepVersion"></div>
+      </div>
+      <div class="catalogue-hole" aria-hidden="true"></div>
+    </div>
+  </section>
+
+  <!-- Everything on the shelves, all members together -->
+  <section class="ledger-card card-shadow" aria-labelledby="shelvesTitle">
+    <div class="member-card catalogue-card">
+      <div class="catalogue-head">
+        <h2 id="shelvesTitle">On the shelves</h2>
+        <span class="card-kind">Everyone together</span>
+      </div>
+      <div class="card-body">
+        <div class="ledger-totals" id="totals"></div>
+        <p class="ledger-note">Totals only. The Ledger never shows anyone's books, names or emails.</p>
+      </div>
+      <div class="catalogue-hole" aria-hidden="true"></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- When the numbers were counted and when the daily history started -->
+<p class="ledger-updated" id="ledgerUpdated"></p>
+
+<!-- The developer tag and the privacy link at the bottom of the page -->
+<footer class="credit"><span>Developed By Sav</span><a href="privacy.html">Privacy</a></footer>
+
+<script src="backgrounds.js"></script>
+<!-- The Supabase library, pinned to one exact version so an update cannot change how the site behaves -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="ledger.js"></script>
+</body>
+</html>
