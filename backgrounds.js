@@ -479,6 +479,513 @@ function DrawSnowyCabin(c, W, H, t)
   }
 }
 
+// Scene 5 (a rainy café window):
+
+// The DrawCafe function paints scene 5: looking out of a café window at a rainy street in the evening
+function DrawCafe(c, W, H, t)
+{
+  const Tick = Math.floor(t * 8);
+  const SillY = Math.round(H * 0.74);
+  const Gx = Math.round(W * 0.08), Gy = Math.round(H * 0.12), Gw = W - Gx * 2, Gh = SillY - Gy - 4;
+
+  // The café wall around the window
+  Rect(c, 0, 0, W, H, "#4A3226");
+  for (let x = 0; x < W; x += 6) Rect(c, x, 0, 1, H, "#40291F");
+  // Outside: a rainy evening sky and the buildings across the street
+  Bands(c, W, Gy, Gy + Gh, ["#2B3550", "#33405E", "#3D4B69", "#475674", "#52607D"]);
+  for (let i = 0, x = Gx - 4; x < Gx + Gw; i++)
+  {
+    const Bw = 14 + Math.round(Hash(i, 101) * 14), Bh = Math.round(Gh * (0.35 + Hash(i, 102) * 0.4));
+    const By = Gy + Gh - Bh;
+    Rect(c, x, By, Bw, Bh, i % 2 ? "#232A40" : "#283049");
+    for (let wy = By + 3; wy < Gy + Gh - 6; wy += 6)
+    {
+      for (let wx = x + 2; wx < x + Bw - 3; wx += 5)
+      {
+        if (Hash(wx, wy) > 0.55) Rect(c, wx, wy, 2, 3, Hash(wx + 1, wy) > 0.5 ? "#E8B65A" : "#C98E4A");
+      }
+    }
+    x += Bw + 1;
+  }
+  // The wet street with lamp glow reflected in it
+  const StreetY = Gy + Gh - Math.round(Gh * 0.16);
+  Rect(c, Gx, StreetY, Gw, Gy + Gh - StreetY, "#1E2436");
+  for (let i = 0; i < 3; i++)
+  {
+    const Lx = Gx + Math.round(Gw * (0.2 + i * 0.3));
+    Rect(c, Lx, StreetY - Math.round(Gh * 0.35), 1, Math.round(Gh * 0.35), "#151A28");
+    Disc(c, Lx, StreetY - Math.round(Gh * 0.35), 5, "rgba(255,200,110,0.18)");
+    Rect(c, Lx - 1, StreetY - Math.round(Gh * 0.35) - 1, 3, 2, "#FFD98A");
+    for (let r = 1; r < Gy + Gh - StreetY; r += 2) if (Hash(r, Lx + Tick % 3) > 0.35) Rect(c, Lx - 1 + Math.round(Math.sin(r + t * 3)), StreetY + r, 2, 1, "rgba(255,200,110,0.35)");
+  }
+  // Rain falling outside, in short slanting streaks
+  for (let n = 0; n < W * 0.9; n++)
+  {
+    const x = Gx + (Hash(n, 111) * Gw + t * 6) % Gw;
+    const y = Gy + (Hash(n, 112) * Gh + t * (40 + Hash(n, 113) * 20)) % Gh;
+    Rect(c, x, y, 1, 2, "rgba(190,205,230,0.45)");
+  }
+  // Drops running down the glass, slowly
+  for (let n = 0; n < 14; n++)
+  {
+    const x = Gx + 2 + Math.floor(Hash(n, 121) * (Gw - 4));
+    const Life = (t * (0.04 + Hash(n, 122) * 0.05) + Hash(n, 123)) % 1;
+    const y = Gy + Math.floor(Life * Gh);
+    Rect(c, x, Math.max(Gy, y - 6), 1, Math.min(6, y - Gy), "rgba(220,230,245,0.25)");
+    Rect(c, x, y, 1, 2, "rgba(235,242,252,0.8)");
+  }
+  // The window frame and its cross bars
+  Rect(c, Gx - 3, Gy - 3, Gw + 6, 3, "#2A1A12"); Rect(c, Gx - 3, Gy + Gh, Gw + 6, 3, "#2A1A12");
+  Rect(c, Gx - 3, Gy, 3, Gh, "#2A1A12"); Rect(c, Gx + Gw, Gy, 3, Gh, "#2A1A12");
+  Rect(c, Gx + (Gw >> 1) - 1, Gy, 2, Gh, "#2A1A12");
+  Rect(c, Gx, Gy + Math.round(Gh * 0.32), Gw, 2, "#2A1A12");
+  // A striped awning edge at the top of the glass
+  for (let x = Gx; x < Gx + Gw; x += 6) Rect(c, x, Gy, 3, 3, "#8C2F39");
+
+  // The sill: a wooden counter with a steaming mug and a little plant
+  Rect(c, 0, SillY, W, 5, "#6E4A30"); Rect(c, 0, SillY, W, 1, "#8C6440");
+  Rect(c, 0, SillY + 5, W, H - SillY - 5, "#3A261C");
+  for (let x = 0; x < W; x += 10) Rect(c, x, SillY + 5, 1, H - SillY - 5, "#2E1E16");
+  const Mx = Math.round(W * 0.66);
+  Rect(c, Mx, SillY - 6, 7, 6, "#E8DCC4"); Rect(c, Mx + 7, SillY - 5, 2, 3, "#E8DCC4"); Rect(c, Mx + 1, SillY - 6, 5, 1, "#6B3E26");
+  for (let n = 0; n < 3; n++)
+  {
+    const Life = (t * 0.25 + n / 3) % 1;
+    Rect(c, Mx + 2 + n + Math.round(Math.sin(Life * 6 + n) * 1.5), SillY - 8 - Math.round(Life * 10), 1, 2, `rgba(240,235,225,${0.5 * (1 - Life)})`);
+  }
+  const Px = Math.round(W * 0.24);
+  Rect(c, Px, SillY - 5, 6, 5, "#B5532E");
+  Rect(c, Px - 1, SillY - 9, 3, 4, "#4E8C5F"); Rect(c, Px + 2, SillY - 11, 2, 6, "#3F7A45"); Rect(c, Px + 4, SillY - 8, 3, 3, "#4E8C5F");
+
+  // A warm pendant lamp hanging over the window, and its light
+  const Lx = W >> 1;
+  Rect(c, Lx, 0, 1, Math.max(4, Gy - 6), "#1E140E");
+  Rect(c, Lx - 4, Math.max(4, Gy - 6), 9, 3, "#C9A14A");
+  Disc(c, Lx, Gy + 2, Math.round(Math.min(W, H) * 0.35), "rgba(255,190,110,0.06)");
+  Disc(c, Lx, Gy, Math.round(Math.min(W, H) * 0.2), "rgba(255,190,110,0.07)");
+}
+
+// Scene 6 (an autumn forest):
+
+// The Oak function paints a round leafy tree: a trunk and clusters of leaves in a few colours
+function Oak(c, Cx, BaseY, Height, Colours, Seed)
+{
+  Rect(c, Cx - 1, BaseY - Math.round(Height * 0.45), 3, Math.round(Height * 0.45), "#4A2E1E");
+  const R = Math.round(Height * 0.3);
+  for (let n = 0; n < 9; n++)
+  {
+    const Dx = Math.round((Hash(n, Seed) - 0.5) * R * 1.4), Dy = Math.round((Hash(n, Seed + 1) - 0.5) * R * 1.1);
+    Disc(c, Cx + Dx, BaseY - Math.round(Height * 0.62) + Dy, Math.max(2, Math.round(R * (0.5 + Hash(n, Seed + 2) * 0.4))), Colours[n % Colours.length]);
+  }
+}
+
+// The DrawAutumn function paints scene 6: an autumn forest in low golden light, with leaves drifting down
+function DrawAutumn(c, W, H, t)
+{
+  const Tick = Math.floor(t * 8);
+  const Horizon = Math.round(H * 0.55), Ground = Math.round(H * 0.68);
+  Bands(c, W, 0, Horizon + 2, ["#E8B86A", "#EEC47A", "#F2CE88", "#F4D898", "#F2DCA8"]);
+  Disc(c, Math.round(W * 0.7), Horizon - 4, 9, "#FFF0C8");
+  Disc(c, Math.round(W * 0.7), Horizon - 4, 16, "rgba(255,240,200,0.25)");
+  // Far trees, pale with distance
+  for (let i = 0; i * 9 < W + 9; i++) Oak(c, i * 9 + Math.round(Hash(i, 151) * 5), Horizon + 4, 18 + Math.round(Hash(i, 152) * 10), ["#D9A06A", "#E0AE78", "#CC9466"], 150 + i);
+  Rect(c, 0, Horizon + 3, W, Ground - Horizon, "#C88A4A");
+  // Middle trees in deep autumn colours
+  for (let i = 0; i * 16 < W + 16; i++) Oak(c, i * 16 + Math.round(Hash(i, 161) * 8), Ground + 2, 32 + Math.round(Hash(i, 162) * 16), ["#C2502A", "#D9822B", "#E8A23A", "#A63E22"], 160 + i * 3);
+  Bands(c, W, Ground, H, ["#A65A2A", "#9A5226", "#8C4A22", "#7E421E"]);
+  // A path of fallen leaves winding away
+  for (let y = H; y > Ground - 1; y--)
+  {
+    const Far = (H - y) / (H - Ground);
+    const PathW = Math.round(22 - 18 * Far), Px = (W >> 1) + Math.round(Math.sin(Far * 3) * 10 * Far);
+    Rect(c, Px - (PathW >> 1), y, PathW, 1, "#C9965E");
+    if (Hash(y, 171) > 0.5) Rect(c, Px - (PathW >> 1) + Hash(y, 172) * PathW, y, 2, 1, "#D9822B");
+  }
+  // Leaves lying on the ground
+  for (let n = 0; n < W * 0.6; n++)
+  {
+    const x = Hash(n, 181) * W, y = Ground + 2 + Hash(n, 182) * (H - Ground - 2);
+    Rect(c, x, y, 2, 1, ["#E8A23A", "#C2502A", "#D9822B", "#F2C25A"][n % 4]);
+  }
+  // Big trees close to us at the edges
+  const NearH = Math.round(Math.min(H * 0.7, 120));
+  Oak(c, Math.round(W * 0.06), H, NearH, ["#A63E22", "#C2502A", "#8C3420"], 191);
+  Oak(c, Math.round(W * 0.95), H, Math.round(NearH * 0.9), ["#D9822B", "#C2502A", "#A63E22"], 197);
+  // Golden light across the top
+  for (let y = 0; y < Ground; y++) Rect(c, 0, y, W, 1, `rgba(255,210,140,${0.06 * (1 - y / Ground)})`);
+  // Leaves drifting down, tumbling as they fall
+  for (let n = 0; n < W * 0.25; n++)
+  {
+    const Fall = 6 + Hash(n, 201) * 6;
+    const y = (Hash(n, 202) * H + t * Fall) % H;
+    const x = (Hash(n, 203) * W + Math.sin(t * 0.8 + n) * 6 + t * 2) % W;
+    const Colour = ["#E8A23A", "#C2502A", "#D9822B", "#F2C25A"][n % 4];
+    if ((Tick + n) % 4 < 2) Rect(c, x, y, 2, 1, Colour);
+    else Rect(c, x, y, 1, 2, Colour);
+  }
+}
+
+// Scene 7 (an attic reading nook):
+
+// The DrawAttic function paints scene 7: an attic under a slanted roof, a round window full of stars, a desk lamp and plants
+function DrawAttic(c, W, H, t)
+{
+  const Tick = Math.floor(t * 8);
+  const FloorY = Math.round(H * 0.82), Cx = W >> 1;
+  // Back wall of planks
+  Rect(c, 0, 0, W, FloorY, "#4E3524");
+  for (let x = 0; x < W; x += 7) { Rect(c, x, 0, 1, FloorY, "#3E2A1C"); if (Hash(x, 211) > 0.7) Rect(c, x + 3, Hash(x, 212) * FloorY, 1, 2, "#3A261A"); }
+  // The round window with stars and a moon
+  const R = Math.round(Math.min(W, H) * 0.16), Wy = Math.round(FloorY * 0.4);
+  Disc(c, Cx, Wy, R + 3, "#2A1A12");
+  Disc(c, Cx, Wy, R, "#141C3D");
+  for (let n = 0; n < R * 3; n++)
+  {
+    const a = Hash(n, 221) * Math.PI * 2, d = Math.sqrt(Hash(n, 222)) * (R - 2);
+    if (Hash(n, Math.floor(Tick / 6) + n) > 0.2) Rect(c, Cx + Math.cos(a) * d, Wy + Math.sin(a) * d, 1, 1, Hash(n, 223) > 0.7 ? "#FFF6D8" : "#AEB8DC");
+  }
+  Disc(c, Cx + Math.round(R * 0.4), Wy - Math.round(R * 0.35), Math.max(2, Math.round(R * 0.22)), "#F4EBC8");
+  Rect(c, Cx - R, Wy - 1, R * 2, 2, "#2A1A12"); Rect(c, Cx - 1, Wy - R, 2, R * 2, "#2A1A12");
+  // The slanted roof on both sides, coming down to the floor
+  for (let y = 0; y < FloorY; y++)
+  {
+    const Reach = Math.round((1 - y / FloorY) * W * 0.32);
+    Rect(c, 0, y, Reach, 1, y % 6 ? "#6B4A30" : "#5A3E28");
+    Rect(c, W - Reach, y, Reach, 1, y % 6 ? "#6B4A30" : "#5A3E28");
+  }
+  // A beam across, with plants hanging from it
+  Rect(c, 0, Math.round(FloorY * 0.08), W, 4, "#3A2618");
+  [0.3, 0.68].forEach((Spot, i) =>
+  {
+    const Px = Math.round(W * Spot), Drop = Math.round(FloorY * (0.18 + i * 0.06));
+    Rect(c, Px, Math.round(FloorY * 0.08) + 4, 1, Drop - Math.round(FloorY * 0.08) - 4, "#2A1A12");
+    Rect(c, Px - 3, Drop, 7, 4, "#B5532E");
+    for (let v = 0; v < 5; v++) Rect(c, Px - 4 + v * 2, Drop + 3, 1, 3 + Math.round(Hash(v, 230 + i) * 7), v % 2 ? "#3F7A45" : "#4E8C5F");
+  });
+  // Floor and a rug
+  Rect(c, 0, FloorY, W, H - FloorY, "#3E2A1C");
+  for (let x = 0; x < W; x += 12) Rect(c, x, FloorY, 1, H - FloorY, "#2E1E14");
+  Rect(c, Cx - 26, FloorY + 4, 52, Math.max(4, H - FloorY - 7), "#3E4A6B");
+  Rect(c, Cx - 24, FloorY + 5, 48, 1, "#C9A14A");
+  // A little desk with the lamp, a stack of books and a ticking clock
+  const Dx = Math.round(W * 0.66), Dy = FloorY - 12;
+  Rect(c, Dx - 14, Dy, 28, 3, "#6E4A30"); Rect(c, Dx - 12, Dy + 3, 2, 9, "#4A2E1E"); Rect(c, Dx + 10, Dy + 3, 2, 9, "#4A2E1E");
+  Rect(c, Dx + 4, Dy - 2, 6, 2, "#3A4A6B"); Rect(c, Dx + 5, Dy - 4, 5, 2, "#A84B3A"); Rect(c, Dx + 4, Dy - 6, 6, 2, "#C9A66B");
+  Rect(c, Dx - 9, Dy - 1, 5, 1, "#2A1A12"); Rect(c, Dx - 7, Dy - 9, 1, 8, "#2A1A12"); Rect(c, Dx - 10, Dy - 12, 7, 3, "#C9A14A");
+  Disc(c, Dx - 7, Dy - 4, 14, "rgba(255,200,110,0.07)"); Disc(c, Dx - 7, Dy - 4, 8, "rgba(255,200,110,0.08)");
+  const Kx = Math.round(W * 0.3), Ky = FloorY - 22;
+  Rect(c, Kx - 4, Ky, 9, 22, "#5A3A24"); Disc(c, Kx, Ky + 4, 3, "#EDE3C8");
+  Rect(c, Kx, Ky + 4, 1, 1, "#2A1A12");
+  Rect(c, Kx + (Tick % 8 < 4 ? -1 : 1), Ky + 10, 1, 6, "#C9A14A");          // the pendulum swinging
+  Rect(c, 0, 0, W, H, "rgba(14,7,3,0.25)");
+}
+
+// Scene 8 (a grand old library at night):
+
+// The Bookcase function paints a tall bookcase filled with rows of books of different heights and colours
+function Bookcase(c, X, Y, Wide, Tall, Seed)
+{
+  Rect(c, X, Y, Wide, Tall, "#3A2214");
+  Rect(c, X, Y, Wide, 3, "#5A3820"); Rect(c, X, Y, 2, Tall, "#4A2C18"); Rect(c, X + Wide - 2, Y, 2, Tall, "#2A180E");
+  const Colours = ["#7A2E2E", "#2E4A3A", "#C9A14A", "#3A3A6A", "#8C5A2B", "#5A2E4A", "#D8C8A8", "#4A6A7A"];
+  for (let Shelf = Y + 4; Shelf + 12 < Y + Tall; Shelf += 14)
+  {
+    for (let x = X + 3; x < X + Wide - 4;)
+    {
+      const Bw = 2 + Math.floor(Hash(x, Shelf + Seed) * 2), Bh = 8 + Math.floor(Hash(x + 1, Shelf + Seed) * 4);
+      if (Hash(x, Shelf * 3 + Seed) > 0.08) Rect(c, x, Shelf + 12 - Bh, Bw, Bh, Colours[Math.floor(Hash(x + 2, Shelf + Seed) * Colours.length)]);
+      x += Bw + (Hash(x + 3, Shelf + Seed) > 0.85 ? 2 : 0);
+    }
+    Rect(c, X + 2, Shelf + 12, Wide - 4, 2, "#5A3820");
+  }
+}
+
+// The DrawGrandLibrary function paints scene 8: a grand old library at night, tall bookcases, a rolling ladder, an arched window full of moonlight and dust drifting in the light
+function DrawGrandLibrary(c, W, H, t)
+{
+  const Tick = Math.floor(t * 8);
+  const FloorY = Math.round(H * 0.84), Cx = W >> 1;
+  Rect(c, 0, 0, W, FloorY, "#3A2A22");
+  // The arched window in the middle, moonlit
+  const Aw = Math.round(Math.min(W * 0.26, H * 0.36)), Ax = Cx - (Aw >> 1), Ay = Math.round(H * 0.1), Ah = Math.round(FloorY * 0.62);
+  for (let y = 0; y < Ah; y++)
+  {
+    const Arch = y < Aw / 2 ? Math.round(Aw / 2 - Math.sqrt(Math.pow(Aw / 2, 2) - Math.pow(Aw / 2 - y, 2))) : 0;
+    Rect(c, Ax + Arch - 2, Ay + y, Aw - Arch * 2 + 4, 1, "#2A180E");
+    Rect(c, Ax + Arch, Ay + y, Aw - Arch * 2, 1, y < Ah * 0.6 ? "#1A2448" : "#202C52");
+  }
+  for (let n = 0; n < Aw * 1.2; n++) if (Hash(n, Math.floor(Tick / 7) + n) > 0.25) Rect(c, Ax + 3 + Hash(n, 451) * (Aw - 6), Ay + Aw * 0.3 + Hash(n, 452) * Ah * 0.5, 1, 1, "#D9D6F0");
+  Disc(c, Ax + Math.round(Aw * 0.65), Ay + Math.round(Aw * 0.45), Math.max(3, Math.round(Aw * 0.12)), "#F4EBC8");
+  Rect(c, Cx - 1, Ay + Math.round(Aw * 0.2), 2, Ah - Math.round(Aw * 0.2), "#2A180E");
+  for (let y = Ay + Math.round(Aw * 0.5); y < Ay + Ah; y += Math.round(Ah / 4)) Rect(c, Ax, y, Aw, 1, "#2A180E");
+  Rect(c, Ax - 4, Ay + Ah, Aw + 8, 3, "#5A3820");
+  // Tall bookcases filling both sides
+  const SideW = Ax - 6;
+  for (let x = 0, i = 0; x < SideW; x += 30, i++) Bookcase(c, x, Math.round(H * 0.04), Math.min(28, SideW - x), FloorY - Math.round(H * 0.04), i * 7);
+  for (let x = Ax + Aw + 6, i = 0; x < W; x += 30, i++) Bookcase(c, x, Math.round(H * 0.04), Math.min(28, W - x), FloorY - Math.round(H * 0.04), 40 + i * 7);
+  // A rolling ladder against the left bookcases, on its rail
+  Rect(c, 0, Math.round(H * 0.08), SideW, 1, "#C9A14A");
+  const Lx = Math.round(SideW * 0.6);
+  for (let y = Math.round(H * 0.08); y < FloorY; y++)
+  {
+    const Lean = Math.round((y - H * 0.08) * 0.12);
+    Rect(c, Lx + Lean, y, 1, 1, "#8C6440"); Rect(c, Lx + 7 + Lean, y, 1, 1, "#8C6440");
+    if ((y - Math.round(H * 0.08)) % 7 === 0) Rect(c, Lx + Lean, y, 8, 1, "#8C6440");
+  }
+  // The floor, a long reading table with a green lamp and an open book
+  Rect(c, 0, FloorY, W, H - FloorY, "#4A3226");
+  for (let x = 0; x < W; x += 8) Rect(c, x, FloorY, 1, H - FloorY, (x >> 3) % 2 ? "#3E2A1E" : "#56392A");
+  Rect(c, 0, FloorY, W, 1, "#2A180E");
+  const Ty = FloorY - 9;
+  Rect(c, Cx - 30, Ty, 60, 3, "#5A3820"); Rect(c, Cx - 28, Ty + 3, 2, 6, "#3A2214"); Rect(c, Cx + 26, Ty + 3, 2, 6, "#3A2214");
+  Rect(c, Cx + 12, Ty - 1, 6, 1, "#2A180E"); Rect(c, Cx + 14, Ty - 6, 1, 5, "#C9A14A"); Rect(c, Cx + 10, Ty - 9, 10, 3, "#2E6A4A");
+  Disc(c, Cx + 15, Ty - 3, 14, "rgba(255,220,140,0.08)"); Disc(c, Cx + 15, Ty - 3, 7, "rgba(255,220,140,0.1)");
+  Rect(c, Cx - 14, Ty - 2, 8, 2, "#EDE3C8"); Rect(c, Cx - 10, Ty - 2, 1, 2, "#B8A888");
+  // Moonlight falling from the window across the floor, with dust drifting in it
+  for (let y = Ay + Ah; y < H; y++)
+  {
+    const Spread = Math.round((y - Ay - Ah) * 0.35);
+    Rect(c, Ax + 4 - Spread, y, Aw - 8 + Spread * 2, 1, "rgba(200,210,255,0.06)");
+  }
+  for (let n = 0; n < 24; n++)
+  {
+    const x = Ax + Hash(n, 461) * Aw + Math.sin(t * 0.4 + n) * 4, y = Ay + Ah * 0.4 + ((Hash(n, 462) * Ah + t * 1.5) % (FloorY - Ay - Ah * 0.4));
+    if (Hash(n, Math.floor(Tick / 4)) > 0.3) Rect(c, x, y, 1, 1, "rgba(240,235,210,0.7)");
+  }
+  // Candle sconces between the bookcases, flickering
+  [Math.round(SideW * 0.25), W - Math.round(SideW * 0.25)].forEach((Sx, i) =>
+  {
+    const Sy = Math.round(H * 0.32);
+    Rect(c, Sx - 2, Sy, 5, 2, "#C9A14A"); Rect(c, Sx, Sy - 4, 1, 4, "#EDE3C8");
+    Rect(c, Sx + ((Tick + i) % 2), Sy - 6, 1, 2, "#FFD15C");
+    Disc(c, Sx, Sy - 4, 10, "rgba(255,190,100,0.08)");
+  });
+  Rect(c, 0, 0, W, H, "rgba(14,7,10,0.2)");
+}
+
+// Shrine helpers (used by scene 9):
+
+// The Blossom function paints a cherry branch: it bends out from a point and is covered in clusters of pink
+function Blossom(c, X, Y, Length, Angle, Depth, Seed)
+{
+  const Ex = X + Math.cos(Angle) * Length, Ey = Y + Math.sin(Angle) * Length;
+  for (let s = 0; s <= Length; s++) Rect(c, X + Math.cos(Angle) * s, Y + Math.sin(Angle) * s, Math.max(1, Depth), Math.max(1, Depth), "#3A2626");
+  if (Depth < 2) for (let n = 0; n < 3; n++) Disc(c, (X + Ex) / 2 + (Hash(n, Seed + 5) - 0.5) * 6, (Y + Ey) / 2 + (Hash(n, Seed + 6) - 0.5) * 5, 2, ["#F6C4D0", "#EFA8BC"][n % 2]);
+  if (Depth <= 0)
+  {
+    for (let n = 0; n < 6; n++) Disc(c, Ex + (Hash(n, Seed) - 0.5) * 8, Ey + (Hash(n, Seed + 1) - 0.5) * 6, 2 + Math.round(Hash(n, Seed + 2) * 2), ["#F6C4D0", "#EFA8BC", "#F9D8E0"][n % 3]);
+    return;
+  }
+  Blossom(c, Ex, Ey, Length * 0.72, Angle - 0.45 - Hash(Seed, 1) * 0.3, Depth - 1, Seed * 3 + 1);
+  Blossom(c, Ex, Ey, Length * 0.68, Angle + 0.35 + Hash(Seed, 2) * 0.3, Depth - 1, Seed * 3 + 2);
+}
+
+// The CherryTree function paints a whole cherry tree: a dark trunk that forks and a big soft crown of pink clusters
+function CherryTree(c, Cx, BaseY, Height, Seed)
+{
+  const Trunk = Math.round(Height * 0.45);
+  for (let y = 0; y < Trunk; y++) Rect(c, Cx - 1 + Math.round(Math.sin(y * 0.15 + Seed) * 1), BaseY - y, 3, 1, "#3A2626");
+  Blossom(c, Cx, BaseY - Trunk, Height * 0.22, -Math.PI / 2 - 0.5, 2, Seed);
+  Blossom(c, Cx, BaseY - Trunk, Height * 0.22, -Math.PI / 2 + 0.5, 2, Seed + 9);
+  const R = Math.round(Height * 0.32);
+  for (let n = 0; n < 14; n++)
+  {
+    const Dx = Math.round((Hash(n, Seed) - 0.5) * R * 1.8), Dy = Math.round((Hash(n, Seed + 1) - 0.5) * R * 1.1);
+    Disc(c, Cx + Dx, BaseY - Trunk - R * 0.5 + Dy, Math.max(2, Math.round(R * (0.35 + Hash(n, Seed + 2) * 0.3))), ["#F2B8C6", "#E89AB0", "#F9D0DA", "#EFA8BC"][n % 4]);
+  }
+}
+
+// The Torii function paints a red shrine gate: two posts, a tie beam and the curved top beam
+function Torii(c, Cx, BaseY, Wide, Tall, Light)
+{
+  const Post = Math.max(1, Math.round(Wide * 0.06));
+  const Red = Light ? "#D8442E" : "#A8321F", Dark = Light ? "#2A1A1A" : "#1E1214";
+  Rect(c, Cx - (Wide >> 1), BaseY - Tall, Post, Tall, Red);
+  Rect(c, Cx + (Wide >> 1) - Post, BaseY - Tall, Post, Tall, Red);
+  Rect(c, Cx - (Wide >> 1) - 1, BaseY - Math.round(Tall * 0.78), Wide + 2, Math.max(1, Math.round(Tall * 0.06)), Red);
+  for (let x = -((Wide >> 1) + 3); x <= (Wide >> 1) + 3; x++)
+  {
+    const Lift = Math.round(Math.pow(Math.abs(x) / ((Wide >> 1) + 3), 3) * 2);
+    Rect(c, Cx + x, BaseY - Tall - 2 - Lift, 1, Math.max(2, Math.round(Tall * 0.1)), Dark);
+  }
+}
+
+// Scene 9 (a temple up the mountain steps):
+
+// The DrawTemple function paints scene 9: stone steps climbing between cherry trees to a red temple, a snowy mountain behind it in the evening
+function DrawTemple(c, W, H, t)
+{
+  const Tick = Math.floor(t * 8);
+  const Cx = W >> 1, Horizon = Math.round(H * 0.5);
+  Bands(c, W, 0, Horizon + 4, ["#F2C6B4", "#F4CDB8", "#F2C0B6", "#EDB2B6", "#E3A2B4", "#D494B2"]);
+  Disc(c, Math.round(W * 0.78), Math.round(H * 0.2), 7, "#FFF0DC");
+  // The mountain behind, with snow on top and soft clouds across it
+  for (let x = 0; x < W; x++)
+  {
+    const Rise = Math.max(0, Math.round(H * 0.34 - Math.abs(x - Cx) * 0.62));
+    if (!Rise) continue;
+    Rect(c, x, Horizon - Rise, 1, Rise, "#8C7CA6");
+    if (Rise > H * 0.25) Rect(c, x, Horizon - Rise, 1, Math.round((Rise - H * 0.25) * 0.9) + 1, "#FBF4F4");
+  }
+  for (let n = 0; n < 5; n++)
+  {
+    const Drift = (Hash(n, 501) * W + t * (1 + n * 0.3)) % (W + 40) - 20, Cy = Math.round(H * (0.32 + n * 0.035));
+    Rect(c, Drift, Cy, 22 + n * 4, 2, "rgba(255,240,240,0.5)"); Rect(c, Drift + 5, Cy - 1, 12, 1, "rgba(255,240,240,0.4)");
+  }
+  // Hills of trees in front of the mountain
+  for (let x = 0; x < W; x++)
+  {
+    const Hill = Math.round(H * 0.1 + 6 * Math.sin(x * 0.05) + 4 * Math.sin(x * 0.13));
+    Rect(c, x, Horizon + 6 - Hill, 1, Hill, "#6E5A86");
+  }
+  // The temple at the top of the steps
+  const TempleY = Math.round(H * 0.5), Tw = Math.round(Math.min(W * 0.3, 70));
+  Rect(c, Cx - (Tw >> 1) + 4, TempleY - 14, Tw - 8, 14, "#B4382A");
+  for (let x = Cx - (Tw >> 1) + 7; x < Cx + (Tw >> 1) - 6; x += 6) Rect(c, x, TempleY - 12, 3, 10, "#2A1A1A");
+  for (let Roof = 0; Roof < 2; Roof++)
+  {
+    const Ry = TempleY - 15 - Roof * 11, Rw = Tw + 10 - Roof * 18;
+    for (let x = -(Rw >> 1); x <= Rw >> 1; x++)
+    {
+      const Lift = Math.round(Math.pow(Math.abs(x) / (Rw / 2), 3) * 3);
+      Rect(c, Cx + x, Ry - 3 - Lift, 1, 4, "#3A2A36");
+    }
+    if (Roof === 0) { Rect(c, Cx - (Rw >> 1) + 12, Ry - 10, Rw - 24, 7, "#B4382A"); }
+  }
+  Rect(c, Cx - 1, TempleY - 40, 2, 4, "#C9A14A");
+  // Stone steps coming down towards us, wider as they come closer
+  const StepsTop = TempleY, StepsBottom = H;
+  for (let y = StepsTop; y < StepsBottom; y++)
+  {
+    const Near = (y - StepsTop) / (StepsBottom - StepsTop);
+    const Half = Math.round(6 + Near * W * 0.18);
+    Rect(c, Cx - Half, y, Half * 2, 1, Math.floor(Near * 26) % 2 ? "#A89AA0" : "#968890");
+    Rect(c, Cx - Half - 2, y, 2, 1, "#6E6070"); Rect(c, Cx + Half, y, 2, 1, "#6E6070");
+  }
+  // Ground either side of the steps, then the torii gate over the steps
+  for (let y = StepsTop + 2; y < H; y++)
+  {
+    const Near = (y - StepsTop) / (StepsBottom - StepsTop), Half = Math.round(8 + Near * W * 0.18);
+    Rect(c, 0, y, Cx - Half - 2, 1, "#4E6A48"); Rect(c, Cx + Half + 2, y, W - Cx - Half - 2, 1, "#4E6A48");
+  }
+  Torii(c, Cx, Math.round(H * 0.72), Math.round(W * 0.24 + 16), Math.round(H * 0.28), true);
+  // Stone lanterns lining the steps, glowing
+  [0.35, 0.6, 0.85].forEach((Near, i) =>
+  {
+    const y = StepsTop + Math.round(Near * (StepsBottom - StepsTop)), Half = Math.round(10 + Near * W * 0.18), Size = 1 + Near;
+    [-1, 1].forEach((Side) =>
+    {
+      const Lx = Cx + Side * (Half + 6 + Math.round(Near * 6));
+      Rect(c, Lx - 2 * Size, y - 2, 4 * Size, 2, "#8A8A92"); Rect(c, Lx - Size, y - 8 * Size, 2 * Size, 6 * Size, "#9A9AA2");
+      Rect(c, Lx - 3 * Size, y - 10 * Size, 6 * Size, 2 * Size, "#7A7A82");
+      Rect(c, Lx - Size / 2, y - 7 * Size, Size, 2 * Size, (Tick + i) % 8 ? "#FFD98A" : "#FFC766");
+      Disc(c, Lx, y - 6 * Size, 4 * Size, "rgba(255,210,140,0.12)");
+    });
+  });
+  // Cherry trees on both sides, the nearest ones biggest
+  const Tall = Math.min(H * 0.7, 130);
+  CherryTree(c, Math.round(W * 0.12), H + 4, Tall, 11);
+  CherryTree(c, Math.round(W * 0.88), H + 6, Tall * 0.95, 29);
+  if (W > 160) { CherryTree(c, Math.round(W * 0.28), Math.round(H * 0.72), Tall * 0.55, 47); CherryTree(c, Math.round(W * 0.72), Math.round(H * 0.7), Tall * 0.5, 61); }
+  // Petals drifting across everything
+  for (let n = 0; n < W * 0.3; n++)
+  {
+    const x = (Hash(n, 511) * W * 1.3 + t * (5 + Hash(n, 512) * 5)) % (W + 10) - 5;
+    const y = (Hash(n, 513) * H + t * (4 + Hash(n, 514) * 4) + Math.sin(t * 1.3 + n) * 3) % H;
+    Rect(c, x, y, (Tick + n) % 4 < 2 ? 2 : 1, 1, Hash(n, 515) > 0.5 ? "#FBE0E6" : "#EFA8BC");
+  }
+}
+
+// Scene 10 (a lighthouse keeper's cottage on a stormy night):
+
+// The DrawKeepersCottage function paints scene 10: inside the keeper's cottage on a stormy night, the lighthouse beam sweeping past the rain-streaked window, a lamp, a kettle and a sea chart
+function DrawKeepersCottage(c, W, H, t)
+{
+  const Tick = Math.floor(t * 8);
+  const SillY = Math.round(H * 0.7);
+  const Ww = Math.round(Math.min(W * 0.62, H * 0.95)), Wx = (W - Ww) >> 1, Wy = Math.round(H * 0.16), Wh = SillY - Wy - 3;
+  // Whitewashed stone walls inside the cottage
+  Rect(c, 0, 0, W, H, "#C8BEAA");
+  for (let Row = 0; Row * 8 < H; Row++) for (let x = Row % 2 ? -6 : 0; x < W; x += 12) Rect(c, x, Row * 8, 1, 8, "#B4AA96");
+  for (let y = 0; y < H; y += 8) Rect(c, 0, y, W, 1, "#B4AA96");
+  // The stormy sea outside, and the lighthouse on its rock
+  Bands(c, W, Wy, Wy + Math.round(Wh * 0.55), ["#24304A", "#2C3854", "#36425E", "#424E6A"]);
+  const MoonX = Wx + Math.round(Ww * 0.28), MoonY = Wy + Math.round(Wh * 0.16);
+  Disc(c, MoonX, MoonY, 9, "rgba(240,235,210,0.12)"); Disc(c, MoonX, MoonY, 5, "#F0EBD2");
+  for (let n = 0; n < 6; n++)
+  {
+    const Drift = Wx + (Hash(n, 551) * Ww + t * (2 + n)) % Ww;
+    Rect(c, Drift - 10, Wy + 4 + n * 4, 20 + n * 3, 3, "rgba(60,70,90,0.6)");                       // clouds rolling past
+  }
+  const SeaTop = Wy + Math.round(Wh * 0.55);
+  Bands(c, W, SeaTop, Wy + Wh, ["#2A3A54", "#24334C", "#1E2C44", "#1A263C"]);
+  for (let y = SeaTop + 1; y < Wy + Wh; y += 2) if (Hash(y, Tick % 5) > 0.45) Rect(c, MoonX - 3 + Math.round((Hash(y, 9) - 0.5) * 8), y, 4, 1, "rgba(240,235,210,0.4)");
+  for (let Row = 0; Row < 8; Row++)
+  {
+    const y = SeaTop + 2 + Row * Math.round((Wh * 0.45) / 8);
+    for (let x = Wx; x < Wx + Ww; x += 6) if (Hash(x, Row + Tick % 4) > 0.6) Rect(c, x + Math.round(Math.sin(t * 2 + Row) * 2), y, 4, 1, "#6A7A92");     // white caps
+  }
+  const Lx = Wx + Math.round(Ww * 0.72), LBase = SeaTop + 6, LTall = Math.round(Wh * 0.55);
+  Rect(c, Lx - 10, LBase - 2, 20, 7, "#2A2A34");
+  for (let y = 0; y < LTall; y++)
+  {
+    const Half = Math.round(5 - (y / LTall) * 2);
+    Rect(c, Lx - Half, LBase - y, Half * 2, 1, Math.floor(y / (LTall / 5)) % 2 ? "#B4383A" : "#E8E0D4");
+  }
+  Rect(c, Lx - 4, LBase - LTall - 5, 8, 5, "#FFF0B8"); Rect(c, Lx - 5, LBase - LTall - 8, 10, 3, "#B4383A"); Rect(c, Lx - 5, LBase - LTall, 10, 1, "#2A2A34");
+  // The beam sweeping round, crossing the window towards us every so often
+  const Angle = t * 0.9, Facing = Math.cos(Angle), Toward = Math.sin(Angle) > 0 ? -1 : 1;
+  for (let d = 3; d < Ww; d++)
+  {
+    const Spread = Math.round(1 + d * 0.08), Bx = Lx + Toward * d;
+    if (Bx < Wx || Bx > Wx + Ww) break;
+    Rect(c, Bx, LBase - LTall - 2 - Spread, 1, Spread * 2 + 1, `rgba(255,240,190,${(0.25 + 0.35 * Math.max(0, Facing)) * (1 - d / Ww)})`);
+  }
+  if (Facing > 0.92) Rect(c, Wx, Wy, Ww, Wh, "rgba(255,240,200,0.12)");                                  // the flash when it points straight at us
+  // Rain lashing the glass at a slant, and drops running down
+  for (let n = 0; n < W * 0.8; n++)
+  {
+    const x = Wx + (Hash(n, 561) * Ww + t * 14) % Ww, y = Wy + (Hash(n, 562) * Wh + t * (50 + Hash(n, 563) * 20)) % Wh;
+    Rect(c, x, y, 1, 2, "rgba(200,215,235,0.4)");
+  }
+  for (let n = 0; n < 12; n++)
+  {
+    const x = Wx + 2 + Math.floor(Hash(n, 571) * (Ww - 4)), Life = (t * (0.05 + Hash(n, 572) * 0.05) + Hash(n, 573)) % 1;
+    Rect(c, x, Wy + Math.floor(Life * Wh), 1, 2, "rgba(230,238,250,0.75)");
+  }
+  // The window frame, painted blue like a seaside cottage
+  Rect(c, Wx - 3, Wy - 3, Ww + 6, 3, "#3E5A7A"); Rect(c, Wx - 3, Wy + Wh, Ww + 6, 3, "#3E5A7A");
+  Rect(c, Wx - 3, Wy, 3, Wh, "#3E5A7A"); Rect(c, Wx + Ww, Wy, 3, Wh, "#3E5A7A");
+  Rect(c, Wx + (Ww >> 1) - 1, Wy, 2, Wh, "#3E5A7A"); Rect(c, Wx, Wy + (Wh >> 1), Ww, 2, "#3E5A7A");
+  // A sea chart pinned to the wall, a ship's wheel and a rope coil
+  if (Wx > 30)
+  {
+    const Mx = Math.round(Wx / 2) - 9;
+    Rect(c, Mx, Wy + 6, 18, 14, "#E8D9B0"); Rect(c, Mx + 3, Wy + 9, 8, 5, "#9AB8C8"); Rect(c, Mx + 10, Wy + 12, 5, 5, "#9AB8C8"); Rect(c, Mx + 8, Wy + 6, 2, 1, "#B4383A");
+    const Sx = W - Math.round(Wx / 2);
+    Disc(c, Sx, Wy + 16, 8, "#6E4A30"); Disc(c, Sx, Wy + 16, 5, "#C8BEAA"); Disc(c, Sx, Wy + 16, 2, "#6E4A30");
+    for (let k = 0; k < 8; k++) Rect(c, Sx + Math.round(Math.cos(k * 0.785) * 9), Wy + 16 + Math.round(Math.sin(k * 0.785) * 9), 2, 2, "#6E4A30");
+  }
+  // The sill and the table under the window: a lamp, a kettle steaming and a mug
+  Rect(c, Wx - 6, SillY, Ww + 12, 3, "#E8E0D0");
+  Rect(c, 0, SillY + 6, W, H - SillY - 6, "#5A3E2A");
+  for (let x = 0; x < W; x += 12) Rect(c, x, SillY + 6, 1, H - SillY - 6, "#4A3020");
+  Rect(c, 0, SillY + 6, W, 2, "#7A5638");
+  const Ox = Math.round(W * 0.3), Oy = SillY + 6;
+  Rect(c, Ox - 2, Oy - 2, 6, 2, "#C9A14A"); Rect(c, Ox - 1, Oy - 10, 4, 8, "rgba(255,240,200,0.6)"); Rect(c, Ox - 1, Oy - 11, 4, 1, "#C9A14A");
+  Rect(c, Ox, Oy - 7, 2, 3, Tick % 3 ? "#FFD15C" : "#FFC244");                                          // the oil lamp's flame
+  Disc(c, Ox + 1, Oy - 6, Math.round(Math.min(W, H) * 0.25), "rgba(255,200,110,0.06)"); Disc(c, Ox + 1, Oy - 6, 10, "rgba(255,200,110,0.1)");
+  const Kx = Math.round(W * 0.62);
+  Rect(c, Kx, Oy - 7, 9, 7, "#3A4A5A"); Rect(c, Kx + 9, Oy - 5, 3, 1, "#3A4A5A"); Rect(c, Kx + 2, Oy - 9, 5, 2, "#2A3644");
+  for (let n = 0; n < 3; n++)
+  {
+    const Life = (t * 0.3 + n / 3) % 1;
+    Rect(c, Kx + 11 + Math.round(Life * 4), Oy - 7 - Math.round(Life * 10), 1, 2, `rgba(240,240,240,${0.55 * (1 - Life)})`);
+  }
+  Rect(c, Kx + 16, Oy - 5, 5, 5, "#B4383A"); Rect(c, Kx + 21, Oy - 4, 1, 2, "#B4383A");
+  Rect(c, 0, 0, W, H, "rgba(20,14,10,0.1)");
+}
+
 // Backgrounds holds the list the picker is built from, each with its name, id, dim (extra darkening), draw function and colour theme
 const Backgrounds = [
   { name: "Cabin fireplace", id: "cabin", dim: 0, draw: DrawCabin, theme: {
@@ -493,6 +1000,24 @@ const Backgrounds = [
   { name: "Snowy cabin", id: "snow", dim: 0.15, draw: DrawSnowyCabin, theme: {
       books: ["#8C2F39", "#1F3F4E", "#D8DEE9", "#5E81AC", "#6B4428", "#B48EAD", "#2E3A5F", "#C9A14A"],   // berries, spruce, frost, lamplight
       shelf: "#3A2314", edge: "#EEF1F8", plaque: "#E8ECF6" } },      // the lit edge is white: snow lying on the shelves
+  { name: "Rainy café", id: "cafe", dim: 0.08, draw: DrawCafe, theme: {
+      books: ["#6B4E3D", "#C08552", "#3C4F65", "#E6C79C", "#8C3B2E", "#5D7285", "#2E2A35", "#D9A066"],   // coffee, street lamps, rainy blues
+      shelf: "#2B1D16", edge: "#7A5640", plaque: "#D9A066" } },
+  { name: "Autumn forest", id: "autumn", dim: 0.2, draw: DrawAutumn, theme: {
+      books: ["#8C3B1E", "#D9822B", "#E8B04A", "#5C3A1E", "#A6542B", "#3E4A2A", "#C9693A", "#F0D9A0"],   // falling leaves and bark
+      shelf: "#3A2214", edge: "#9A5A2A", plaque: "#E8A23A" } },
+  { name: "Attic nook", id: "attic", dim: 0, draw: DrawAttic, theme: {
+      books: ["#3A4A6B", "#8C5A3C", "#C9A66B", "#2A2438", "#6B8E7A", "#A84B3A", "#D8C9A8", "#4E3A5C"],   // night sky, old wood, lamplight
+      shelf: "#2A1C14", edge: "#6E4A30", plaque: "#D8B060" } },
+  { name: "Grand library", id: "library", dim: 0.05, draw: DrawGrandLibrary, theme: {
+      books: ["#7A2E2E", "#2E4A3A", "#C9A14A", "#3A3A6A", "#8C5A2B", "#5A2E4A", "#D8C8A8", "#4A6A7A"],   // old cloth bindings and gilt
+      shelf: "#2A180E", edge: "#8C6440", plaque: "#D4A84A" } },
+  { name: "Mountain temple", id: "temple", dim: 0.18, draw: DrawTemple, theme: {
+      books: ["#B4382A", "#F2C4CE", "#5A4A7A", "#E8DCC4", "#8C2F39", "#EFA8BC", "#3A2A36", "#C9A14A"],   // temple red, blossom, mountain dusk
+      shelf: "#3A2626", edge: "#EFA8BC", plaque: "#F2C4CE" } },      // the lit edge is pink: petals settled on the shelves
+  { name: "Keeper's cottage", id: "keeper", dim: 0.1, draw: DrawKeepersCottage, theme: {
+      books: ["#3E5A7A", "#B4383A", "#E8D9B0", "#2A3644", "#9AB8C8", "#C9A14A", "#6E4A30", "#E8E0D4"],   // sea blues, lighthouse red, sailcloth
+      shelf: "#2A2420", edge: "#9AB8C8", plaque: "#E8D9B0" } },
 ];
 
 // The LetteringFor function picks dark or light lettering for a cover colour, whichever is easier to read on it

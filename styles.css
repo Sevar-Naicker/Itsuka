@@ -128,6 +128,9 @@ h1 {
 .motion-switch { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 0.9375rem; cursor: pointer; }
 .motion-switch input { width: 20px; height: 20px; accent-color: var(--brass); }
 .scene-list { display: flex; gap: 12px; padding: 4px; overflow-x: auto; }
+@media (min-width: 641px) {
+  .scene-list { flex-wrap: wrap; row-gap: 14px; overflow-x: visible; }   /* on a laptop every background shows at once, on a phone the row slides */
+}
 .scene {
   flex: none;
   width: 134px;

@@ -32,6 +32,9 @@ const NEWS = [
   { number: 6, title: "Itsuka on your home screen", items: [
     { title: "Add to home screen", text: "Settings now has an Add to home screen button under On your phone. On many Android phones it adds Itsuka in one tap, on iPhone it shows you the three steps. Itsuka then opens from its own icon like an app.", show: "settings" },
   ] },
+  { number: 7, title: "Six new backgrounds", items: [
+    { title: "New scenes", text: "A rainy café, an autumn forest, an attic nook, a grand library, a mountain temple in cherry blossom and a lighthouse keeper's cottage. Each one recolours your shelves to match. Pick one in Settings.", show: "settings" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;

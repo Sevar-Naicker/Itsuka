@@ -28,7 +28,7 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 - **Share Into Itsuka:** on Android, once Itsuka is on the home screen it appears in the Share menu of Instagram, Pinterest and other apps. Sharing a link opens a new catalogue card with the link and name filled in. On iPhone, the Itsuka shortcut (linked in Settings: https://www.icloud.com/shortcuts/4c29b0fcae1b4f10b5e615784edd1c0e) does the same from the Share menu by opening `library.html?add=` followed by the link.
 - **Done Mark:** tick Done inside a book once you have visited, bought or used it. The book gets a ribbon on its spine and a stamp inside, and the Hide done button tucks the finished books away.
 - **Pictures:** one picture per book, shrunk before upload and drawn in a pixel style to match the library.
-- **Backgrounds:** four animated pixel scenes (cabin fireplace, green woodland, campfire night, snowy cabin). The shelves, books and plaques change colour to match the one you pick.
+- **Backgrounds:** ten animated pixel scenes (cabin fireplace, green woodland, campfire night, snowy cabin, rainy café, autumn forest, attic nook, grand library, mountain temple and keeper's cottage). The shelves, books and plaques change colour to match the one you pick.
 - **Phone and Laptop:** the layout and the backgrounds fit both. On a phone the site can be added to the home screen, where it opens like an app. An Add to home screen button, in How it works on the landing page and under On your phone in Settings, installs it in one tap where the browser allows (Chrome, Edge and Samsung Internet, on Android and laptops) and shows the steps for that phone everywhere else, like on iPhone. It hides once Itsuka is on the home screen.
 
 ## How it is built:
