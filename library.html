@@ -88,49 +88,90 @@
 <!-- The developer tag and the privacy link at the bottom of the page -->
 <footer class="credit"><span>Developed By Sav</span><a href="privacy.html">Privacy</a></footer>
 
-<!-- The settings: the background for this device (thumbnails added by backgrounds.js) and the shelf tools for this member (switches added by library.js) -->
-<dialog class="scenes" id="scenePicker" aria-labelledby="sceneTitle">
+<!-- The settings, laid out like a journal: a bookmark for each page down the side (across the top on a phone), thumbnails added by backgrounds.js and switches by library.js -->
+<dialog class="scenes journal" id="scenePicker" aria-labelledby="sceneTitle">
   <div class="scenes-inner">
     <div class="scenes-head">
       <h2 id="sceneTitle">Settings</h2>
       <button class="plain-button" id="sceneDone" type="button">Done</button>
     </div>
-    <h3 class="settings-title">Background on this device</h3>
-    <label class="motion-switch">
-      <input type="checkbox" id="motionSwitch"> Moving backgrounds
-    </label>
-    <div class="scene-list" id="sceneList"></div>
-    <h3 class="settings-title">On the shelves</h3>
-    <div class="settings-list" id="settingsList"></div>
-    <p class="settings-note" id="settingsNote" role="alert" hidden></p>
-    <div id="colourSection" hidden>
-      <h3 class="settings-title">Your colour on joint shelves</h3>
-      <div class="colour-picker" id="colourPicker"></div>
-      <p class="settings-help">The colour of your books' stripes on joint shelves, and of your ribbon on shelves you own. The colours follow the background, so they always fit.</p>
-      <p class="settings-note" id="colourNote" role="alert" hidden></p>
+
+    <!-- The bookmarks, one per page -->
+    <div class="journal-tabs" id="journalTabs" role="tablist" aria-label="Settings pages">
+      <button type="button" role="tab" id="tabBackground" aria-controls="pageBackground" data-page="background" style="--tab: #4A7A8C">Background</button>
+      <button type="button" role="tab" id="tabShelves" aria-controls="pageShelves" data-page="shelves" style="--tab: #8A5A3A">Shelves</button>
+      <button type="button" role="tab" id="tabLibrary" aria-controls="pageLibrary" data-page="library" style="--tab: #5C7A3E">Library</button>
+      <button type="button" role="tab" id="tabPhone" aria-controls="pagePhone" data-page="phone" style="--tab: #9A4A3A">Phone</button>
+      <button type="button" role="tab" id="tabHelp" aria-controls="pageHelp" data-page="help" style="--tab: #6A5A8A">Help</button>
     </div>
-    <h3 class="settings-title">Your library</h3>
-    <div class="library-copy">
-      <button class="plain-button" id="downloadCopy" type="button">Download a copy</button>
-      <button class="plain-button" id="loadCopy" type="button">Load a copy</button>
-      <input id="copyFile" type="file" accept=".json,application/json" hidden>
-    </div>
-    <p class="library-status" id="libraryStatus" role="status" hidden></p>
-    <h3 class="settings-title">On your phone</h3>
-    <p class="settings-help">Add Itsuka to your home screen and it opens from its own icon like an app.</p>
-    <div class="library-copy">
-      <button class="plain-button install-button" type="button" data-install="Add to home screen" data-steps="How to add it to your home screen" hidden>Add to home screen</button>
-    </div>
-    <h3 class="settings-title">Adding from other apps</h3>
-    <p class="settings-help"><b>Android:</b> add Itsuka to your home screen, then in Instagram, Pinterest or any app press Share and choose Itsuka. A new catalogue card opens with the link filled in.</p>
-    <p class="settings-help"><b>iPhone:</b> add the Itsuka shortcut once, then in Instagram, Pinterest or any app press Share, then More, and choose Itsuka.</p>
-    <div class="library-copy">
-      <a class="plain-button" id="iphoneShortcut" href="https://www.icloud.com/shortcuts/4c29b0fcae1b4f10b5e615784edd1c0e" target="_blank" rel="noopener">Get the iPhone shortcut</a>
-    </div>
-    <h3 class="settings-title">Help</h3>
-    <div class="library-copy">
-      <button class="plain-button" id="settingsGuide" type="button">Guide</button>
-      <button class="plain-button" id="settingsNews" type="button">What's new</button>
+
+    <div class="journal-page" id="journalPage">
+
+      <!-- Background page: moving or still, Shuffle and the pictures -->
+      <section class="journal-section" id="pageBackground" role="tabpanel" aria-labelledby="tabBackground" data-page="background">
+        <h3 class="settings-title">Background on this device</h3>
+        <label class="motion-switch">
+          <input type="checkbox" id="motionSwitch"> Moving backgrounds
+        </label>
+        <div class="scene-list" id="sceneList"></div>
+        <div class="shuffle-options" id="shuffleOptions" hidden>
+          <span>A new background</span>
+          <button class="plain-button" type="button" data-when="visit">Each visit</button>
+          <button class="plain-button" type="button" data-when="day">Each day</button>
+          <small>Untick any you would rather leave out of the shuffle. Choosing one picture turns Shuffle off.</small>
+        </div>
+      </section>
+
+      <!-- Shelves page: the shelf tools and your colour on joint shelves -->
+      <section class="journal-section" id="pageShelves" role="tabpanel" aria-labelledby="tabShelves" data-page="shelves" hidden>
+        <h3 class="settings-title">On the shelves</h3>
+        <div class="settings-list" id="settingsList"></div>
+        <p class="settings-note" id="settingsNote" role="alert" hidden></p>
+        <div id="colourSection" hidden>
+          <h3 class="settings-title">Your colour on joint shelves</h3>
+          <div class="colour-picker" id="colourPicker"></div>
+          <p class="settings-help">The colour of your books' stripes on joint shelves, and of your ribbon on shelves you own. The colours follow the background, so they always fit.</p>
+          <p class="settings-note" id="colourNote" role="alert" hidden></p>
+        </div>
+      </section>
+
+      <!-- Library page: download a copy or load one back -->
+      <section class="journal-section" id="pageLibrary" role="tabpanel" aria-labelledby="tabLibrary" data-page="library" hidden>
+        <h3 class="settings-title">Your library</h3>
+        <p class="settings-help">Download your whole library as one file to keep, or load a copy you saved before.</p>
+        <div class="library-copy">
+          <button class="plain-button" id="downloadCopy" type="button">Download a copy</button>
+          <button class="plain-button" id="loadCopy" type="button">Load a copy</button>
+          <input id="copyFile" type="file" accept=".json,application/json" hidden>
+        </div>
+        <p class="library-status" id="libraryStatus" role="status" hidden></p>
+      </section>
+
+      <!-- Phone page: the home screen and sharing in from other apps -->
+      <section class="journal-section" id="pagePhone" role="tabpanel" aria-labelledby="tabPhone" data-page="phone" hidden>
+        <h3 class="settings-title">On your phone</h3>
+        <p class="settings-help">Add Itsuka to your home screen and it opens from its own icon like an app.</p>
+        <div class="library-copy">
+          <button class="plain-button install-button" type="button" data-install="Add to home screen" data-steps="How to add it to your home screen" hidden>Add to home screen</button>
+        </div>
+        <h3 class="settings-title">Adding from other apps</h3>
+        <p class="settings-help"><b>Android:</b> add Itsuka to your home screen, then in Instagram, Pinterest or any app press Share and choose Itsuka. A new catalogue card opens with the link filled in.</p>
+        <p class="settings-help"><b>iPhone:</b> add the Itsuka shortcut once, then in Instagram, Pinterest or any app press Share, then More, and choose Itsuka.</p>
+        <div class="library-copy">
+          <a class="plain-button" id="iphoneShortcut" href="https://www.icloud.com/shortcuts/4c29b0fcae1b4f10b5e615784edd1c0e" target="_blank" rel="noopener">Get the iPhone shortcut</a>
+        </div>
+      </section>
+
+      <!-- Help page: the Guide and What's new -->
+      <section class="journal-section" id="pageHelp" role="tabpanel" aria-labelledby="tabHelp" data-page="help" hidden>
+        <h3 class="settings-title">Help</h3>
+        <p class="settings-help">The Guide explains every part of Itsuka. What's new lists the latest additions.</p>
+        <div class="library-copy">
+          <button class="plain-button" id="settingsGuide" type="button">Guide</button>
+          <button class="plain-button" id="settingsNews" type="button">What's new</button>
+        </div>
+      </section>
+
     </div>
   </div>
 </dialog>

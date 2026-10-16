@@ -11,29 +11,33 @@ const NEWS = [
     { title: "Done and Hide done", text: "Open a book and tick Done once you've bought, visited or used it. Hide done tucks those away.", show: "spine" },
     { title: "Sort and arrange shelves", text: "Edit sections moves shelves up and down and keeps each one in your own order, A to Z, newest or oldest first.", show: "sections" },
     { title: "Share a shelf", text: "Edit sections, then Share, makes a link to one shelf. Friends can look and add its books to their own library.", show: "sections" },
-    { title: "Settings and a copy of your library", text: "Switch shelf tools on or off, and download your whole library as one file to keep.", show: "settings" },
+    { title: "Settings and a copy of your library", text: "Switch shelf tools on or off, and download your whole library as one file to keep.", show: "settings shelves" },
     { title: "Dusty books", text: "Books you haven't opened in two months gather dust, and cobwebs after eight. Open one to blow it off.", show: "" },
     { title: "Share into Itsuka", text: "On Android, add Itsuka to your home screen, then Share any Instagram or Pinterest link to it.", show: "" },
   ] },
   { number: 2, title: "Joint shelves", items: [
     { title: "Joint shelves", text: "Fill a shelf together with up to four friends. Edit sections, then Invite, makes a link they can join with. Joint shelves have a ribbon on their plaque.", show: "sections" },
-    { title: "Your colour", text: "Pick your colour in Settings. It marks the books you add to joint shelves, with a stripe on the spine and an Added by line inside.", show: "settings" },
+    { title: "Your colour", text: "Pick your colour in Settings. It marks the books you add to joint shelves, with a stripe on the spine and an Added by line inside.", show: "settings shelves" },
   ] },
   { number: 3, title: "Lots of shelves", items: [
     { title: "Sliding plaques", text: "When your shelves don't all fit along the top, brass arrows appear at each end. Press them, or scroll, to slide along. Edit sections now always stays in view.", show: "#editSections" },
-    { title: "Shelves down the side", text: "On a laptop, switch on Shelves down the side in Settings to stand your plaques in a list beside the shelves.", show: "settings" },
+    { title: "Shelves down the side", text: "On a laptop, switch on Shelves down the side in Settings to stand your plaques in a list beside the shelves.", show: "settings shelves" },
   ] },
   { number: 4, title: "Live joint shelves", items: [
     { title: "Changes straight away", text: "On a joint shelf, books your friends add, move, tick done or remove now show up on your screen as it happens, no reloading. A small note says who did what.", show: "" },
   ] },
   { number: 5, title: "Sharing from iPhone", items: [
-    { title: "Share into Itsuka on iPhone", text: "Add the Itsuka shortcut from Settings once. Then in Instagram, Pinterest or Safari press Share, then More, and choose Itsuka to open a new catalogue card with the link filled in.", show: "settings" },
+    { title: "Share into Itsuka on iPhone", text: "Add the Itsuka shortcut from Settings once. Then in Instagram, Pinterest or Safari press Share, then More, and choose Itsuka to open a new catalogue card with the link filled in.", show: "settings phone" },
   ] },
   { number: 6, title: "Itsuka on your home screen", items: [
-    { title: "Add to home screen", text: "Settings now has an Add to home screen button under On your phone. On many Android phones it adds Itsuka in one tap, on iPhone it shows you the three steps. Itsuka then opens from its own icon like an app.", show: "settings" },
+    { title: "Add to home screen", text: "Settings now has an Add to home screen button under On your phone. On many Android phones it adds Itsuka in one tap, on iPhone it shows you the three steps. Itsuka then opens from its own icon like an app.", show: "settings phone" },
   ] },
   { number: 7, title: "Six new backgrounds", items: [
     { title: "New scenes", text: "A rainy café, an autumn forest, an attic nook, a grand library, a mountain temple in cherry blossom and a lighthouse keeper's cottage. Each one recolours your shelves to match. Pick one in Settings.", show: "settings" },
+  ] },
+  { number: 8, title: "A new look for Settings", items: [
+    { title: "The settings journal", text: "Settings is now a journal with a bookmark for each page, and the shelf tools have little levers.", show: "settings shelves" },
+    { title: "Shuffle", text: "Pick Shuffle, the first picture under Background, for a new background each visit or each day. Untick any you'd rather leave out.", show: "settings" },
   ] },
 ];
 // LATEST_NEWS is the number of the newest entry
@@ -66,12 +70,13 @@ const GUIDE = [
     ["Joint shelves", "Edit sections, then Invite, makes a link that lets up to four friends join one shelf. Everyone can add books, move them and tick them done. Only you and whoever added a book can change it, and only you can rename or delete the shelf. Anyone can leave whenever they like."],
     ["Live changes", "Changes on a joint shelf show up for everyone straight away, with a small note saying who did what. They wait while you're dragging a book or have one open."],
     ["Your colour", "In Settings, pick the colour that marks the books you add to joint shelves. The ribbon on a joint shelf's plaque is its owner's colour."],
-    ["Copies", "In Settings, Download a copy saves your whole library as one file, joint shelves included, and Load a copy adds one back."],
+    ["Copies", "On the Library page in Settings, Download a copy saves your whole library as one file, joint shelves included, and Load a copy adds one back."],
   ] },
   { group: "Your library", lines: [
-    ["Settings", "Choose a background and switch the shelf tools on or off. Your choices follow you to every device."],
+    ["Settings", "A journal with a bookmark for each page: Background, Shelves, Library, Phone and Help. The shelf tools follow you to every device, the background is chosen on each device."],
+    ["Shuffle", "Under Background in Settings, the first picture. Itsuka picks a new background each visit or each day. Untick any you want left out, or pick one picture to stop shuffling."],
     ["Your card", "The card in the top corner holds your photo, Sign out and Delete my account."],
-    ["On your phone", "In Settings, under On your phone, Add to home screen puts Itsuka on your home screen, or shows you the steps for your phone. It then opens like an app."],
+    ["On your phone", "On the Phone page in Settings, Add to home screen puts Itsuka on your home screen, or shows you the steps for your phone. It then opens like an app."],
   ] },
 ];
 
@@ -126,7 +131,7 @@ function PointAt(Elem)
 function ShowMe(Where)
 {
   NewsDialog.close();
-  if (Where === "settings") { ScenePicker.showModal(); return; }
+  if (Where.startsWith("settings")) { OpenSettingsPage(Where.split(" ")[1] || "background"); ScenePicker.showModal(); return; }
   if (Where === "sections") { OpenSectionsCard(); return; }
   if (Where === "spine") { PointAt(LibraryRoot.querySelector(".book .spine")); return; }
   const Elem = document.querySelector(Where);

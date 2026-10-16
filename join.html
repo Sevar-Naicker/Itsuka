@@ -83,17 +83,25 @@
   </div>
 </dialog>
 
-<!-- The background picker, its thumbnails are added by backgrounds.js -->
-<dialog class="scenes" id="scenePicker" aria-labelledby="sceneTitle">
+<!-- The background picker, a single journal page, its thumbnails are added by backgrounds.js -->
+<dialog class="scenes journal single-page" id="scenePicker" aria-labelledby="sceneTitle">
   <div class="scenes-inner">
     <div class="scenes-head">
       <h2 id="sceneTitle">Choose a background</h2>
       <button class="plain-button" id="sceneDone" type="button">Done</button>
     </div>
-    <label class="motion-switch">
-      <input type="checkbox" id="motionSwitch"> Moving backgrounds
-    </label>
-    <div class="scene-list" id="sceneList"></div>
+    <div class="journal-page">
+      <label class="motion-switch">
+        <input type="checkbox" id="motionSwitch"> Moving backgrounds
+      </label>
+      <div class="scene-list" id="sceneList"></div>
+      <div class="shuffle-options" id="shuffleOptions" hidden>
+        <span>A new background</span>
+        <button class="plain-button" type="button" data-when="visit">Each visit</button>
+        <button class="plain-button" type="button" data-when="day">Each day</button>
+        <small>Untick any you would rather leave out of the shuffle. Choosing one picture turns Shuffle off.</small>
+      </div>
+    </div>
   </div>
 </dialog>
 

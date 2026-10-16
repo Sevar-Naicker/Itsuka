@@ -1045,10 +1045,12 @@ function ApplyTheme(Theme)
 
 // Running the chosen background:
 
-// The picker only exists on the main page, on login.html these three are null and the picker code is skipped
+// The picker only exists on the main page and the landing page, elsewhere these are null and the picker code is skipped
 const ScenePicker = document.getElementById("scenePicker");
 const SceneList = document.getElementById("sceneList");
 const MotionSwitch = document.getElementById("motionSwitch");
+const ShuffleOptions = document.getElementById("shuffleOptions");
+const JournalTabs = document.getElementById("journalTabs");
 
 let Current = Backgrounds[0];   // the background in use
 let Width = 0, Height = 0;      // the screen size the canvas was last fitted to
@@ -1064,6 +1066,20 @@ function Remember(Key, Value)
 function Recall(Key)
 {
   try { return localStorage.getItem(Key); }
+  catch (error) { return null; }
+}
+
+// The RememberForVisit function saves a note that only lasts until this tab or the home screen app is closed
+function RememberForVisit(Key, Value)
+{
+  try { sessionStorage.setItem(Key, Value); }
+  catch (error) {}
+}
+
+// The RecallForVisit function reads a note saved by the RememberForVisit function
+function RecallForVisit(Key)
+{
+  try { return sessionStorage.getItem(Key); }
   catch (error) { return null; }
 }
 
@@ -1112,44 +1128,204 @@ function StartOrStop()
   if (!MotionOn) DrawFrame(20);           // one fixed moment, shown as a still
 }
 
-// The SetBackground function switches to a background, remembers the choice and marks its thumbnail
-function SetBackground(Id)
+// Section: Shuffle
+
+// Shuffle holds the shuffle choices for this device: whether it is on, how often a new background comes, and the backgrounds left out of the mix
+const Shuffle = {
+  on: Recall("library-background") === "shuffle",
+  when: Recall("library-shuffle-when") === "day" ? "day" : "visit",
+  leftOut: new Set((Recall("library-shuffle-out") || "").split(",").filter((Id) => Backgrounds.some((b) => b.id === Id))),
+};
+
+// The Today function returns today's date on this device, such as 2026-10-16
+function Today()
+{
+  const Now = new Date();
+  return Now.getFullYear() + "-" + String(Now.getMonth() + 1).padStart(2, "0") + "-" + String(Now.getDate()).padStart(2, "0");
+}
+
+// The ShuffleMix function returns the backgrounds that are in the shuffle
+function ShuffleMix()
+{
+  const Mix = Backgrounds.filter((b) => !Shuffle.leftOut.has(b.id));
+  return Mix.length >= 2 ? Mix : Backgrounds;      // a saved mix that is too small falls back to all of them
+}
+
+// The PickShuffled function picks a background from the mix that is not Avoid, and notes it for this visit and this day
+function PickShuffled(Avoid)
+{
+  const Mix = ShuffleMix();
+  const Choices = Mix.filter((b) => b.id !== Avoid);
+  const Pick = (Choices.length ? Choices : Mix)[Math.floor(Math.random() * (Choices.length || Mix.length))];
+  Remember("library-shuffle-last", Pick.id);
+  Remember("library-shuffle-day", Today());
+  RememberForVisit("library-shuffle-visit", Pick.id);
+  return Pick.id;
+}
+
+// The ShuffledBackground function returns the background to show while shuffling: the same one for the whole visit, or for the whole day
+function ShuffledBackground()
+{
+  const InMix = (Id) => ShuffleMix().some((b) => b.id === Id);
+  const Last = Recall("library-shuffle-last");
+  if (Shuffle.when === "day" && Recall("library-shuffle-day") === Today() && InMix(Last)) return Last;
+  const ThisVisit = RecallForVisit("library-shuffle-visit");
+  if (Shuffle.when === "visit" && InMix(ThisVisit)) return ThisVisit;
+  return PickShuffled(Last);                        // a new visit or a new day never repeats the last one
+}
+
+// Section: Showing a background
+
+// The ShowBackground function paints a background and colours the shelves to match, without saving it as the choice
+function ShowBackground(Id)
 {
   Current = Backgrounds.find((b) => b.id === Id) || Backgrounds[0];   // unknown or nothing saved -> the first one
   document.body.style.setProperty("--dim", Current.dim);
   ApplyTheme(Current.theme);
-  Remember("library-background", Current.id);
   DrawFrame(20);
   StartOrStop();
+  MarkPicker();
+}
 
-  if (SceneList)
+// The SetBackground function switches to one background and remembers it, which also turns Shuffle off
+function SetBackground(Id)
+{
+  Shuffle.on = false;
+  ShowBackground(Id);
+  Remember("library-background", Current.id);
+}
+
+// The StartShuffle function turns Shuffle on and swaps straight to a different background so it is clear it worked
+function StartShuffle()
+{
+  Shuffle.on = true;
+  Remember("library-background", "shuffle");
+  ShowBackground(PickShuffled(Current.id));
+}
+
+// The MarkPicker function marks the chosen thumbnail, or the Shuffle tile with the mix buttons and options while shuffling
+function MarkPicker()
+{
+  if (!SceneList) return;
+  ScenePicker.classList.toggle("is-shuffle", Shuffle.on);
+  SceneList.querySelectorAll(".scene").forEach((Button) =>
   {
-    SceneList.querySelectorAll(".scene").forEach((Button) =>
-    {
-      Button.setAttribute("aria-pressed", String(Button.dataset.id === Current.id));
-    });
-  }
+    const IsShuffle = Button.classList.contains("shuffle-tile");
+    Button.setAttribute("aria-pressed", String(IsShuffle ? Shuffle.on : !Shuffle.on && Button.dataset.id === Current.id));
+    Button.classList.toggle("is-showing", Shuffle.on && Button.dataset.id === Current.id);
+  });
+  SceneList.querySelectorAll(".scene-mix").forEach((Mix) =>
+  {
+    const In = !Shuffle.leftOut.has(Mix.dataset.id);
+    Mix.setAttribute("aria-pressed", String(In));
+    Mix.textContent = In ? "✓" : "✕";
+    Mix.title = In ? "In the shuffle" : "Left out of the shuffle";
+    Mix.closest(".scene-cell").classList.toggle("left-out", !In);
+  });
+  ShuffleOptions.hidden = !Shuffle.on;
+  ShuffleOptions.querySelectorAll("[data-when]").forEach((Button) => Button.setAttribute("aria-pressed", String(Button.dataset.when === Shuffle.when)));
+}
+
+// Section: The picker
+
+// The MakeThumbnail function paints one small still frame of a background onto a new canvas
+function MakeThumbnail(Background)
+{
+  const Thumbnail = document.createElement("canvas");
+  Thumbnail.width = 126;
+  Thumbnail.height = 78;
+  Background.draw(Thumbnail.getContext("2d"), 126, 78, 20);
+  return Thumbnail;
+}
+
+// The MakeShuffleTile function paints the Shuffle thumbnail: slices of five backgrounds with a dice on top
+function MakeShuffleTile()
+{
+  const Tile = document.createElement("canvas");
+  Tile.width = 126;
+  Tile.height = 78;
+  const Paint = Tile.getContext("2d");
+  const Slice = Math.ceil(126 / 5);
+  ["temple", "snow", "cafe", "autumn", "keeper"].forEach((Id, Index) =>
+  {
+    const Picture = MakeThumbnail(Backgrounds.find((b) => b.id === Id) || Backgrounds[Index]);
+    Paint.drawImage(Picture, Index * Slice, 0, Slice, 78, Index * Slice, 0, Slice, 78);
+  });
+  Paint.fillStyle = "rgba(0, 0, 0, 0.45)";
+  Paint.fillRect(43, 19, 40, 40);
+  Paint.fillStyle = "#FAF8F2";
+  Paint.fillRect(47, 23, 32, 32);
+  Paint.fillStyle = "#2A1A10";
+  [[53, 29], [69, 29], [61, 37], [53, 45], [69, 45]].forEach(([X, Y]) => Paint.fillRect(X, Y, 5, 5));
+  return Tile;
+}
+
+// The OpenSettingsPage function turns the journal to one page and marks its bookmark
+function OpenSettingsPage(Page)
+{
+  if (!JournalTabs) return;
+  JournalTabs.querySelectorAll("[role=tab]").forEach((Tab) =>
+  {
+    const Open = Tab.dataset.page === Page;
+    Tab.setAttribute("aria-selected", String(Open));
+    Tab.tabIndex = Open ? 0 : -1;
+  });
+  ScenePicker.querySelectorAll(".journal-section").forEach((Section) => { Section.hidden = Section.dataset.page !== Page; });
+  document.getElementById("journalPage").scrollTop = 0;
 }
 
 if (ScenePicker)
 {
-  // Build one thumbnail button per background. Each thumbnail is a tiny canvas with one frame painted on it.
+  // The Shuffle tile comes first, then one thumbnail per background, each with a small button to leave it out of the shuffle
+  const ShuffleCell = document.createElement("div");
+  ShuffleCell.className = "scene-cell";
+  const ShuffleTile = document.createElement("button");
+  ShuffleTile.className = "scene shuffle-tile";
+  ShuffleTile.type = "button";
+  ShuffleTile.append(MakeShuffleTile(), "Shuffle");
+  ShuffleTile.addEventListener("click", StartShuffle);
+  ShuffleCell.append(ShuffleTile);
+  SceneList.append(ShuffleCell);
+
   Backgrounds.forEach((Background) =>
   {
+    const Cell = document.createElement("div");
+    Cell.className = "scene-cell";
+
     const Button = document.createElement("button");
     Button.className = "scene";
     Button.type = "button";
     Button.dataset.id = Background.id;
-
-    const Thumbnail = document.createElement("canvas");
-    Thumbnail.width = 126;
-    Thumbnail.height = 78;
-    Background.draw(Thumbnail.getContext("2d"), 126, 78, 20);
-    Button.append(Thumbnail, Background.name);
-
+    Button.append(MakeThumbnail(Background), Background.name);
     Button.addEventListener("click", () => SetBackground(Background.id));
-    SceneList.append(Button);
+
+    const Mix = document.createElement("button");
+    Mix.className = "scene-mix";
+    Mix.type = "button";
+    Mix.dataset.id = Background.id;
+    Mix.setAttribute("aria-label", Background.name + " in the shuffle");
+    Mix.addEventListener("click", () =>
+    {
+      // Ticking it back in always works, leaving it out only while at least two stay in
+      if (Shuffle.leftOut.has(Background.id)) Shuffle.leftOut.delete(Background.id);
+      else if (Backgrounds.length - Shuffle.leftOut.size > 2) Shuffle.leftOut.add(Background.id);
+      Remember("library-shuffle-out", [...Shuffle.leftOut].join(","));
+      MarkPicker();
+    });
+
+    Cell.append(Button, Mix);
+    SceneList.append(Cell);
   });
+
+  ShuffleOptions.querySelectorAll("[data-when]").forEach((Button) => Button.addEventListener("click", () =>
+  {
+    Shuffle.when = Button.dataset.when;
+    Remember("library-shuffle-when", Shuffle.when);
+    Remember("library-shuffle-last", Current.id);    // the background showing now counts as today's
+    Remember("library-shuffle-day", Today());
+    RememberForVisit("library-shuffle-visit", Current.id);
+    MarkPicker();
+  }));
 
   MotionSwitch.addEventListener("change", () =>
   {
@@ -1157,20 +1333,44 @@ if (ScenePicker)
     Remember("library-motion", MotionOn ? "on" : "off");
     StartOrStop();
   });
+
+  // The bookmarks: a click turns to that page, the arrow keys move between them
+  if (JournalTabs)
+  {
+    const Tabs = [...JournalTabs.querySelectorAll("[role=tab]")];
+    Tabs.forEach((Tab, Index) =>
+    {
+      Tab.addEventListener("click", () => OpenSettingsPage(Tab.dataset.page));
+      Tab.addEventListener("keydown", (event) =>
+      {
+        const Step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[event.key];
+        if (!Step) return;
+        event.preventDefault();
+        const Next = Tabs[(Index + Step + Tabs.length) % Tabs.length];
+        OpenSettingsPage(Next.dataset.page);
+        Next.focus();
+      });
+    });
+    OpenSettingsPage("background");
+  }
 }
 
 window.addEventListener("resize", FitCanvas);
 FitCanvas();
 
-// Start with whatever was chosen last time on this device.
-SetBackground(Recall("library-background"));
+// Start with whatever was chosen last time on this device, or a shuffled one.
+ShowBackground(Shuffle.on ? ShuffledBackground() : Recall("library-background"));
 
 if (ScenePicker)
 {
-  document.getElementById("sceneButton").addEventListener("click", () => ScenePicker.showModal());
+  document.getElementById("sceneButton").addEventListener("click", () =>
+  {
+    OpenSettingsPage("background");
+    ScenePicker.showModal();
+  });
   document.getElementById("sceneDone").addEventListener("click", () => ScenePicker.close());
   ScenePicker.addEventListener("click", (event) =>
   {
-    if (event.target === ScenePicker) ScenePicker.close();    // a click outside the strip closes it
+    if (event.target === ScenePicker) ScenePicker.close();    // a click outside the journal closes it
   });
 }
