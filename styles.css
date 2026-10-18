@@ -1316,6 +1316,11 @@ a.card-button { display: block; box-sizing: border-box; text-align: center; text
 .ledger-totals b { font-size: 1.125rem; }
 .ledger-note { margin: 12px 0 0; color: #6A5E48; font-size: 0.75rem; }
 
+/* On a phone the Guide button lives in Settings, under Help, so the top bar fits on one line */
+@media (max-width: 640px) {
+  #guideButton { display: none; }
+}
+
 /* Cards and the settings journal rise into place in a few chunky steps, like an old game menu */
 @keyframes menu-in {
   from { transform: translateY(28px); opacity: 0; }

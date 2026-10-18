@@ -39,6 +39,9 @@ const NEWS = [
     { title: "The settings journal", text: "Settings is now a journal with a bookmark for each page, and the shelf tools have little levers.", show: "settings shelves" },
     { title: "Shuffle", text: "Pick Shuffle, the first picture under Background, for a new background each visit or each day. Untick any you'd rather leave out.", show: "settings" },
   ] },
+  { number: 9, title: "More room on phones", items: [
+    { title: "The Guide moved on phones", text: "On a phone, the Guide button now lives in Settings, under Help, so your shelves start higher up. On a laptop it stays at the top.", show: "settings help" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -195,11 +198,13 @@ function OpenNews(Since)
 // The welcome tour:
 
 // TOUR holds the stops on the welcome tour: what to point at (the first shelf, or the empty shelves message for a new member) and what to say there
+// A stop with unless is only used when that other button is not showing, on a phone the Guide button is tucked into Settings
 const TOUR = [
   { target: "#library .section, #library .empty-library", title: "Your shelves", text: "Each section you make gets its own shelf and a plaque, like Artists or Shops." },
   { target: "#addBook", title: "Add a book", text: "Save an artist, creator or shop here, with a link, notes and a picture." },
   { target: ".new-section", title: "Sections", text: "Make, rename, sort and share your shelves here." },
   { target: "#guideButton", title: "The guide", text: "Every feature and how to use it, whenever you need it. Settings is next to it." },
+  { target: "#sceneButton", unless: "#guideButton", title: "The guide", text: "Every feature and how to use it is in Settings, under Help, whenever you need it." },
 ];
 
 // TourStop is the stop the tour is on, -1 while no tour is running
@@ -220,10 +225,17 @@ function PlaceNote(Note, Target)
   Note.style.setProperty("--arrow", Math.max(16, Math.min(Box.left + Box.width / 2 - Left, Note.offsetWidth - 16)) + "px");
 }
 
-// The TourTargets function returns the stops whose target is on the page right now
+// The Showing function checks whether an element is on the page and not hidden, by the hidden attribute or by the styles
+function Showing(Elem)
+{
+  return Boolean(Elem && !Elem.hidden && Elem.getClientRects().length);
+}
+
+// The TourTargets function returns the stops whose target is showing right now
 function TourTargets()
 {
-  return TOUR.map((Stop) => ({ ...Stop, Elem: document.querySelector(Stop.target) })).filter((Stop) => Stop.Elem && !Stop.Elem.hidden);
+  return TOUR.map((Stop) => ({ ...Stop, Elem: document.querySelector(Stop.target) }))
+    .filter((Stop) => Showing(Stop.Elem) && !(Stop.unless && Showing(document.querySelector(Stop.unless))));
 }
 
 // The EndTour function takes the tour away and remembers it was seen
