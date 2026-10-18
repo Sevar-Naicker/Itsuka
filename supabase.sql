@@ -31,7 +31,8 @@ create table public.books
   constraint books_name_length    check (char_length(name) <= 200),
   constraint books_link_length    check (char_length(link) <= 2000),
   constraint books_notes_length   check (char_length(notes) <= 10000),
-  constraint books_picture_length check (char_length(picture) <= 300)
+  constraint books_picture_length check (char_length(picture) <= 300),
+  constraint books_link_web       check (link = '' or link ~* '^https?://')
 );
 
 -- Addition of Books Section Index to Books:
@@ -177,7 +178,7 @@ as $$
       or exists (select 1 from public.shelf_members m where m.section_id = shelf and m.member_id = auth.uid());
 $$;
 
--- Book Owner Setting (a book always belongs to the owner of the shelf it is on, and remembers who added it):
+-- Book Owner Setting (a book always belongs to the owner of the shelf it is on, checked on every change, it remembers who added it, and a new picture must be in the member's own folder or the shelf's folder):
 create or replace function public.book_owner()
 returns trigger
 language plpgsql
@@ -188,8 +189,10 @@ begin
   if tg_op = 'INSERT' then
     new.added_by := coalesce(auth.uid(), new.added_by);
   end if;
-  if tg_op = 'INSERT' or new.section_id is distinct from old.section_id then
-    select s.member_id into new.member_id from public.sections s where s.id = new.section_id;
+  select s.member_id into new.member_id from public.sections s where s.id = new.section_id;
+  if auth.uid() is not null and new.picture <> '' and (tg_op = 'INSERT' or new.picture is distinct from old.picture)
+     and not (new.picture like auth.uid()::text || '/%' or new.picture like 'shelves/' || new.section_id::text || '/%') then
+    raise exception 'That picture does not belong to you';
   end if;
   return new;
 end;
@@ -199,7 +202,7 @@ create trigger books_owner
   before insert or update on public.books
   for each row execute function public.book_owner();
 
--- Book Change Check (on a joint shelf anyone can move a book, tick it done or open it, only its owner and whoever added it can change what it says or move it to another shelf):
+-- Book Change Check (who added a book can only ever be emptied, when they delete their account, on a joint shelf anyone can move a book, tick it done or open it, only its owner and whoever added it can change what it says or move it to another shelf):
 create or replace function public.book_change_check()
 returns trigger
 language plpgsql
@@ -207,6 +210,10 @@ security definer
 set search_path = ''
 as $$
 begin
+  if new.added_by is distinct from old.added_by
+     and not (new.added_by is null and (auth.uid() is null or auth.uid() = old.added_by or auth.uid() = old.member_id)) then
+    raise exception 'Who added a book cannot be changed';
+  end if;
   if auth.uid() is null or auth.uid() = old.member_id or auth.uid() = old.added_by then
     return new;
   end if;
@@ -746,3 +753,29 @@ grant execute on function public.ledger() to authenticated;
 -- insert into public.site_admins (member_id)
 -- select u.id from auth.users u where lower(u.email) = lower('you@example.com')
 -- on conflict (member_id) do nothing;
+
+-- Security Additions (people on a joint shelf only change their own place and sort, visitors only reach the functions meant for them, and the Ledger's tables are never reached from a browser):
+
+-- Ensuring people on a joint shelf can only change their own place for it and how they sort it, nothing else on their row:
+revoke update on public.shelf_members from authenticated;
+grant update (position, sort_by) on public.shelf_members to authenticated;
+
+-- Ensuring visitors who are not signed in can only use the three functions meant for them (a shared shelf, its pictures and an invite link) and the keep-awake job's snapshot:
+-- Supabase lets visitors use every new function unless it is taken away from them by name, every function below already checked who was asking, this makes it certain
+revoke execute on function public.owns_shelf(uuid) from anon;
+revoke execute on function public.on_shelf(uuid) from anon;
+revoke execute on function public.picture_on_my_shelves(text) from anon;
+revoke execute on function public.shelf_folder_ok(text) from anon;
+revoke execute on function public.picture_unused(text) from anon;
+revoke execute on function public.shelf_people() from anon;
+revoke execute on function public.join_shelf(text) from anon;
+revoke execute on function public.pictures_to_keep() from anon;
+revoke execute on function public.delete_my_account(text) from anon;
+revoke execute on function public.can_hear_shelf(text) from anon;
+revoke execute on function public.is_keeper() from anon;
+revoke execute on function public.note_visit() from anon;
+revoke execute on function public.ledger() from anon;
+revoke execute on function public.shelf_has_others(uuid) from anon, authenticated;
+
+-- Ensuring the Ledger's tables can only be reached through the Ledger's own functions, never read or changed from a browser:
+revoke all on public.site_admins, public.last_visits, public.daily_visits, public.ledger_snapshots from anon, authenticated;

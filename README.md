@@ -65,7 +65,7 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 | `shelf.js` | The shared shelf page: shows the shelf and adds its books to the visitor's library |
 | `backgrounds.js` | The pixel scenes, background picker and colour themes (used by every page) |
 | `.github/workflows/keep-awake.yml` | Visits the Supabase project once a day so the free project never pauses for inactivity, and saves the day's totals for the Ledger |
-| `supabase.sql` | Sets up the database, the picture storage, shelf sharing, joint shelves, live joint shelves, the Ledger and account deleting in a new Supabase project. Run once |
+| `supabase.sql` | Sets up the database, the picture storage, shelf sharing, joint shelves, live joint shelves, the Ledger, account deleting and the security rules in a new Supabase project. Run once |
 | `ledger.html` | The Ledger, only for the library keeper |
 | `ledger.js` | Fills the Ledger from the database: the gauges, the charts and the upkeep checks |
 | `install.js` | The Add to home screen buttons on the landing page and in Settings: a one-tap install where the browser allows it, the steps for each phone everywhere else |
@@ -96,6 +96,14 @@ The `config.js` in this repository points at the live Itsuka project. To run you
 7. To open the Ledger, register on your site, then in the SQL Editor run the three Library Keeper lines at the end of `supabase.sql` with your own email in them. A Ledger button then appears on your library card.
 
 If both values in `config.js` are left empty, login is off and the library shows a few example shelves that are not saved anywhere.
+
+## Keeping it safe:
+
+- Everything a member types (names, notes, links, passwords) is sent to Supabase as plain data, never as part of a database command, so it cannot be used for SQL injection. The database has no hand-built commands.
+- Every table has row-level security: a member only reaches their own shelves and the joint shelves they joined. Visitors who are not signed in only reach a shared shelf, its pictures and an invite link, each by its long random key.
+- On a joint shelf, who added a book and who owns it are set by the database and cannot be changed from a browser. A book's picture must be one the member uploaded, and its link must start with http:// or https://.
+- Everything is written onto the page as text, never as HTML, and only web addresses become clickable links.
+- Passwords are handled by Supabase and never reach the site's code or the database tables.
 
 ## Never put these in the project:
 

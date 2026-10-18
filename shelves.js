@@ -228,7 +228,7 @@ function MakeBook(Book, ColourNumber)
     Points.forEach((Point) => List.append(Make("li", "", Point)));
     Right.append(List);
   }
-  if (Book.link)
+  if (Book.link && /^https?:\/\//i.test(Book.link))      // only web addresses become links, anything else could run code when pressed
   {
     const Link = Make("a", "", ShortLink(Book.link));
     Link.href = Book.link; Link.target = "_blank"; Link.rel = "noopener";
