@@ -134,6 +134,7 @@ async function FetchChanges()
   RenderTabs();
   Update();
   Told.forEach((Change) => ShowNote(Change, Before));
+  if (typeof LettersHeard === "function") LettersHeard(Ids);     // letters.js counts changes seen as they happen as read
 }
 
 // The FetchShelves function fetches some shelves again and puts them in the library in place of the old ones, a shelf the member can no longer see leaves it
@@ -178,6 +179,7 @@ async function CatchUp()
     await LoadLibrary();
     RenderTabs();
     Update();
+    if (typeof FetchLetters === "function") FetchLetters();     // changes made while the page was asleep wait in letters
   }
   catch (error)
   {

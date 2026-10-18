@@ -779,3 +779,193 @@ revoke execute on function public.shelf_has_others(uuid) from anon, authenticate
 
 -- Ensuring the Ledger's tables can only be reached through the Ledger's own functions, never read or changed from a browser:
 revoke all on public.site_admins, public.last_visits, public.daily_visits, public.ledger_snapshots from anon, authenticated;
+
+-- Letters Addition (while a member is away, the changes their friends make on a joint shelf are noted in a small log, kept for 30 days, and a letter on the shelf's plaque shows them when they come back):
+
+-- Shelf Log Table Creation (what changed on a joint shelf, who changed it and who joined or left, with their first names so someone who has left can still be named, and a book's name so a removed book can still be named):
+create table if not exists public.shelf_log
+(
+  id         bigint generated always as identity primary key,
+  section_id uuid not null references public.sections (id) on delete cascade,
+  at         timestamptz not null default now(),
+  by_member  uuid references auth.users (id) on delete set null,
+  kind       text not null check (kind in ('added', 'removed', 'done', 'renamed', 'joined', 'left', 'removed_person', 'handover')),
+  by_name    text not null default '',
+  person     uuid references auth.users (id) on delete set null,
+  person_name text not null default '',
+  book_id    uuid,
+  book_name  text not null default '',
+  old_name   text not null default ''
+);
+
+-- Shelf Log Name Clearing (when someone deletes their account their id empties from the log, and this empties their first name with it):
+create or replace function public.clear_log_names()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.by_member is null and old.by_member is not null then
+    new.by_name := '';
+  end if;
+  if new.person is null and old.person is not null then
+    new.person_name := '';
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.clear_log_names() from public, anon, authenticated;
+
+drop trigger if exists shelf_log_clear_names on public.shelf_log;
+create trigger shelf_log_clear_names
+  before update on public.shelf_log
+  for each row execute function public.clear_log_names();
+
+-- Addition of a Shelf and Time Index for finding a shelf's latest changes:
+create index if not exists shelf_log_section_at_idx on public.shelf_log (section_id, at);
+
+-- Shelf Seen Table Creation (when each member last read the letter for a shelf, so reading it on one device clears it on every device):
+create table if not exists public.shelf_seen
+(
+  section_id uuid not null references public.sections (id) on delete cascade,
+  member_id  uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  seen_at    timestamptz not null default now(),
+  primary key (section_id, member_id)
+);
+
+-- Ensuring the people on a joint shelf can read its log, nobody can write to it from a browser, and each member only reads and writes their own seen times:
+alter table public.shelf_log enable row level security;
+alter table public.shelf_seen enable row level security;
+revoke all on public.shelf_log, public.shelf_seen from anon, authenticated;
+grant select on public.shelf_log to authenticated;
+grant select, insert, update on public.shelf_seen to authenticated;
+
+drop policy if exists "people on a joint shelf read its log" on public.shelf_log;
+create policy "people on a joint shelf read its log" on public.shelf_log
+  for select to authenticated
+  using (public.on_shelf(section_id));
+
+drop policy if exists "members read their own seen times" on public.shelf_seen;
+create policy "members read their own seen times" on public.shelf_seen
+  for select to authenticated
+  using (member_id = (select auth.uid()));
+
+drop policy if exists "members note when they read a letter" on public.shelf_seen;
+create policy "members note when they read a letter" on public.shelf_seen
+  for insert to authenticated
+  with check (member_id = (select auth.uid()) and public.on_shelf(section_id));
+
+drop policy if exists "members update when they read a letter" on public.shelf_seen;
+create policy "members update when they read a letter" on public.shelf_seen
+  for update to authenticated
+  using (member_id = (select auth.uid()))
+  with check (member_id = (select auth.uid()) and public.on_shelf(section_id));
+
+-- First Name Function (a member's first name, the same one shown on joint shelves, never their email):
+create or replace function public.first_name(member uuid)
+returns text
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select coalesce((select nullif(split_part(trim(coalesce(u.raw_user_meta_data ->> 'name', '')), ' ', 1), '') from auth.users u where u.id = member), '');
+$$;
+
+revoke all on function public.first_name(uuid) from public, anon, authenticated;
+
+-- Shelf Log Writing (notes the changes worth a letter on a joint shelf: books added, removed or ticked done, the shelf renamed, people joining or leaving, a hiccup here never stops the change itself being saved):
+-- Moving a book, opening it, and each person's own place and sort for a shelf are never noted, and anything older than 30 days is cleared away as new changes come in
+create or replace function public.log_shelf_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  shelf uuid;
+  what text;
+  book uuid;
+  title text := '';
+  before_title text := '';
+  who uuid := auth.uid();
+  someone uuid;
+begin
+  if TG_TABLE_NAME = 'books' then
+    if TG_OP = 'INSERT' then
+      shelf := NEW.section_id; what := 'added'; book := NEW.id; title := NEW.name;
+    elsif TG_OP = 'DELETE' then
+      shelf := OLD.section_id; what := 'removed'; book := OLD.id; title := OLD.name;
+    elsif NEW.done and not OLD.done and NEW.section_id = OLD.section_id then
+      shelf := NEW.section_id; what := 'done'; book := NEW.id; title := NEW.name;
+    elsif NEW.section_id is distinct from OLD.section_id then
+      -- a book moved between shelves counts as removed from one and added to the other
+      begin
+        if public.shelf_has_others(OLD.section_id) then
+          insert into public.shelf_log (section_id, by_member, by_name, kind, book_id, book_name) values (OLD.section_id, who, public.first_name(who), 'removed', OLD.id, OLD.name);
+        end if;
+        if public.shelf_has_others(NEW.section_id) then
+          insert into public.shelf_log (section_id, by_member, by_name, kind, book_id, book_name) values (NEW.section_id, who, public.first_name(who), 'added', NEW.id, NEW.name);
+        end if;
+      exception when others then
+        null;
+      end;
+      return null;
+    else
+      return null;
+    end if;
+  elsif TG_TABLE_NAME = 'sections' then
+    if TG_OP <> 'UPDATE' or NEW.name = OLD.name then
+      return null;
+    end if;
+    shelf := NEW.id; what := 'renamed'; title := NEW.name; before_title := OLD.name;
+  else
+    if TG_OP = 'INSERT' then
+      shelf := NEW.section_id; what := 'joined'; who := NEW.member_id; someone := NEW.member_id;
+    elsif TG_OP = 'DELETE' then
+      shelf := OLD.section_id; someone := OLD.member_id;
+      if exists (select 1 from public.sections s where s.id = shelf and s.member_id = OLD.member_id) then
+        what := 'handover';                          -- the owner deleted their account and the shelf passed to this person
+      elsif auth.uid() is null or auth.uid() = OLD.member_id then
+        what := 'left'; who := OLD.member_id;
+      else
+        what := 'removed_person';
+      end if;
+    else
+      return null;
+    end if;
+  end if;
+
+  begin
+    -- only joint shelves keep a log, people joining and leaving are always noted
+    if TG_TABLE_NAME = 'shelf_members' or public.shelf_has_others(shelf) then
+      if TG_TABLE_NAME = 'shelf_members' and TG_OP = 'DELETE' and not exists (select 1 from public.sections s where s.id = shelf) then
+        return null;                                 -- the shelf itself is being deleted
+      end if;
+      insert into public.shelf_log (section_id, by_member, by_name, kind, person, person_name, book_id, book_name, old_name)
+      values (shelf, who, public.first_name(who), what, someone, public.first_name(someone), book, coalesce(title, ''), coalesce(before_title, ''));
+      delete from public.shelf_log l where l.section_id = shelf and l.at < now() - interval '30 days';
+    end if;
+  exception when others then
+    null;
+  end;
+  return null;
+end;
+$$;
+
+revoke all on function public.log_shelf_change() from public, anon, authenticated;
+
+-- Addition of the Shelf Log Triggers on books, sections and the people on shelves:
+drop trigger if exists books_log on public.books;
+create trigger books_log
+  after insert or update or delete on public.books
+  for each row execute function public.log_shelf_change();
+drop trigger if exists sections_log on public.sections;
+create trigger sections_log
+  after update on public.sections
+  for each row execute function public.log_shelf_change();
+drop trigger if exists shelf_members_log on public.shelf_members;
+create trigger shelf_members_log
+  after insert or delete on public.shelf_members
+  for each row execute function public.log_shelf_change();

@@ -1340,3 +1340,72 @@ dialog[open]::backdrop { animation: menu-shade 0.22s steps(4, end); }
 @media (prefers-reduced-motion: reduce) {
   dialog[open], dialog[open]::backdrop, .journal-section:not([hidden]) { animation: none; }
 }
+
+/* Letters on joint shelves: a small envelope on the plaque with how many things changed */
+.shelf-letter {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 26px;
+  height: 18px;
+  margin: -6px 10px -4px -2px;
+  padding: 0;
+  border: 2px solid #160E08;
+  background: #FAF8F2;
+  color: #2A1A10;
+  font: inherit;
+  vertical-align: middle;
+  cursor: pointer;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35);
+  animation: letter-bob 1.6s steps(2) infinite;
+}
+.shelf-letter::before { content: ""; position: absolute; inset: 0; background: linear-gradient(to bottom right, transparent 47%, #160E08 47% 53%, transparent 53%) left / 50% 60% no-repeat, linear-gradient(to bottom left, transparent 47%, #160E08 47% 53%, transparent 53%) right / 50% 60% no-repeat; opacity: 0.6; }
+.shelf-letter span { position: absolute; right: -8px; bottom: -8px; display: grid; place-items: center; min-width: 18px; height: 18px; padding: 0 3px; box-sizing: border-box; border: 2px solid #160E08; background: #C2505E; color: #FAF8F2; font-size: 0.6875rem; font-weight: 700; }
+.shelf-letter:focus-visible { outline: 3px solid var(--gilt); outline-offset: 2px; }
+@keyframes letter-bob { 50% { transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) {
+  .shelf-letter { animation: none; }
+}
+
+/* The letter opened as a journal page, with an envelope beside the shelf's name */
+.scenes.letter-page { width: min(34rem, calc(100% - 32px)); }
+.letter-page .scenes-head h2::before { content: ""; display: inline-block; width: 22px; height: 15px; margin-right: 10px; vertical-align: -1px; border: 2px solid var(--page-ink); background: linear-gradient(to bottom right, transparent 46%, var(--page-ink) 46% 54%, transparent 54%) left / 50% 70% no-repeat, linear-gradient(to bottom left, transparent 46%, var(--page-ink) 46% 54%, transparent 54%) right / 50% 70% no-repeat, #FAF8F2; }
+.letter-page .journal-page > .settings-title:first-child { margin-top: 0; }
+.letter-list { margin: 0 0 16px; }
+.letter-line { display: flex; align-items: flex-start; gap: 10px; margin: 0; padding: 6px 0; border-bottom: 2px dotted var(--page-rule); color: var(--page-ink); font-size: 0.9375rem; line-height: 1.4; }
+.letter-line:last-child { border-bottom: 0; }
+.letter-line .face { flex: none; width: 16px; height: 16px; margin-top: 3px; border: 2px solid #160E08; background: var(--who); }
+.letter-line b { font-weight: 600; }
+
+/* Cards for reading (the Guide, What's new, How it works and Add to home screen) are journal pages, the same paper, rules and ink as Settings */
+.card-dialog.journal-card {
+  --page-ink: #3A2A1C;
+  --page-red: #6A3E22;
+  --page-gold: #B8862E;
+  --page-rule: rgba(58, 42, 28, 0.22);
+  width: min(34rem, calc(100% - 32px));
+  padding: 0;
+  border: var(--dot) solid #2A1A10;
+  background: repeating-linear-gradient(to bottom, transparent 0 27px, rgba(120, 90, 50, 0.13) 27px 28px), #EFE3C6;
+  box-shadow: calc(var(--dot) * 2) calc(var(--dot) * 2) 0 rgba(0, 0, 0, 0.55), inset 0 0 0 var(--dot) #E2D2AE;
+}
+.journal-card .news-list:focus, .journal-card .guide-body:focus { outline: none; }   /* the browser puts the focus on the list when the page opens, without a ring around it */
+.card-dialog.journal-card::backdrop { background: rgba(10, 6, 4, 0.55); }
+.journal-card .card-shadow { width: 100%; filter: none; }
+.journal-card .member-card { border: 0; background: transparent; color: var(--page-ink); clip-path: none; }
+.journal-card .catalogue-head { align-items: center; padding: 14px 20px 12px; border-bottom: 2px solid var(--page-rule); }
+.journal-card .catalogue-head h2 { font-size: 1.375rem; font-weight: 500; }
+.journal-card .card-kind { color: var(--page-red); font-weight: 500; letter-spacing: 0; }
+.journal-card .catalogue-hole { display: none; }
+.journal-card .card-body { padding: 18px 24px 22px; }
+.journal-card .card-line { border-bottom: 2px dotted var(--page-rule); }
+.journal-card .card-line:focus-within { background: rgba(184, 134, 46, 0.18); border-bottom-color: var(--page-ink); }
+.journal-card .card-line span, .journal-card .card-notes span, .journal-card .guide-line, .journal-card .news-words span { color: #6A5A48; }
+.journal-card .card-line input, .journal-card .card-line select, .journal-card .card-notes textarea { color: var(--page-ink); }
+.journal-card .card-notes textarea { background: repeating-linear-gradient(to bottom, transparent 0, transparent 30px, rgba(58, 42, 28, 0.25) 30px, rgba(58, 42, 28, 0.25) 32px); }
+.journal-card .guide-group { color: var(--page-red); border-bottom: 2px dotted var(--page-rule); }
+.journal-card .guide-line b { color: var(--page-ink); }
+.journal-card .news-item { border-bottom: 2px dotted var(--page-rule); }
+.journal-card .card-button { background: #3A2A1C; color: #FAF8F2; }
+.journal-card .card-button.danger { background: #8E2A1E; }
+.journal-card .card-line b { color: var(--page-ink); }

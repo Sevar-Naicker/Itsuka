@@ -42,6 +42,10 @@ const NEWS = [
   { number: 9, title: "More room on phones", items: [
     { title: "The Guide moved on phones", text: "On a phone, the Guide button now lives in Settings, under Help, so your shelves start higher up. On a laptop it stays at the top.", show: "settings help" },
   ] },
+  { number: 10, title: "Letters on joint shelves", items: [
+    { title: "While you were away", text: "When friends change a joint shelf while you're away, a small letter now waits on its plaque. Press it to read what changed, and Show me points at the new books.", show: "" },
+    { title: "Pages to read", text: "The Guide and What's new are now journal pages, like Settings. Cards for your books stay catalogue cards.", show: "" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -72,6 +76,7 @@ const GUIDE = [
     ["Share a shelf", "Edit sections, then Share, then Make a link. Anyone with the link can look at that one shelf and add its books to their own library. Stop sharing turns the link off."],
     ["Joint shelves", "Edit sections, then Invite, makes a link that lets up to four friends join one shelf. Everyone can add books, move them and tick them done. Only you and whoever added a book can change it, and only you can rename or delete the shelf. Anyone can leave whenever they like."],
     ["Live changes", "Changes on a joint shelf show up for everyone straight away, with a small note saying who did what. They wait while you're dragging a book or have one open."],
+    ["Letters", "When friends change a joint shelf while you're away, a small letter waits on its plaque. Press it to read who added, removed or ticked what. Reading it on one device clears it on all of them."],
     ["Your colour", "In Settings, pick the colour that marks the books you add to joint shelves. The ribbon on a joint shelf's plaque is its owner's colour."],
     ["Copies", "On the Library page in Settings, Download a copy saves your whole library as one file, joint shelves included, and Load a copy adds one back."],
   ] },

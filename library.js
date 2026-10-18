@@ -306,6 +306,7 @@ function RenderTabs()
   BoardCount.textContent = String(Library.length);
   requestAnimationFrame(CheckArrows);
   if (typeof SyncLive === "function") SyncLive();     // live.js listens on the joint shelves now showing, it loads after this file so it is not there for the very first build
+  if (typeof PlaceLetters === "function") PlaceLetters();
 }
 
 // Sliding the plaques:
@@ -474,6 +475,7 @@ function Update()
   });
   RenderShelves();
   PullButton.hidden = !ShelfSettings.pull || !LibraryRoot.querySelector(".book:not(.is-done)");     // only when there is a book that is not done to pull
+  if (typeof PlaceLetters === "function") PlaceLetters();     // letters.js puts the letters back on the plaques, it loads after this file
 }
 
 // Pulling a book at random:

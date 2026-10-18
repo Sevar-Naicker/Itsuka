@@ -65,7 +65,7 @@
 </div>
 
 <!-- The Add to home screen card, its steps are filled in by install.js for the phone being used -->
-<dialog class="card-dialog how-dialog" id="installDialog" aria-labelledby="installTitle">
+<dialog class="card-dialog journal-card how-dialog" id="installDialog" aria-labelledby="installTitle">
   <div class="card-shadow">
     <div class="member-card catalogue-card">
       <div class="catalogue-head">
@@ -363,7 +363,7 @@
 </dialog>
 
 <!-- The Guide card: every feature and how to use it, filled in by guide.js -->
-<dialog class="card-dialog guide-dialog" id="guideDialog" aria-labelledby="guideTitle">
+<dialog class="card-dialog journal-card guide-dialog" id="guideDialog" aria-labelledby="guideTitle">
   <div class="card-shadow">
     <div class="member-card catalogue-card">
       <div class="catalogue-head">
@@ -381,7 +381,7 @@
 </dialog>
 
 <!-- The What's new card, shown once after an update with only the things a member has not seen yet -->
-<dialog class="card-dialog news-dialog" id="newsDialog" aria-labelledby="newsTitle">
+<dialog class="card-dialog journal-card news-dialog" id="newsDialog" aria-labelledby="newsTitle">
   <div class="card-shadow">
     <div class="member-card catalogue-card">
       <div class="catalogue-head">
@@ -393,6 +393,23 @@
         <button class="card-button" id="newsDone" type="button">Got it</button>
       </div>
       <div class="catalogue-hole" aria-hidden="true"></div>
+    </div>
+  </div>
+</dialog>
+
+<!-- A letter on a joint shelf: what changed while the member was away, opened as a journal page, filled in by letters.js -->
+<dialog class="scenes journal single-page letter-page" id="letterDialog" aria-labelledby="letterTitle">
+  <div class="scenes-inner">
+    <div class="scenes-head">
+      <h2 id="letterTitle"></h2>
+      <button class="plain-button" id="letterDone" type="button">Done</button>
+    </div>
+    <div class="journal-page">
+      <h3 class="settings-title" id="letterSince"></h3>
+      <div class="letter-list" id="letterList"></div>
+      <div class="library-copy">
+        <button class="plain-button" id="letterShow" type="button">Show me the new books</button>
+      </div>
     </div>
   </div>
 </dialog>
@@ -436,6 +453,7 @@
 <script src="library.js"></script>
 <script src="joint.js"></script>
 <script src="live.js"></script>
+<script src="letters.js"></script>
 <script src="install.js"></script>
 <script src="guide.js"></script>
 
