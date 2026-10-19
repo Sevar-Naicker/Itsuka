@@ -151,6 +151,7 @@ async function FetchShelves(Ids)
   const Everyone = Array.isArray(People.data) ? People.data : [];
   Ids.forEach((Id) =>
   {
+    if (WaitingGone.has(Id)) return;                 // a shelf just deleted stays down while its Undo note is showing
     const Old = Library.find((Section) => Section.id === Id);
     const Row = Sections.data.find((Section) => Section.id === Id);
     if (!Row)

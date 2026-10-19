@@ -215,6 +215,7 @@ async function DeleteAccount()
     ShowDeleteNote("Deleting your account\u2026", true);
     const Result = await DB.rpc("delete_my_account", { confirm: "DELETE" });
     if (Result.error) throw Result.error;
+    ForgetCopy();
     try { await DB.auth.signOut({ scope: "local" }); }
     catch (error) { console.error(error); }                   // the account is already gone, so forgetting it on this device is all that is left
     location.replace("index.html?deleted=1");

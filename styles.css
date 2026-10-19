@@ -1409,3 +1409,89 @@ dialog[open]::backdrop { animation: menu-shade 0.22s steps(4, end); }
 .journal-card .card-button { background: #3A2A1C; color: #FAF8F2; }
 .journal-card .card-button.danger { background: #8E2A1E; }
 .journal-card .card-line b { color: var(--page-ink); }
+
+/* Undo: a taped note with an Undo button and a little bar that runs down before the delete is saved */
+.undo-notes { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom, 0px)); z-index: 61; display: grid; justify-items: center; gap: 14px; width: min(26rem, calc(100% - 32px)); transform: translateX(-50%); pointer-events: none; }
+.undo-note { position: relative; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px 14px; width: 100%; box-sizing: border-box; margin: 0; padding: 14px 14px 10px; background: linear-gradient(to bottom, #F6ECD2 0, #F6ECD2 var(--dot), #EFE2C2 var(--dot)); color: #4A4436; box-shadow: inset 0 0 0 2px #160E08, var(--dot) var(--dot) 0 rgba(0, 0, 0, 0.5); font-family: var(--font); font-size: 0.875rem; font-weight: 600; line-height: 1.35; pointer-events: auto; animation: note-in 0.3s steps(3) both; }
+.undo-note::after { content: ""; position: absolute; top: calc(var(--dot) * -3); left: calc(50% - 22px); width: 44px; height: calc(var(--dot) * 5); background: color-mix(in srgb, var(--brass) 75%, transparent); transform: rotate(-4deg); clip-path: polygon(0 0, 100% 0, 96% 25%, 100% 50%, 96% 75%, 100% 100%, 0 100%, 4% 75%, 0 50%, 4% 25%); }
+.undo-note p { margin: 0; }
+.undo-note b { color: #2A1A10; }
+.undo-note button { padding: 5px 14px; border: 2px solid #160E08; background: #3A2A1C; color: #F6ECD2; font: inherit; font-size: 0.875rem; cursor: pointer; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.35); }
+.undo-note button:active { transform: translate(1px, 1px); box-shadow: none; }
+.undo-time { grid-column: 1 / -1; height: var(--dot); background: rgba(58, 42, 28, 0.18); }
+.undo-time i { display: block; height: 100%; background: #B8862E; transform-origin: left; animation: undo-run var(--undo-for, 8s) steps(16, end) forwards; }   /* runs down in steps, like the rest of the pixel motion */
+.undo-note.is-leaving { animation: note-out 0.3s steps(3) both; }
+.undo-note.is-back { background: linear-gradient(to bottom, #E8F0D2 0, #E8F0D2 var(--dot), #DCE6C0 var(--dot)); }
+@keyframes undo-run { to { transform: scaleX(0); } }
+.book.is-returned .spine { animation: put-back 0.5s steps(4) both; }
+@keyframes put-back { from { transform: translateY(calc(var(--dot) * -8)); opacity: 0; } 60% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .undo-note, .undo-note.is-leaving, .book.is-returned .spine { animation: none; } .undo-time i { animation-timing-function: linear; } }
+
+/* No signal: a small sign hung under the title, swaying gently, made from whatever fits the background */
+.signal-sign { position: relative; z-index: 6; display: flex; justify-content: center; margin: -6px auto 8px; pointer-events: none; font-family: var(--font);
+  --sign-face: repeating-linear-gradient(to bottom, #7A5232 0 calc(var(--dot) * 3), #6B4628 calc(var(--dot) * 3) calc(var(--dot) * 4));
+  --sign-edge: #160E08; --sign-ink: #F2C86A; --sign-words: #F6ECD2; --sign-drop: none;
+  --string: #2A1A10; --string-w: 2px; }
+.signal-sign[hidden] { display: none; }
+.signal-board { position: relative; display: grid; justify-items: center; gap: 2px; max-width: min(30rem, calc(100% - 32px)); margin: 30px 0 0; padding: 10px 18px 8px; border: var(--dot) solid var(--sign-edge); background: var(--sign-face); color: var(--sign-words); box-shadow: var(--dot) var(--dot) 0 rgba(0, 0, 0, 0.45), inset 0 var(--dot) 0 rgba(255, 255, 255, 0.12); text-align: center; }
+.signal-board::before, .signal-board::after { content: ""; position: absolute; top: calc(-30px - var(--dot)); width: var(--string-w); height: 30px; background: var(--string); }
+.signal-board::before { left: 24px; }
+.signal-board::after { right: 24px; }
+.signal-board b { font-size: 1.125rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sign-ink); text-shadow: var(--sign-drop); }
+.signal-board span { font-size: 0.8125rem; line-height: 1.35; }
+.sign-top, .sign-bottom { position: absolute; display: none; pointer-events: none; }
+.signal-sign.is-going .signal-board { animation: sign-off 0.4s steps(4) both; }
+@keyframes sign-sway { 0%, 100% { transform: rotate(-1.2deg); } 50% { transform: rotate(1.2deg); } }   /* swings gently from where the strings are tied */
+.signal-board { transform-origin: 50% -30px; animation: sign-sway 5s ease-in-out infinite; }
+[data-scene="temple"] .signal-board { transform-origin: 50% -48px; }
+.still-sign .signal-board { animation: none; }   /* Swaying sign switched off in Settings */
+@keyframes sign-off { to { transform: translateY(-40px); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .signal-board { animation: none; } }
+
+/* Green woodland: a plank with moss along the top, hung on vines */
+[data-scene="woodland"] .signal-sign { --sign-face: repeating-linear-gradient(to bottom, #6B4428 0 calc(var(--dot) * 3), #5C3A22 calc(var(--dot) * 3) calc(var(--dot) * 4)); --sign-ink: #E8E0A8; --string: #3E7A45; --string-w: 4px; }
+[data-scene="woodland"] .sign-top { display: block; top: calc(var(--dot) * -3); left: calc(var(--dot) * -2); right: calc(var(--dot) * -2); height: calc(var(--dot) * 3); background: linear-gradient(to bottom, #7DB062 0 var(--dot), #4E8A4A var(--dot) calc(var(--dot) * 2), #3E7A45 calc(var(--dot) * 2)); clip-path: polygon(0 100%, 0 33%, 4% 33%, 4% 0, 14% 0, 14% 33%, 30% 33%, 30% 0, 38% 0, 38% 66%, 55% 66%, 55% 0, 70% 0, 70% 33%, 86% 33%, 86% 0, 96% 0, 96% 66%, 100% 66%, 100% 100%); }
+
+/* Campfire night: charred wood with ember lettering, on rope */
+[data-scene="campfire"] .signal-sign { --sign-face: repeating-linear-gradient(to bottom, #3A2A22 0 calc(var(--dot) * 3), #2E211A calc(var(--dot) * 3) calc(var(--dot) * 4)); --sign-ink: #FFB347; --sign-drop: 2px 2px 0 #7A2E10; --sign-words: #F0D9A0; --string: #8C6A44; --string-w: 4px; }
+[data-scene="campfire"] .sign-bottom { display: block; bottom: calc(var(--dot) * -1); left: 30%; width: var(--dot); height: var(--dot); background: #FF8A3A; box-shadow: 40px -4px 0 #E0A23A, 92px 0 0 #FF8A3A; }   /* a few embers caught on the edge */
+
+/* Snowy cabin: snow lying on top and icicles underneath */
+[data-scene="snow"] .signal-sign { --sign-face: repeating-linear-gradient(to bottom, #6B4428 0 calc(var(--dot) * 3), #5E3A20 calc(var(--dot) * 3) calc(var(--dot) * 4)); --sign-ink: #EEF4FF; --sign-words: #DDE6F5; --string: #1F3F4E; }
+[data-scene="snow"] .sign-top { display: block; top: calc(var(--dot) * -4); left: calc(var(--dot) * -2); right: calc(var(--dot) * -2); height: calc(var(--dot) * 4); background: #F4F7FC; box-shadow: inset 0 calc(var(--dot) * -1) 0 #CFDBEA; clip-path: polygon(0 100%, 0 50%, 6% 50%, 6% 25%, 20% 25%, 20% 0, 46% 0, 46% 25%, 64% 25%, 64% 0, 84% 0, 84% 25%, 94% 25%, 94% 50%, 100% 50%, 100% 100%); }
+[data-scene="snow"] .sign-bottom { display: block; bottom: calc(var(--dot) * -4 - var(--dot)); left: 12%; right: 12%; height: calc(var(--dot) * 4); background: #CFE3F5; clip-path: polygon(0 0, 100% 0, 100% 25%, 96% 25%, 96% 75%, 92% 75%, 92% 25%, 70% 25%, 70% 50%, 67% 50%, 67% 25%, 44% 25%, 44% 100%, 40% 100%, 40% 25%, 18% 25%, 18% 50%, 14% 50%, 14% 25%, 4% 25%, 4% 75%, 0 75%); }
+
+/* Rainy café: a chalkboard in a wooden frame, on a chain */
+[data-scene="cafe"] .signal-sign { --sign-face: #2E3A33; --sign-edge: #8C5A3C; --sign-ink: #F4F1E8; --sign-words: #D8D8D0; --string: repeating-linear-gradient(to bottom, #9A9AA0 0 6px, transparent 6px 8px); }
+[data-scene="cafe"] .signal-board { box-shadow: 0 0 0 2px #160E08, var(--dot) var(--dot) 0 2px rgba(0, 0, 0, 0.45); }
+[data-scene="cafe"] .signal-board b { letter-spacing: 0.14em; }
+
+/* Autumn forest: warm wood with fallen leaves stuck on the corners */
+[data-scene="autumn"] .signal-sign { --sign-face: repeating-linear-gradient(to bottom, #8C4A22 0 calc(var(--dot) * 3), #7A3F1C calc(var(--dot) * 3) calc(var(--dot) * 4)); --sign-ink: #FFD27A; --sign-drop: 2px 2px 0 #5C2A10; --string: #3E2A18; }
+[data-scene="autumn"] .sign-top { display: block; top: -10px; left: -10px; width: var(--dot); height: var(--dot); background: #D9822B; box-shadow: 4px 0px 0 #D9822B, -4px 4px 0 #D9822B, 0px 4px 0 #E8B04A, 4px 4px 0 #D9822B, 8px 4px 0 #D9822B, -4px 8px 0 #D9822B, 0px 8px 0 #D9822B, 4px 8px 0 #E8B04A, 8px 8px 0 #A6542B, 0px 12px 0 #D9822B, 4px 12px 0 #A6542B, 8px 16px 0 #5C3A1E; }
+[data-scene="autumn"] .sign-bottom { display: block; bottom: 2px; right: 22px; width: var(--dot); height: var(--dot); background: #C9693A; box-shadow: -4px 4px 0 #C9693A, 0px 4px 0 #E8B04A, 4px 4px 0 #C9693A, -8px 8px 0 #C9693A, -4px 8px 0 #C9693A, 0px 8px 0 #C9693A, 4px 8px 0 #8C3B1E, -4px 12px 0 #8C3B1E, 0px 12px 0 #C9693A, -8px 16px 0 #5C3A1E; }
+
+/* Attic nook: a cardboard sign tied with twine */
+[data-scene="attic"] .signal-sign { --sign-face: linear-gradient(to bottom, #D2B07A 0, #D2B07A var(--dot), #C9A66B var(--dot)); --sign-edge: #3A2A1C; --sign-ink: #3A2A1C; --sign-words: #4A3A28; --string: #D8C9A8; }
+[data-scene="attic"] .signal-board { box-shadow: var(--dot) var(--dot) 0 rgba(0, 0, 0, 0.45), inset 0 calc(var(--dot) * -1) 0 rgba(90, 60, 30, 0.25); }
+
+/* Grand library: an engraved brass plate on two chains */
+[data-scene="library"] .signal-sign { --sign-face: linear-gradient(to bottom, #E8C46A 0, #E8C46A var(--dot), #D4A84A var(--dot), #D4A84A calc(100% - var(--dot)), #A8802E calc(100% - var(--dot))); --sign-edge: #5A3E1E; --sign-ink: #2A1A10; --sign-drop: 0 2px 0 #F2D88A; --sign-words: #3A2A18; --string: repeating-linear-gradient(to bottom, #8C6A30 0 6px, transparent 6px 8px); }
+
+/* Mountain temple: a wooden prayer plaque with a pointed roof and a red cord */
+[data-scene="temple"] .signal-sign { --sign-face: repeating-linear-gradient(to bottom, #E8D2A6 0 calc(var(--dot) * 3), #E0C798 calc(var(--dot) * 3) calc(var(--dot) * 4)); --sign-edge: #3A2626; --sign-ink: #B4382A; --sign-words: #3A2A36; --string: #B4382A; }
+[data-scene="temple"] .signal-board { margin-top: 40px; }
+[data-scene="temple"] .signal-board::before, [data-scene="temple"] .signal-board::after { top: -40px; height: 40px; }
+[data-scene="temple"] .signal-board::before { left: calc(50% - 2px); top: -48px; height: 32px; width: 4px; }   /* one red cord from the peak of the roof */
+[data-scene="temple"] .signal-board::after { display: none; }
+[data-scene="temple"] .sign-top { display: block; top: calc(var(--dot) * -5); left: calc(var(--dot) * -2); right: calc(var(--dot) * -2); height: calc(var(--dot) * 4); background: #5A3A3A; box-shadow: inset 0 var(--dot) 0 #7A4E4E; clip-path: polygon(0 100%, 0 75%, 10% 75%, 10% 50%, 25% 50%, 25% 25%, 40% 25%, 40% 0, 60% 0, 60% 25%, 75% 25%, 75% 50%, 90% 50%, 90% 75%, 100% 75%, 100% 100%); }
+[data-scene="temple"] .sign-bottom { display: block; bottom: calc(var(--dot) * -1); left: 20%; width: var(--dot); height: var(--dot); background: #F2C4CE; box-shadow: 4px 0 0 #EFA8BC, 60px -8px 0 #F2C4CE, 64px -8px 0 #F2C4CE, 150px 0 0 #EFA8BC; }   /* a few petals */
+
+/* Keeper's cottage: a sea-blue painted board on rope */
+[data-scene="keeper"] .signal-sign { --sign-face: repeating-linear-gradient(to bottom, #3E5A7A 0 calc(var(--dot) * 3), #36506D calc(var(--dot) * 3) calc(var(--dot) * 4)); --sign-edge: #1A2430; --sign-ink: #F4F1E8; --sign-drop: 2px 2px 0 #B4383A; --sign-words: #DDE6EE; --string: #C9B48A; --string-w: 4px; }
+[data-scene="keeper"] .sign-bottom { display: block; bottom: var(--dot); left: var(--dot); width: var(--dot); height: var(--dot); background: #6E4A30; box-shadow: 4px 0 0 #6E4A30, 0 -4px 0 #6E4A30; }   /* a chip where the paint wore off */
+
+/* While there is no signal the shelves can be read but not changed */
+body.no-signal #addBook, body.no-signal .edit-book, body.no-signal #editSections, body.no-signal .done-box { opacity: 0.5; cursor: not-allowed; }
+body.no-signal .spine { cursor: pointer; }
+.signal-tip { position: fixed; z-index: 62; max-width: 15rem; margin: 0; padding: 6px 10px; border: 2px solid #160E08; background: #F6ECD2; color: #3A2A1C; font-family: var(--font); font-size: 0.8125rem; line-height: 1.35; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4); pointer-events: none; animation: note-in 0.2s steps(2) both; }

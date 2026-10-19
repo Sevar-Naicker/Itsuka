@@ -46,6 +46,10 @@ const NEWS = [
     { title: "While you were away", text: "When friends change a joint shelf while you're away, a small letter now waits on its plaque. Press it to read what changed, and Show me points at the new books.", show: "" },
     { title: "Pages to read", text: "The Guide and What's new are now journal pages, like Settings. Cards for your books stay catalogue cards.", show: "" },
   ] },
+  { number: 11, title: "Undo, and no signal", items: [
+    { title: "Undo", text: "Deleted a book or a shelf by mistake? A note with an Undo button now waits for a few seconds afterwards, press it to put everything back where it was.", show: "" },
+    { title: "Open without signal", text: "Your library now opens even with no signal, showing your shelves as they were last time. A small sign hangs under the title until you're connected again. You can keep it still in Settings.", show: "settings shelves" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -67,6 +71,7 @@ const GUIDE = [
   { group: "Arranging", lines: [
     ["Move a book", "Drag a book by its spine. On a phone, rest your finger on the spine until it lifts, then drag."],
     ["Edit sections", "Rename shelves, move them up or down, sort their books (A to Z, newest or oldest first), invite friends, share or delete them."],
+    ["Undo", "After deleting a book or a shelf, press Undo on the note at the bottom within a few seconds to put it back."],
   ] },
   { group: "Keeping track", lines: [
     ["Done", "Open a book and tick Done. It gets a ribbon and a stamp, and Hide done tucks it away."],
@@ -84,6 +89,7 @@ const GUIDE = [
     ["Settings", "A journal with a bookmark for each page: Background, Shelves, Library, Phone and Help. The shelf tools follow you to every device, the background is chosen on each device."],
     ["Shuffle", "Under Background in Settings, the first picture. Itsuka picks a new background each visit or each day. Untick any you want left out, or pick one picture to stop shuffling."],
     ["Your card", "The card in the top corner holds your photo, Sign out and Delete my account."],
+    ["No signal", "With no signal, Itsuka opens the copy of your shelves saved on this device, under a small sign. You can read and find books, and changes come back once you're connected. Swaying sign in Settings keeps the sign still."],
     ["On your phone", "On the Phone page in Settings, Add to home screen puts Itsuka on your home screen, or shows you the steps for your phone. It then opens like an app."],
   ] },
 ];

@@ -38,6 +38,11 @@
   </div>
 </header>
 
+<!-- The No signal sign, hung under the title while the library shows the copy kept on this device, its look follows the background -->
+<div class="signal-sign" id="signalSign" role="status" hidden>
+  <p class="signal-board"><i class="sign-top" aria-hidden="true"></i><b>No signal</b><span id="signalWords"></span><i class="sign-bottom" aria-hidden="true"></i></p>
+</div>
+
 <!-- The search box, tucked away until the Find button is pressed -->
 <div class="search-line" id="searchLine" hidden>
   <label class="visually-hidden" for="searchBox">Find a book</label>
@@ -83,6 +88,9 @@
     </div>
   </div>
 </dialog>
+
+<!-- The taped notes with an Undo button after a book or shelf is deleted, filled in by library.js -->
+<div class="undo-notes" id="undoNotes" role="status" aria-live="polite"></div>
 
 <!-- Small taped notes about changes other people make to joint shelves, filled in by live.js -->
 <div class="live-notes" id="liveNotes" role="status" aria-live="polite"></div>
@@ -456,6 +464,7 @@
 <script src="joint.js"></script>
 <script src="live.js"></script>
 <script src="letters.js"></script>
+<script src="offline.js"></script>
 <script src="install.js"></script>
 <script src="guide.js"></script>
 

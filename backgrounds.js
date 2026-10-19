@@ -1181,6 +1181,7 @@ function ShowBackground(Id)
 {
   Current = Backgrounds.find((b) => b.id === Id) || Backgrounds[0];   // unknown or nothing saved -> the first one
   document.body.style.setProperty("--dim", Current.dim);
+  document.body.dataset.scene = Current.id;                           // the No signal sign takes on the look of the background
   ApplyTheme(Current.theme);
   DrawFrame(20);
   StartOrStop();

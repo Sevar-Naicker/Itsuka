@@ -46,11 +46,14 @@ const SETTING_LIST = [
   { key: "hover", label: "Open books on hover", hint: "On a laptop, a book opens when you point at it" },
   { key: "dust", label: "Dusty books", hint: "Books you have not opened in a while gather dust" },
   { key: "sideList", label: "Shelves down the side", hint: "On a laptop, the plaques stand in a list beside the shelves" },
+  { key: "sway", label: "Swaying sign", hint: "With no signal, the sign sways gently, off keeps it still" },
 ];
 // JointIsSetUp holds whether the database has joint shelves (supabase-joint.sql), until then the Invite button explains what to run
 let JointIsSetUp = true;
 // ShelfSettings holds which tools are switched on, they all start on apart from Shelves down the side, and the member's own choices are loaded over them
-const ShelfSettings = { find: true, done: true, hideDone: true, pull: true, drag: true, ornaments: true, hover: true, dust: true, sideList: false };
+const ShelfSettings = { find: true, done: true, hideDone: true, pull: true, drag: true, ornaments: true, hover: true, dust: true, sideList: false, sway: true };
+// WaitingGone holds the books and shelves deleted in the last few seconds, kept off the page while their Undo note is showing, even if the shelves are fetched again
+const WaitingGone = new Set();
 const SettingsList = document.getElementById("settingsList");
 const SettingsNote = document.getElementById("settingsNote");
 
@@ -476,6 +479,7 @@ function Update()
   RenderShelves();
   PullButton.hidden = !ShelfSettings.pull || !LibraryRoot.querySelector(".book:not(.is-done)");     // only when there is a book that is not done to pull
   if (typeof PlaceLetters === "function") PlaceLetters();     // letters.js puts the letters back on the plaques, it loads after this file
+  if (typeof SaveCopy === "function") SaveCopy();             // offline.js keeps a copy of the shelves on this device for when there is no signal
 }
 
 // Pulling a book at random:
@@ -611,6 +615,7 @@ function ApplyShelfSettings()
   document.body.classList.toggle("no-ornaments", !ShelfSettings.ornaments);
   document.body.classList.toggle("no-hover", !ShelfSettings.hover);
   document.body.classList.toggle("side-list", ShelfSettings.sideList);
+  document.body.classList.toggle("still-sign", !ShelfSettings.sway);
   if (!ShelfSettings.find && !SearchLine.hidden) ShowSearch(false);
   SettingsList.querySelectorAll("input").forEach((Box) =>
   {
@@ -1005,7 +1010,7 @@ async function DropBook()
 LibraryRoot.addEventListener("pointerdown", (event) =>
 {
   const Spine = event.target.closest(".spine");
-  if (!Spine || event.button !== 0 || Carry || !ShelfSettings.drag) return;
+  if (!Spine || event.button !== 0 || Carry || !ShelfSettings.drag || NoSignalNow()) return;
   const Elem = Spine.closest(".book");
   Press = { Elem, X: event.clientX, Y: event.clientY, Touch: event.pointerType !== "mouse", Timer: null };
   if (Press.Touch) Press.Timer = setTimeout(() => LiftBook(Elem, Press.X, Press.Y), HOLD_TIME);
@@ -1077,6 +1082,12 @@ function Softly(Request)
   }
 }
 
+// The NoSignalNow function checks whether the library is showing the copy kept on this device because there is no signal (offline.js decides)
+function NoSignalNow()
+{
+  return typeof NoSignal !== "undefined" && NoSignal;
+}
+
 // The LoadLibrary function fetches the member's sections and books and puts each book inside its section
 async function LoadLibrary()
 {
@@ -1093,7 +1104,7 @@ async function LoadLibrary()
   const Mine = JointIsSetUp ? Rows.data.filter((Row) => Row.member_id === MyId()) : [];
   const Everyone = JointIsSetUp && Array.isArray(People.data) ? People.data : [];
   // Every section and book has a place, a number that decides its spot, so they are put in that order
-  Library = Sections.data.map((Section) => MakeShelf(Section, Books.data, Mine, Everyone)).sort((a, b) => a.position - b.position);
+  Library = Sections.data.filter((Section) => !WaitingGone.has(Section.id)).map((Section) => MakeShelf(Section, Books.data, Mine, Everyone)).sort((a, b) => a.position - b.position);
 }
 
 // The MakeShelf function turns a section from the database into a shelf on the page, with its books, its people and the member's own place and sort for it
@@ -1114,7 +1125,7 @@ function MakeShelf(Section, AllBooks, Mine, Everyone)
     share_key: Section.share_key || "",                  // empty until the shelf is shared
     invite_key: Section.invite_key || "",                // empty until the owner turns on the invite link
     position: Owner ? Section.position : Row.position ?? Section.position,
-    books: AllBooks.filter((Book) => Book.section_id === Section.id).sort((a, b) => a.position - b.position),
+    books: AllBooks.filter((Book) => Book.section_id === Section.id && !WaitingGone.has(Book.id)).sort((a, b) => a.position - b.position),
   };
   if (Shelf.joint && Shelf.sort_by) Shelf.books.sort(SortRule(Shelf.sort_by));     // sorted for this member only, the shared order stays as it is
   return Shelf;
@@ -1296,6 +1307,129 @@ async function DeleteBook(Book)
   DiscardPicture(Book.picture).catch(console.error);
   Library.forEach((Section) => { Section.books = Section.books.filter((Other) => Other !== Book); });
 }
+
+// Undo after deleting:
+
+// UNDO_TIME is how long the Undo note waits before a delete is saved
+const UNDO_TIME = 8000;
+// UndoNotes is where the Undo notes are pinned, and Waiting holds the deletes still to be saved, each as the function that saves it
+const UndoNotes = document.getElementById("undoNotes");
+const Waiting = new Set();
+
+// The Quoted function puts a name in curly quotes, in bold, for a note
+function Quoted(Name)
+{
+  return Make("b", "", "\u201C" + Name + "\u201D");
+}
+
+// The PinNote function pins a taped note at the bottom of the screen, a note with no button leaves by itself after a moment
+function PinNote(Words, Button)
+{
+  const Note = Make("div", "undo-note");
+  const Line = Make("p");
+  Line.append(...Words);
+  Note.append(Line);
+  if (Button) Note.append(Button);
+  MoveNotes();
+  UndoNotes.append(Note);
+  while (UndoNotes.children.length > 3) UndoNotes.firstElementChild.remove();     // only the newest three stay
+  if (!Button) setTimeout(() => UnpinNote(Note), 2600);
+  return Note;
+}
+
+// The MoveNotes function keeps the notes inside the card that is open, if there is one, so Undo can still be pressed while the card covers the page
+function MoveNotes()
+{
+  const Open = [...document.querySelectorAll("dialog[open]")].pop();
+  const Home = Open || document.body;
+  if (UndoNotes.parentElement !== Home) Home.append(UndoNotes);
+}
+// When a card closes, the notes move back out with it
+document.addEventListener("close", () => setTimeout(MoveNotes, 0), true);
+
+// The UnpinNote function lets a note go
+function UnpinNote(Note)
+{
+  Note.classList.add("is-leaving");
+  setTimeout(() => Note.remove(), 300);
+}
+
+// The DeleteLater function takes a book or a shelf off the page straight away and pins an Undo note, the delete is only saved when the note runs out
+// TakeOff takes it off the page, PutBack puts it back where it was (and may return a book's id to point at) and Save deletes it for good
+function DeleteLater(Id, Name, Words, TakeOff, PutBack, Save)
+{
+  WaitingGone.add(Id);
+  TakeOff();
+  RedrawAll();
+  const Button = Make("button", "", "Undo");
+  Button.type = "button";
+  const Time = Make("span", "undo-time");
+  Time.setAttribute("aria-hidden", "true");
+  Time.append(Make("i"));
+  const Note = PinNote(Words, Button);
+  Note.append(Time);
+  Note.style.setProperty("--undo-for", UNDO_TIME / 1000 + "s");
+  let Settled = false;
+
+  // Saving the delete: if it fails, the book or shelf comes back and the note says why
+  const SaveNow = async () =>
+  {
+    if (Settled) return;
+    Settled = true;
+    clearTimeout(Timer);
+    Waiting.delete(SaveNow);
+    UnpinNote(Note);
+    try
+    {
+      await Save();
+    }
+    catch (error)
+    {
+      console.error(error);
+      PutBack();
+      RedrawAll();
+      PinNote(["\u201C" + Name + "\u201D could not be deleted, so it is back. " + ExplainDatabase(error)]);
+    }
+    WaitingGone.delete(Id);
+  };
+  const Timer = setTimeout(SaveNow, UNDO_TIME);
+  Waiting.add(SaveNow);
+
+  // Undo puts it back where it was
+  Button.addEventListener("click", () =>
+  {
+    if (Settled) return;
+    Settled = true;
+    clearTimeout(Timer);
+    Waiting.delete(SaveNow);
+    WaitingGone.delete(Id);
+    const BookId = PutBack();
+    RedrawAll();
+    const Elem = BookId && LibraryRoot.querySelector('.book[data-id="' + BookId + '"]');
+    if (Elem)
+    {
+      Elem.classList.add("is-returned");
+      Elem.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+    Note.classList.add("is-back");
+    Note.querySelector("p").replaceChildren("Put back where it was.");
+    Button.remove();
+    Time.remove();
+    setTimeout(() => UnpinNote(Note), 1400);
+  });
+}
+
+// The RedrawAll function redraws the plaques, the shelves and the Edit sections card if it is open
+function RedrawAll()
+{
+  if (SectionsDialog.open) RenderSectionRows();
+  RenderTabs();
+  Update();
+}
+
+// When the page goes out of sight or closes, waiting deletes are saved straight away, so a deleted book does not come back next time
+document.addEventListener("visibilitychange", () => { if (document.hidden) Waiting.forEach((SaveNow) => SaveNow()); });
+window.addEventListener("pagehide", () => Waiting.forEach((SaveNow) => SaveNow()));
 
 // Asking before deleting:
 
@@ -1498,18 +1632,20 @@ BookDelete.addEventListener("click", async () =>
 {
   const Book = EditingBook;
   if (!(await AskToConfirm("Delete \u201C" + Book.name + "\u201D for good?", "Delete book"))) return;
-  try
+  CatalogueDialog.close();
+  // The book leaves the shelf straight away, but it is only deleted once the Undo note has run out
+  const SectionId = SectionOf(Book).id;
+  const Index = SectionOf(Book).books.indexOf(Book);
+  DeleteLater(Book.id, Book.name, ["Took ", Quoted(Book.name), " off the shelf."], () =>
   {
-    await DeleteBook(Book);
-    CatalogueDialog.close();
-    RenderTabs();
-    Update();
-  }
-  catch (error)
+    Library.forEach((Section) => { Section.books = Section.books.filter((Other) => Other !== Book); });
+  }, () =>
   {
-    console.error(error);
-    ShowCardNote(CatalogueNote, ExplainDatabase(error));
-  }
+    const Section = Library.find((Other) => Other.id === SectionId);     // the shelf may have been fetched again in the meantime
+    if (!Section || Section.books.some((Other) => Other.id === Book.id)) return;
+    Section.books.splice(Math.min(Index, Section.books.length), 0, Book);
+    return Book.id;
+  }, () => DeleteBook(Book));
 });
 
 // The Add a book button opens a blank card and the Cancel link closes it
@@ -1651,10 +1787,27 @@ function RenderSectionRows(FocusId, FocusPart)
         : "Delete \u201C" + Section.name + "\u201D" + Inside + " for good?" + Others;
       if (!(await AskToConfirm(Question, Section.owner === false ? "Leave shelf" : "Delete section"))) return;
       SectionsNote.hidden = true;
+      if (Section.owner !== false)
+      {
+        // The shelf comes down straight away, but it is only deleted once the Undo note has run out
+        const Index = Library.indexOf(Section);
+        const WasChosen = Chosen.has(Section.id);
+        const Inside = Count === 0 ? "" : Count === 1 ? " and its 1 book" : " and its " + Count + " books";
+        DeleteLater(Section.id, Section.name, ["Took down ", Quoted(Section.name), Inside + "."], () =>
+        {
+          Library = Library.filter((Other) => Other !== Section);
+          Chosen.delete(Section.id);
+        }, () =>
+        {
+          if (Library.some((Other) => Other.id === Section.id)) return;
+          Library.splice(Math.min(Index, Library.length), 0, Section);
+          if (WasChosen) Chosen.add(Section.id);
+        }, () => DeleteSection(Section));
+        return;
+      }
       try
       {
-        if (Section.owner === false) await LeaveShelf(Section);
-        else await DeleteSection(Section);
+        await LeaveShelf(Section);
         RenderSectionRows(); RenderTabs(); Update();
       }
       catch (error)
@@ -1991,6 +2144,8 @@ async function NoteVisit()
 // The StartLibrary function runs when the page opens, it waits for the member and then loads and shows their shelves
 async function StartLibrary()
 {
+  // Every script on the page loads first, so offline.js is there to open the copy if the shelves cannot be fetched
+  if (document.readyState === "loading") await new Promise((Done) => document.addEventListener("DOMContentLoaded", Done, { once: true }));
   const Member = await MemberReady;              // from member.js: the signed-in member, or null
   if (LoginIsSetUp && !Member) return;           // nobody signed in: member.js is already sending them to the login page
 
@@ -2005,7 +2160,8 @@ async function StartLibrary()
     catch (error)
     {
       console.error(error);
-      ShowLibraryNote(ExplainDatabase(error));
+      // With no signal, offline.js opens the copy of the shelves kept on this device instead
+      if (!(typeof OpenCopy === "function" && OpenCopy(error))) ShowLibraryNote(ExplainDatabase(error));
     }
     clearTimeout(Waiting);
   }

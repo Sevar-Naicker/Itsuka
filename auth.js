@@ -23,8 +23,26 @@ async function CurrentMember()
 {
   // no connection, so nobody can be signed in
   if (!DB) return null;
-  const { data: Data } = await DB.auth.getSession();
-  return Data.session ? Data.session.user : null;
+  const { data: Data, error } = await DB.auth.getSession();
+  if (Data.session) return Data.session.user;
+  // With no signal an old sign-in cannot be renewed, so the member saved on this device is used until the signal comes back
+  if (error && (!navigator.onLine || /fetch|network|load failed/i.test(error.message || ""))) return SavedMember();
+  return null;
+}
+
+// The SavedMember function reads the member saved with the sign-in on this device, Supabase keeps it until they sign out or the sign-in is turned down
+function SavedMember()
+{
+  try
+  {
+    const Key = "sb-" + new URL(Settings.supabaseUrl).hostname.split(".")[0] + "-auth-token";
+    const Saved = JSON.parse(localStorage.getItem(Key));
+    return Saved && Saved.user ? Saved.user : null;
+  }
+  catch (error)
+  {
+    return null;
+  }
 }
 
 // The SignIn function just ensures the credentials of the user when signing in
@@ -58,7 +76,15 @@ function ResendConfirmation(Email)
 // The SignOut function will log the user out of their current session (dump the sign in information)
 function SignOut()
 {
+  ForgetCopy();
   return DB.auth.signOut();
+}
+
+// The ForgetCopy function removes the copy of the shelves kept on this device for when there is no signal (offline.js makes it)
+function ForgetCopy()
+{
+  try { localStorage.removeItem("library-copy"); }
+  catch (error) {}
 }
 
 // The SendPasswordReset function will email the user with a link, as well as take them back to the login page
