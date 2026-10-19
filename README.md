@@ -72,6 +72,8 @@ Itsuka (いつか) is Japanese for "someday". You find someone on Instagram or P
 | `ledger.js` | Fills the Ledger from the database: the gauges, the charts and the upkeep checks |
 | `install.js` | The Add to home screen buttons on the landing page and in Settings: a one-tap install where the browser allows it, the steps for each phone everywhere else |
 | `manifest.json` | Lets a phone add the site to its home screen like an app, and puts Itsuka in the Share menu on Android |
+| `robots.txt` | Tells search engines they may visit the site and where the sitemap is (private pages carry a noindex tag instead) |
+| `sitemap.xml` | The list of pages search engines should show: the landing page and the privacy page |
 | `icons/` | The tab icon, the home screen icons and the picture shown when the link is shared |
 | `fonts/` | The pixel font files and their licence |
 

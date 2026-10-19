@@ -1,0 +1,6 @@
+# This file tells search engines they may visit Itsuka and where the list of pages to show is
+# The private pages (everyone's library, shared and joint shelf links, the Ledger) each carry a noindex tag instead, so they are never listed
+User-agent: *
+Allow: /
+
+Sitemap: https://itsuka.co.za/sitemap.xml
