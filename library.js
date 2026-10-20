@@ -1294,6 +1294,9 @@ async function MarkDone(Book, Done)
     if (error) throw error;
   }
   Book.done = Done;
+  // The database stamps the day it was ticked, the page keeps the same so the reading record is right before the shelves are fetched again
+  Book.done_at = Done ? new Date().toISOString() : null;
+  Book.done_by = Done ? MyId() : null;
 }
 
 // The DeleteBook function deletes a book and its picture

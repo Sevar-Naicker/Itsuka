@@ -50,6 +50,9 @@ const NEWS = [
     { title: "Undo", text: "Deleted a book or a shelf by mistake? A note with an Undo button now waits for a few seconds afterwards, press it to put everything back where it was.", show: "" },
     { title: "Open without signal", text: "Your library now opens even with no signal, showing your shelves as they were last time. A small sign hangs under the title until you're connected again. You can keep it still in Settings.", show: "settings shelves" },
   ] },
+  { number: 12, title: "Your reading record", items: [
+    { title: "Reading record", text: "Your library card now has a Reading record: every book you tick done, stamped with the day, month by month. Books you delete stay on it until you take them off. Books ticked before today sit under Before the record began.", show: "#memberChip" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -76,6 +79,7 @@ const GUIDE = [
   { group: "Keeping track", lines: [
     ["Done", "Open a book and tick Done. It gets a ribbon and a stamp, and Hide done tucks it away."],
     ["Dust", "A book you haven't opened in two months gathers dust. Opening it blows the dust off."],
+    ["Reading record", "On your library card. Every book you tick done is stamped with the day, with totals and the book that has waited longest. On a joint shelf a book goes on the record of whoever ticked it. A deleted book stays until you press Take off."],
   ] },
   { group: "Sharing", lines: [
     ["Share a shelf", "Edit sections, then Share, then Make a link. Anyone with the link can look at that one shelf and add its books to their own library. Stop sharing turns the link off."],

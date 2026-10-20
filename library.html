@@ -359,6 +359,7 @@
         </div>
         <!-- Only shown on the library keeper's card -->
         <a class="card-button ledger-link ledger-open" id="ledgerButton" href="ledger.html" hidden>Ledger</a>
+        <button class="card-button record-open" id="recordButton" type="button">Reading record</button>
         <button class="card-button" id="signOut" type="button">Sign out</button>
         <p class="card-switch card-ends">
           <button class="link-button" id="memberClose" type="button" autofocus>Close</button>
@@ -425,6 +426,16 @@
   </div>
 </dialog>
 
+<!-- The reading record, a manila record card with the day each book was ticked done, filled in by record.js -->
+<dialog class="slip-dialog record-dialog" id="recordDialog" aria-labelledby="recordTitle">
+  <div class="slip record-card">
+    <h2 class="slip-head" id="recordTitle">Reading record</h2>
+    <p class="slip-sub" id="recordOwner"></p>
+    <div id="recordBody"></div>
+    <button class="card-button slip-done" id="recordDone" type="button">Close</button>
+  </div>
+</dialog>
+
 <!-- The welcome tour's taped notes are placed here by guide.js -->
 <div class="tour-layer" id="tourLayer" hidden></div>
 
@@ -466,6 +477,7 @@
 <script src="live.js"></script>
 <script src="letters.js"></script>
 <script src="offline.js"></script>
+<script src="record.js"></script>
 <script src="install.js"></script>
 <script src="guide.js"></script>
 

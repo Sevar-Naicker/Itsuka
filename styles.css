@@ -1495,3 +1495,47 @@ dialog[open]::backdrop { animation: menu-shade 0.22s steps(4, end); }
 body.no-signal #addBook, body.no-signal .edit-book, body.no-signal #editSections, body.no-signal .done-box { opacity: 0.5; cursor: not-allowed; }
 body.no-signal .spine { cursor: pointer; }
 .signal-tip { position: fixed; z-index: 62; max-width: 15rem; margin: 0; padding: 6px 10px; border: 2px solid #160E08; background: #F6ECD2; color: #3A2A1C; font-family: var(--font); font-size: 0.8125rem; line-height: 1.35; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.4); pointer-events: none; animation: note-in 0.2s steps(2) both; }
+
+/* Library paperwork (the reading record, and later the Books due slip): manila paper with faint ruled lines and a red rule under the heading */
+.slip-dialog { width: min(480px, calc(100% - 32px)); padding: 0 12px 12px 0; border: 0; background: transparent; font-family: var(--font); font-variant-ligatures: none; overflow: visible; }
+.slip-dialog::backdrop { background: rgba(10, 6, 3, 0.6); }
+.slip { position: relative; padding: 22px 24px; border: var(--dot) solid #160E08; background: repeating-linear-gradient(to bottom, transparent 0 35px, rgba(110, 80, 40, 0.16) 35px 36px), #EADBB0; color: #3A2A1C; box-shadow: calc(var(--dot) * 2) calc(var(--dot) * 2) 0 rgba(0, 0, 0, 0.45); }
+.slip-head { margin: 0; padding-bottom: 8px; border-bottom: 3px solid #B5483C; font-size: 1.875rem; font-weight: 700; letter-spacing: 0.14em; text-align: center; text-transform: uppercase; }
+.slip-sub { margin: 8px 0 10px; font-size: 0.875rem; text-align: center; opacity: 0.75; }
+.slip-done { width: 100%; margin-top: 18px; }
+
+/* The reading record: brown ink stamps and totals, each month under a red rule, a red ruled column beside the stamps */
+.record-card { max-height: calc(100vh - 80px); overflow-y: auto; scrollbar-width: none; }
+.record-card::-webkit-scrollbar { display: none; }
+.record-open { margin-bottom: 10px; background: var(--brass); color: #2A1A10; }
+.record-tallies { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0 0 14px; }
+.record-tally { display: grid; align-content: center; justify-items: center; gap: 2px; padding: 10px 6px 8px; border: 2px solid #6A3E22; color: #6A3E22; text-align: center; }
+.record-tally b { font-size: 1.625rem; font-weight: 700; line-height: 1.05; overflow-wrap: anywhere; }
+.record-tally b.is-word { padding-top: 4px; font-size: 1.0625rem; }
+.record-tally span { font-size: 0.75rem; opacity: 0.8; }
+.record-waiting { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 0 0 6px; padding: 8px 10px; border: 2px solid rgba(58, 42, 28, 0.35); background: rgba(255, 255, 255, 0.3); font-size: 0.875rem; line-height: 1.4; }
+.record-month { display: flex; justify-content: space-between; align-items: baseline; margin: 18px 0 2px; padding-bottom: 6px; border-bottom: 3px solid #B5483C; font-size: 1rem; letter-spacing: 0.04em; }
+.record-month span { font-size: 0.8125rem; font-weight: 400; opacity: 0.75; }
+.record-row { display: grid; grid-template-columns: 5rem 1fr auto; align-items: center; column-gap: 12px; padding: 8px 0; border-bottom: 2px solid rgba(58, 42, 28, 0.35); background: linear-gradient(to right, transparent calc(5rem + 4px), rgba(181, 72, 60, 0.55) calc(5rem + 4px), rgba(181, 72, 60, 0.55) calc(5rem + 6px), transparent calc(5rem + 6px)); }
+.record-date { justify-self: start; padding: 2px 6px; border: 2px solid #6A3E22; color: #6A3E22; font-size: 0.875rem; font-weight: 700; white-space: nowrap; transform: rotate(-3deg); }
+.record-row:nth-child(even) .record-date { transform: rotate(2deg); }   /* each stamp lands a little crooked */
+.record-date.is-blank { border-style: dashed; font-weight: 400; opacity: 0.7; transform: none; }
+.record-words { display: grid; gap: 2px; min-width: 0; }
+.record-words b { font-weight: 600; overflow-wrap: anywhere; }
+.record-words small { font-size: 0.8125rem; opacity: 0.75; }
+.record-row.is-gone .record-words b { opacity: 0.7; }
+.record-row button, .record-waiting button { padding: 3px 9px; border: 2px solid #3A2A1C; background: rgba(255, 255, 255, 0.35); color: #3A2A1C; font: inherit; font-size: 0.8125rem; white-space: nowrap; cursor: pointer; }
+.record-row button:active, .record-waiting button:active { transform: translate(1px, 1px); }
+.record-row button:disabled { opacity: 0.6; cursor: default; }
+.record-empty { margin: 8px 0 4px; font-size: 0.9375rem; line-height: 1.5; }
+@media (max-width: 420px)
+{
+  .slip { padding: 20px 16px; }
+  .slip-head { font-size: 1.5rem; letter-spacing: 0.08em; }
+  .record-tallies { gap: 6px; }
+  .record-tally b { font-size: 1.375rem; }
+  .record-tally b.is-word { font-size: 0.9375rem; }
+  .record-row { grid-template-columns: 4.25rem 1fr; background: linear-gradient(to right, transparent calc(4.25rem + 4px), rgba(181, 72, 60, 0.55) calc(4.25rem + 4px), rgba(181, 72, 60, 0.55) calc(4.25rem + 6px), transparent calc(4.25rem + 6px)); }
+  .record-row button { grid-column: 2; justify-self: start; margin-top: 6px; }
+  .record-date { padding: 2px 4px; font-size: 0.8125rem; }
+}

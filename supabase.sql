@@ -969,3 +969,88 @@ drop trigger if exists shelf_members_log on public.shelf_members;
 create trigger shelf_members_log
   after insert or delete on public.shelf_members
   for each row execute function public.log_shelf_change();
+
+-- Reading Record Addition (the day each book is ticked done is stamped on the member's reading record, opened from their library card, and kept even after the book is deleted):
+
+-- Addition of Done On and Done By to Books (when a book was ticked done and who ticked it, the database fills both in, empty for books ticked before the record began):
+alter table public.books add column if not exists done_at timestamptz;
+alter table public.books add column if not exists done_by uuid references auth.users (id) on delete set null;
+
+-- Reading Record Table Creation (one line per book a member ticked done, with the book's name and shelf kept so a deleted book can still be named, there is no link to the book itself so the line stays when the book is deleted):
+create table if not exists public.reading_record
+(
+  id          bigint generated always as identity primary key,
+  member_id   uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  book_id     uuid not null,
+  book_name   text not null default '',
+  section_id  uuid,
+  shelf_name  text not null default '',
+  done_at     timestamptz not null default now(),
+  constraint reading_record_name_length  check (char_length(book_name) <= 200),
+  constraint reading_record_shelf_length check (char_length(shelf_name) <= 100)
+);
+
+-- Addition of a Member and Date Index for reading a member's record newest first:
+create index if not exists reading_record_member_idx on public.reading_record (member_id, done_at desc);
+
+-- Ensuring each member only reads and takes lines off their own record, and nobody writes to it from a browser, the database writes every line:
+alter table public.reading_record enable row level security;
+revoke all on public.reading_record from anon, authenticated;
+grant select, delete on public.reading_record to authenticated;
+
+drop policy if exists "members read their own record" on public.reading_record;
+create policy "members read their own record" on public.reading_record
+  for select to authenticated
+  using (member_id = (select auth.uid()));
+
+drop policy if exists "members take lines off their own record" on public.reading_record;
+create policy "members take lines off their own record" on public.reading_record
+  for delete to authenticated
+  using (member_id = (select auth.uid()));
+
+-- Reading Record Writing (ticking Done stamps the day and who ticked it on the book and adds a line to their record, unticking it takes their line off again, the stamp itself can never be set or changed from a browser):
+-- On a joint shelf the book goes on the record of whoever ticked it, and unticking only takes the line off the record of whoever unticks it
+create or replace function public.stamp_reading_record()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  who uuid := auth.uid();
+begin
+  if tg_op = 'INSERT' then
+    -- a new book, or one loaded back from a copy, has no stamp: if it is done it shows under Before the record began
+    new.done_at := null;
+    new.done_by := null;
+    return new;
+  end if;
+  if new.done and not old.done then
+    new.done_at := now();
+    new.done_by := who;
+    if who is not null then
+      insert into public.reading_record (member_id, book_id, book_name, section_id, shelf_name)
+      values (who, new.id, new.name, new.section_id, coalesce((select s.name from public.sections s where s.id = new.section_id), ''));
+    end if;
+  elsif old.done and not new.done then
+    new.done_at := null;
+    new.done_by := null;
+    if who is not null then
+      delete from public.reading_record r where r.book_id = old.id and r.member_id = who;
+    end if;
+  else
+    -- anything else keeps the stamp as it was, so it cannot be changed by hand
+    new.done_at := old.done_at;
+    new.done_by := old.done_by;
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.stamp_reading_record() from public, anon, authenticated;
+
+-- Addition of the Reading Record Trigger on books:
+drop trigger if exists books_reading_record on public.books;
+create trigger books_reading_record
+  before insert or update on public.books
+  for each row execute function public.stamp_reading_record();
