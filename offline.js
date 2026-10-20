@@ -138,7 +138,7 @@ function ShowSignalTip(Near, Words)
 document.addEventListener("click", (event) =>
 {
   if (!NoSignal) return;
-  const Blocked = event.target.closest("#addBook, .edit-book, #editSections, .done-box");
+  const Blocked = event.target.closest("#addBook, .edit-book, #editSections, .done-box, .needs-signal");
   if (!Blocked) return;
   event.preventDefault();
   event.stopImmediatePropagation();

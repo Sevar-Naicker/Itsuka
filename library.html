@@ -219,6 +219,13 @@
           <span>Notes, one point per line</span>
           <textarea id="bookNotes" rows="4" maxlength="10000"></textarea>
         </label>
+        <!-- The day to come back to the book, with quick picks under it, filled in by comeback.js -->
+        <label class="card-line come-back-card" id="comeBackLine" hidden>
+          <span>Come back on</span>
+          <input id="bookComeBack" type="date">
+        </label>
+        <div class="come-back-picks" id="comeBackPicks" hidden></div>
+        <p class="come-back-warning" id="comeBackWarning" role="alert" hidden></p>
         <div class="picture-row">
           <canvas class="picture-thumb" id="bookPicturePreview" aria-hidden="true" hidden></canvas>
           <div class="picture-choices">
@@ -436,6 +443,17 @@
   </div>
 </dialog>
 
+<!-- The Books due slip: a library date due slip with a stamped line for every book whose day has come, filled in by comeback.js -->
+<dialog class="slip-dialog" id="dueDialog" aria-labelledby="dueTitle">
+  <div class="slip">
+    <p class="slip-stamp" id="dueStamp" aria-hidden="true">Overdue</p>
+    <h2 class="slip-head" id="dueTitle">Books due</h2>
+    <p class="slip-sub">Please come back to these by the date stamped</p>
+    <div class="slip-rows" id="dueTable"></div>
+    <button class="card-button slip-done" id="dueDone" type="button">Got it</button>
+  </div>
+</dialog>
+
 <!-- The welcome tour's taped notes are placed here by guide.js -->
 <div class="tour-layer" id="tourLayer" hidden></div>
 
@@ -478,6 +496,7 @@
 <script src="letters.js"></script>
 <script src="offline.js"></script>
 <script src="record.js"></script>
+<script src="comeback.js"></script>
 <script src="install.js"></script>
 <script src="guide.js"></script>
 

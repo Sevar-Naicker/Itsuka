@@ -1539,3 +1539,52 @@ body.no-signal .spine { cursor: pointer; }
   .record-row button { grid-column: 2; justify-self: start; margin-top: 6px; }
   .record-date { padding: 2px 4px; font-size: 0.8125rem; }
 }
+
+/* The Books due slip: a ruled column of brown date stamps, each book's name and buttons, and a big red stamp in the corner */
+.slip-rows { border-top: 2px solid rgba(58, 42, 28, 0.35); }
+.slip-row { display: grid; grid-template-columns: 6.5rem 1fr; align-items: center; column-gap: 16px; row-gap: 8px; padding: 12px 0; border-bottom: 2px solid rgba(58, 42, 28, 0.35); background: linear-gradient(to right, transparent calc(6.5rem + 6px), rgba(181, 72, 60, 0.55) calc(6.5rem + 6px), rgba(181, 72, 60, 0.55) calc(6.5rem + 8px), transparent calc(6.5rem + 8px)); }
+.slip-date { position: relative; grid-row: span 2; justify-self: center; display: grid; justify-items: center; min-width: 5.25rem; padding: 4px 6px 3px; border: 4px double #6A3E22; color: #6A3E22; line-height: 1; white-space: nowrap; opacity: 0.9; transform: rotate(var(--tilt, -3deg)); }
+.slip-date::after { content: ""; position: absolute; inset: -4px; background: radial-gradient(circle at 30% 40%, #EADBB0 0 1px, transparent 1.5px) 0 0 / 19px 15px; pointer-events: none; }   /* worn ink: tiny gaps where the stamp did not press evenly */
+.slip-date .day { position: relative; z-index: 1; font-size: 1.75rem; font-weight: 700; }
+.slip-date .month { position: relative; z-index: 1; margin-top: 4px; font-size: 1.0625rem; font-weight: 700; letter-spacing: 0.06em; }   /* title case: in the pixel font a capital C looks like an O */
+.slip-date .year { position: relative; z-index: 1; margin-top: 3px; font-size: 0.75rem; letter-spacing: 0.14em; opacity: 0.85; }
+.slip-row b { align-self: end; font-size: 1.125rem; font-weight: 600; overflow-wrap: anywhere; }
+.slip-actions, .slip-row .come-back-choose, .slip-row .come-back-line { grid-column: 2; align-self: start; }
+.slip-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.slip-actions button, .come-back-again button { padding: 4px 10px; border: 2px solid #3A2A1C; background: rgba(255, 255, 255, 0.35); color: #3A2A1C; font: inherit; font-size: 0.8125rem; cursor: pointer; }
+.slip-actions button:first-child { background: #3A2A1C; color: #EADBB0; }
+.slip-actions button:active, .come-back-again button:active { transform: translate(1px, 1px); }
+.slip-row .come-back-line { margin: 0; color: #3A2A1C; font-size: 0.875rem; }
+.slip-stamp { position: absolute; z-index: 1; top: -14px; left: -18px; margin: 0; padding: 4px 14px; border: 5px solid #C2392E; outline: 2px solid #C2392E; outline-offset: 3px; color: #C2392E; font-size: 1.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.75; transform: rotate(-12deg); pointer-events: none; animation: stamp-down 0.32s steps(3, end) 0.3s both; }
+@keyframes stamp-down { from { opacity: 0; transform: rotate(-12deg) scale(1.7); } to { opacity: 0.75; transform: rotate(-12deg) scale(1); } }
+@media (max-width: 420px)
+{
+  .slip-row { grid-template-columns: 4.75rem 1fr; column-gap: 12px; background: linear-gradient(to right, transparent calc(4.75rem + 5px), rgba(181, 72, 60, 0.55) calc(4.75rem + 5px), rgba(181, 72, 60, 0.55) calc(4.75rem + 7px), transparent calc(4.75rem + 7px)); }
+  .slip-date { min-width: 4.25rem; padding: 3px 4px 2px; }
+  .slip-date .day { font-size: 1.5rem; }
+  .slip-actions, .come-back-again { gap: 6px; }
+  .slip-actions button, .come-back-again button { padding: 3px 7px; font-size: 0.75rem; }
+  .slip-stamp { left: -10px; font-size: 1.375rem; }
+}
+@media (prefers-reduced-motion: reduce) { .slip-stamp { animation: none; } }
+
+/* Coming back to a book: the note inside it on the day, a quiet line before it, and the choices for a new day */
+.come-back-part:empty { display: none; }
+.come-back-note { margin: 0 0 8px; padding: 5px 8px; border: 2px solid #B8862E; background: rgba(217, 162, 60, 0.18); color: var(--ink); font-size: 0.8125rem; line-height: 1.3; }
+.come-back-note b { display: block; font-weight: 600; }
+.come-back-note .note-buttons { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 3px; }
+.come-back-note .note-buttons button, .come-back-set { padding: 0; border: 0; background: none; color: var(--ink); font: inherit; font-size: 0.75rem; text-decoration: underline; cursor: pointer; }
+.come-back-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin: 0 0 10px; color: var(--faded); font-family: var(--font); font-size: 0.8125rem; }
+.come-back-line i { display: inline-block; width: 6px; height: 12px; background: #D9A23C; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 75%, 0 100%); }   /* a little bookmark */
+.come-back-choose { margin: 0 0 10px; }
+.come-back-again { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.come-back-again input { padding: 2px 4px; border: 2px solid #3A2A1C; background: #FAF8F2; color: #3A2A1C; font-family: var(--font); font-size: 0.8125rem; }
+.come-back-warning { margin: 6px 0 0; padding: 6px 10px; border: 2px solid #7A1E14; background: #F3D9D4; color: #7A1E14; font-family: var(--font); font-size: 0.8125rem; line-height: 1.4; }
+.come-back-warning[hidden] { display: none; }
+
+/* On the catalogue card: the date line with its quick picks */
+.come-back-card input[type="date"] { padding: 6px 2px; border: 0; background: transparent; color: var(--ink); font: inherit; font-size: 1rem; }
+.come-back-picks { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: -4px 0 12px; }
+.come-back-picks[hidden] { display: none; }
+.come-back-picks button { padding: 0; border: 0; background: none; color: var(--faded); font: inherit; font-size: 0.8125rem; text-decoration: underline; cursor: pointer; }
+#comeBackWarning { margin: -6px 0 12px; }

@@ -1054,3 +1054,65 @@ drop trigger if exists books_reading_record on public.books;
 create trigger books_reading_record
   before insert or update on public.books
   for each row execute function public.stamp_reading_record();
+
+-- Books Due Addition (a member can give any book a day to come back to it, and on that day the Books due slip lists it, each member's days are their own):
+
+-- Come Back Table Creation (the day a member wants to come back to a book, one per book for each member, removed with the book or the account):
+create table if not exists public.come_back
+(
+  member_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  book_id   uuid not null references public.books (id) on delete cascade,
+  day       date not null,
+  primary key (member_id, book_id)
+);
+
+-- Addition of a Book Index for removing a book's days when it is deleted:
+create index if not exists come_back_book_idx on public.come_back (book_id);
+
+-- Ensuring each member only sees and sets their own days, and only on books they can see on their shelves:
+alter table public.come_back enable row level security;
+revoke all on public.come_back from anon, authenticated;
+grant select, insert, update, delete on public.come_back to authenticated;
+
+drop policy if exists "members read their own days" on public.come_back;
+create policy "members read their own days" on public.come_back
+  for select to authenticated
+  using (member_id = (select auth.uid()));
+
+drop policy if exists "members set days on books they can see" on public.come_back;
+create policy "members set days on books they can see" on public.come_back
+  for insert to authenticated
+  with check (member_id = (select auth.uid()) and exists (select 1 from public.books b where b.id = book_id));
+
+drop policy if exists "members change their own days" on public.come_back;
+create policy "members change their own days" on public.come_back
+  for update to authenticated
+  using (member_id = (select auth.uid()))
+  with check (member_id = (select auth.uid()) and exists (select 1 from public.books b where b.id = book_id));
+
+drop policy if exists "members clear their own days" on public.come_back;
+create policy "members clear their own days" on public.come_back
+  for delete to authenticated
+  using (member_id = (select auth.uid()));
+
+-- Come Back Day Check (a new or changed day cannot be one that has already passed, a day's leeway is left for members in other time zones):
+create or replace function public.come_back_check()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if (tg_op = 'INSERT' or new.day is distinct from old.day) and new.day < current_date - 1 then
+    raise exception 'That day has already passed';
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.come_back_check() from public, anon, authenticated;
+
+-- Addition of the Come Back Day Check Trigger:
+drop trigger if exists come_back_day_check on public.come_back;
+create trigger come_back_day_check
+  before insert or update on public.come_back
+  for each row execute function public.come_back_check();

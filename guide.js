@@ -53,6 +53,9 @@ const NEWS = [
   { number: 12, title: "Your reading record", items: [
     { title: "Reading record", text: "Your library card now has a Reading record: every book you tick done, stamped with the day, month by month. Books you delete stay on it until you take them off. Books ticked before today sit under Before the record began.", show: "#memberChip" },
   ] },
+  { number: 13, title: "Books due", items: [
+    { title: "Come back on", text: "Give any book a day to come back to it, on its catalogue card or with Remind me to come back inside the book. When the day comes, a Books due slip greets you with Open it, Later and Clear.", show: "spine" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -70,6 +73,7 @@ const GUIDE = [
     ["Shelves down the side", "On a laptop, switch this on in Settings to stand the plaques in a list beside your shelves instead."],
     ["Find", "Find searches the names and notes of every book."],
     ["Pull a book", "Picks a book you haven't finished, for when you can't decide."],
+    ["Books due", "Give a book a Come back on day on its card, or press Remind me to come back inside it. On the day, the Books due slip lists it. Later picks a new day, Clear forgets it. Your days are only yours, even on a joint shelf."],
   ] },
   { group: "Arranging", lines: [
     ["Move a book", "Drag a book by its spine. On a phone, rest your finger on the spine until it lifts, then drag."],

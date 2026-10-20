@@ -264,6 +264,7 @@ function MakeLibraryBook(Book, ColourNumber)
   Dust.setAttribute("aria-hidden", "true");
   Elem.querySelector(".spine").append(Dust);
   DressAsDone(Elem, Book);
+  if (typeof DressComeBack === "function") DressComeBack(Elem, Book);     // comeback.js writes the day to come back to it inside the book
   return Elem;
 }
 
@@ -1563,6 +1564,7 @@ function OpenCatalogueCard(Book)
   }
   NewSectionLine.hidden = BookSection.value !== "new";               // with no sections yet, "New section" is the only choice
   ShowCardPicture();
+  if (typeof FillComeBackLine === "function") FillComeBackLine(Book);   // comeback.js fills in the Come back on line
 
   if (!DB) ShowCardNote(CatalogueNote, "Login is switched off, so changes show on the shelf but are not saved.");
   CatalogueDialog.showModal();
@@ -1589,6 +1591,7 @@ CatalogueForm.addEventListener("submit", async (event) =>
   if (!Name) { ShowCardNote(CatalogueNote, "Give the book a name, usually who or what you are saving."); BookName.focus(); return; }
   if (BookLink.value.trim() && !Link) { ShowCardNote(CatalogueNote, "That link does not look like a web address. Fix it or leave it empty."); BookLink.focus(); return; }
   if (BookSection.value === "new" && !SectionName) { ShowCardNote(CatalogueNote, "Name the new section, for example Artists."); NewSectionName.focus(); return; }
+  if (typeof ComeBackProblem === "function" && ComeBackProblem()) return;     // comeback.js checks the day has not already passed
 
   const Label = CatalogueSubmit.textContent;
   CatalogueSubmit.disabled = true;
@@ -1612,6 +1615,7 @@ CatalogueForm.addEventListener("submit", async (event) =>
     {
       Book = await SaveBook(Section, { name: Name, link: Link, notes: Notes, picture: Picture });
     }
+    if (typeof SaveComeBackLine === "function") await SaveComeBackLine(Book);  // and saves the day to come back to it
 
     CatalogueDialog.close();
     if (Chosen.size) Chosen.add(Section.id);                           // make sure the shelf it is on is showing
