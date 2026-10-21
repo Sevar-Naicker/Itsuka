@@ -1650,3 +1650,9 @@ body.carrying-page .open-book { visibility: hidden !important; }
 /* Show me on an open book's Edit button: the button glows brass so it stands out on the paper */
 .page-foot .is-pointed { animation: point-at-paper 0.65s steps(2) 4; }
 @keyframes point-at-paper { 50% { background: var(--brass); color: #2A1A10; box-shadow: 0 0 0 3px var(--brass); } }
+
+/* Date added: a yellow sticky note tilted over the top corner of the picture, with a darker sticky strip along its top, only on page 1 */
+.added-note { position: absolute; top: calc(var(--dot) * 2 + 2px); left: calc(var(--dot) * 2 + 4px); z-index: 4; display: grid; justify-items: center; gap: 1px; width: 62px; padding: 8px 4px 6px; background: linear-gradient(#E9CF62 0 6px, #F6E27F 6px); color: #4A3410; font-family: var(--font); line-height: 1.1; box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.35); transform: rotate(-14deg); pointer-events: none; }
+.added-note small { font-size: 0.5625rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.75; }
+.added-note b { font-size: 0.6875rem; text-align: center; }
+body.no-added .added-note, .book.on-later-page .added-note { display: none; }

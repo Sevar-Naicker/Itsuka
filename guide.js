@@ -60,6 +60,9 @@ const NEWS = [
     { title: "More pages", text: "A book can now hold up to 8 pages, each with its own title, link, notes and picture. Press Edit on a book, then + Add a page. Turn the pages with the brass arrows under the open book, or swipe on a phone.", show: "edit" },
     { title: "Moving pages", text: "Drag a page out of an open book onto another book, or hold one book over the middle of another's spine to put it inside. A bookmark ribbon remembers the page you left each book on.", show: "" },
   ] },
+  { number: 15, title: "Date added", items: [
+    { title: "When you shelved it", text: "Each book now has a little sticky note in its corner with the day you added it. Don't want them? Switch off Date added in Settings, under Shelves.", show: "settings shelves" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -89,6 +92,7 @@ const GUIDE = [
   { group: "Keeping track", lines: [
     ["Done", "Open a book and tick Done. It gets a ribbon and a stamp, and Hide done tucks it away."],
     ["Dust", "A book you haven't opened in two months gathers dust. Opening it blows the dust off."],
+    ["Date added", "The sticky note in a book's corner shows the day it was added. Switch off Date added in Settings, under Shelves, to hide the notes."],
     ["Reading record", "On your library card. Every book you tick done is stamped with the day, with totals and the book that has waited longest. On a joint shelf a book goes on the record of whoever ticked it. A deleted book stays until you press Take off."],
   ] },
   { group: "Sharing", lines: [

@@ -45,13 +45,14 @@ const SETTING_LIST = [
   { key: "ornaments", label: "Shelf ornaments", hint: "The little things at the end of each shelf" },
   { key: "hover", label: "Open books on hover", hint: "On a laptop, a book opens when you point at it" },
   { key: "dust", label: "Dusty books", hint: "Books you have not opened in a while gather dust" },
+  { key: "added", label: "Date added", hint: "A sticky note inside each book with the day it was added" },
   { key: "sideList", label: "Shelves down the side", hint: "On a laptop, the plaques stand in a list beside the shelves" },
   { key: "sway", label: "Swaying sign", hint: "With no signal, the sign sways gently, off keeps it still" },
 ];
 // JointIsSetUp holds whether the database has joint shelves (supabase-joint.sql), until then the Invite button explains what to run
 let JointIsSetUp = true;
 // ShelfSettings holds which tools are switched on, they all start on apart from Shelves down the side, and the member's own choices are loaded over them
-const ShelfSettings = { find: true, done: true, hideDone: true, pull: true, drag: true, ornaments: true, hover: true, dust: true, sideList: false, sway: true };
+const ShelfSettings = { find: true, done: true, hideDone: true, pull: true, drag: true, ornaments: true, hover: true, dust: true, added: true, sideList: false, sway: true };
 // WaitingGone holds the books and shelves deleted in the last few seconds, kept off the page while their Undo note is showing, even if the shelves are fetched again
 const WaitingGone = new Set();
 const SettingsList = document.getElementById("settingsList");
@@ -264,6 +265,14 @@ function MakeLibraryBook(Book, ColourNumber)
   const Dust = Make("i", "dust");
   Dust.setAttribute("aria-hidden", "true");
   Elem.querySelector(".spine").append(Dust);
+  // The sticky note with the day the book was added, styles.css hides it when Date added is off in the settings
+  if (Book.created_at && !isNaN(Date.parse(Book.created_at)))
+  {
+    const Note = Make("div", "added-note");
+    const Day = new Date(Book.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+    Note.append(Make("small", "", "Added"), Make("b", "", Day));
+    Elem.querySelector(".open-book").append(Note);
+  }
   DressAsDone(Elem, Book);
   if (typeof DressComeBack === "function") DressComeBack(Elem, Book);     // comeback.js writes the day to come back to it inside the book
   return Elem;
@@ -579,6 +588,7 @@ function ApplyShelfSettings()
   document.body.classList.toggle("no-hover", !ShelfSettings.hover);
   document.body.classList.toggle("side-list", ShelfSettings.sideList);
   document.body.classList.toggle("still-sign", !ShelfSettings.sway);
+  document.body.classList.toggle("no-added", !ShelfSettings.added);
   if (!ShelfSettings.find && !SearchLine.hidden) ShowSearch(false);
   SettingsList.querySelectorAll("input").forEach((Box) =>
   {
