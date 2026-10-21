@@ -107,7 +107,7 @@ The `config.js` in this repository points at the live Itsuka project. To run you
 5. Supabase's built-in email only delivers to people on your own Supabase team. To let anyone register, connect an email provider such as Resend under **Authentication > Emails > SMTP Settings**. The provider's key is a secret and belongs only in the Supabase dashboard.
 6. In `index.html`, `shelf.html` and `join.html`, change the `https://itsuka.co.za` addresses near the top (`og:url` and `og:image`) to your own site's address, so shared links show your preview. Do the same in `.github/workflows/keep-awake.yml`, and change the contact email in `privacy.html` to your own.
 
-7. To open the Ledger, register on your site, then in the SQL Editor run the three Library Keeper lines at the end of `supabase.sql` with your own email in them. A Ledger button then appears on your library card.
+7. To open the Ledger, register on your site first. In `supabase.sql`, find **Library Keeper Addition**, just after the Ledger section. Copy the three lines under it into a new query in the SQL Editor, take the `-- ` off the start of each, put your own email in place of `you@example.com` and press **Run**. They start with `-- ` so that running the whole file skips them. A Ledger button then appears on your library card.
 
 If both values in `config.js` are left empty, login is off and the library shows a few example shelves that are not saved anywhere.
 
