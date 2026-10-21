@@ -1646,3 +1646,7 @@ body.carrying-page .open-book { visibility: hidden !important; }
 .book.is-page-full::after, .book.is-page-no::after { background: #F3D9D4; color: #7A1E14; }
 .book.is-page-full::after { content: "This book is full"; }
 .book.is-page-no::after { content: "Not yours to add to"; }
+
+/* Show me on an open book's Edit button: the button glows brass so it stands out on the paper */
+.page-foot .is-pointed { animation: point-at-paper 0.65s steps(2) 4; }
+@keyframes point-at-paper { 50% { background: var(--brass); color: #2A1A10; box-shadow: 0 0 0 3px var(--brass); } }

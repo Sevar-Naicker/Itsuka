@@ -57,7 +57,7 @@ const NEWS = [
     { title: "Come back on", text: "Give any book a day to come back to it, on its catalogue card or with Remind me to come back inside the book. When the day comes, a Books due slip greets you with Open it, Later and Clear.", show: "spine" },
   ] },
   { number: 14, title: "Pages in a book", items: [
-    { title: "More pages", text: "A book can now hold up to 8 pages, each with its own title, link, notes and picture. Press Edit on a book, then + Add a page. Turn the pages with the brass arrows under the open book, or swipe on a phone.", show: "spine" },
+    { title: "More pages", text: "A book can now hold up to 8 pages, each with its own title, link, notes and picture. Press Edit on a book, then + Add a page. Turn the pages with the brass arrows under the open book, or swipe on a phone.", show: "edit" },
     { title: "Moving pages", text: "Drag a page out of an open book onto another book, or hold one book over the middle of another's spine to put it inside. A bookmark ribbon remembers the page you left each book on.", show: "" },
   ] },
 ];
@@ -155,6 +155,23 @@ function PointAt(Elem)
   setTimeout(() => Elem.classList.remove("is-pointed"), 2600);
 }
 
+// The PointAtEdit function opens a book the member can edit, one that already has pages when there is one, and points at its Edit button, where pages are added
+function PointAtEdit()
+{
+  const Mine = Library.flatMap((Section) => Section.books).filter((Book) => CanEdit(Book) && LibraryRoot.querySelector('.book[data-id="' + Book.id + '"]'));
+  const Book = Mine.find((Other) => (Other.pages || []).length) || Mine[0];
+  if (!Book) { PointAt(document.getElementById("addBook")); return; }   // no books yet: start with Add a book
+  const Elem = LibraryRoot.querySelector('.book[data-id="' + Book.id + '"]');
+  Elem.scrollIntoView({ block: "center" });
+  CloseAll();
+  OpenBook(Elem);
+  const Edit = Elem.querySelector(".edit-book");
+  Edit.classList.remove("is-pointed");
+  void Edit.offsetWidth;                         // restarts the pulse if it was already running
+  Edit.classList.add("is-pointed");
+  setTimeout(() => Edit.classList.remove("is-pointed"), 2600);
+}
+
 // The ShowMe function opens or points at the part of the page a What's new item is about
 function ShowMe(Where)
 {
@@ -162,6 +179,7 @@ function ShowMe(Where)
   if (Where.startsWith("settings")) { OpenSettingsPage(Where.split(" ")[1] || "background"); ScenePicker.showModal(); return; }
   if (Where === "sections") { OpenSectionsCard(); return; }
   if (Where === "spine") { PointAt(LibraryRoot.querySelector(".book .spine")); return; }
+  if (Where === "edit") { PointAtEdit(); return; }
   const Elem = document.querySelector(Where);
   PointAt(Elem && !Elem.hidden ? Elem : null);
 }
