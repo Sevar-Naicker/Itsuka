@@ -217,7 +217,7 @@ async function SavePagesLine(Book, Section)
     // The pages are fetched again so the shelf shows what was really saved
     const Fresh = await Softly(() => DB.from("book_pages").select("*").eq("book_id", Book.id));
     if (!Fresh.error) GivePages([Book], Fresh.data);
-    PinNote(["The book is saved, but its pages could not all be. " + ExplainDatabase(error)]);
+    PinProblem(["The book is saved, but its pages could not all be. " + ExplainDatabase(error)]);
   }
 }
 

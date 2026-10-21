@@ -691,6 +691,7 @@ async function DownloadLibrary(Button)
   Button.disabled = true;
   const Total = Library.reduce((Sum, Section) => Sum + Section.books.reduce((Count, Book) => Count + [Book, ...(Book.pages || [])].filter((Page) => Page.picture).length, 0), 0);
   let Packed = 0;
+  let Missed = 0;                                // pictures that could not be fetched, the copy is still made without them
   ShowLibraryStatus("Packing your library\u2026");
   try
   {
@@ -704,7 +705,7 @@ async function DownloadLibrary(Button)
         if (Book.picture)
         {
           try { Entry.picture = await PictureAsText(Book.picture); }
-          catch (error) { console.error(error); }                    // a picture that cannot be fetched is left out, the book still goes in
+          catch (error) { console.error(error); Missed++; }          // a picture that cannot be fetched is left out, the book still goes in
           Packed++;
           ShowLibraryStatus("Packing pictures: " + Packed + " of " + Total + "\u2026");
         }
@@ -716,7 +717,7 @@ async function DownloadLibrary(Button)
           if (Page.picture)
           {
             try { Sheet.picture = await PictureAsText(Page.picture); }
-            catch (error) { console.error(error); }
+            catch (error) { console.error(error); Missed++; }
             Packed++;
             ShowLibraryStatus("Packing pictures: " + Packed + " of " + Total + "\u2026");
           }
@@ -738,7 +739,7 @@ async function DownloadLibrary(Button)
     Link.remove();
     setTimeout(() => URL.revokeObjectURL(Address), 2000);
     const Books = Copy.sections.reduce((Sum, Shelf) => Sum + Shelf.books.length, 0);
-    ShowLibraryStatus("Saved " + FileName + " with " + Copy.sections.length + (Copy.sections.length === 1 ? " section and " : " sections and ") + Books + (Books === 1 ? " book." : " books."));
+    ShowLibraryStatus("Saved " + FileName + " with " + Copy.sections.length + (Copy.sections.length === 1 ? " section and " : " sections and ") + Books + (Books === 1 ? " book." : " books.") + (Missed ? " " + Missed + (Missed === 1 ? " picture" : " pictures") + " could not be fetched and " + (Missed === 1 ? "was" : "were") + " left out, try again with a better signal to include " + (Missed === 1 ? "it." : "them.") : ""), Missed > 0);
   }
   catch (error)
   {
@@ -1353,6 +1354,17 @@ function PinNote(Words, Button)
   return Note;
 }
 
+// The PinProblem function pins a note about something that did not save, it stays long enough to read and has a button to put it away
+function PinProblem(Words)
+{
+  const Button = Make("button", "", "Got it");
+  Button.type = "button";
+  const Note = PinNote(Words, Button);
+  Button.addEventListener("click", () => UnpinNote(Note));
+  setTimeout(() => UnpinNote(Note), 12000);
+  return Note;
+}
+
 // The MoveNotes function keeps the notes inside the card that is open, if there is one, so Undo can still be pressed while the card covers the page
 function MoveNotes()
 {
@@ -1405,7 +1417,7 @@ function DeleteLater(Id, Name, Words, TakeOff, PutBack, Save, Failed)
       console.error(error);
       PutBack();
       RedrawAll();
-      PinNote([(Failed || "\u201C" + Name + "\u201D could not be deleted, so it is back.") + " " + ExplainDatabase(error)]);
+      PinProblem([(Failed || "\u201C" + Name + "\u201D could not be deleted, so it is back.") + " " + ExplainDatabase(error)]);
     }
     WaitingGone.delete(Id);
   };

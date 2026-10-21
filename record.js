@@ -160,7 +160,8 @@ async function TakeOff(Line, Button)
   {
     console.error(error);
     Button.disabled = false;
-    Button.textContent = NoSignalNow() ? "Needs a signal" : "Try again";
+    Button.textContent = NoSignalNow() ? "Needs a signal" : "Not taken off, try again";
+    Button.title = ExplainDatabase(error);         // pointing at it says why
     return;
   }
   RecordLines = RecordLines.filter((Other) => Other !== Line);

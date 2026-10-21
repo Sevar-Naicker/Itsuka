@@ -265,6 +265,8 @@ async function SaveComeBackLine(Book)
   catch (error)
   {
     console.error(error);
+    // The book itself is saved, so the card still closes, a note says the day was not
+    PinProblem(["The book is saved, but its come back day could not be. " + ExplainDatabase(error) + " Open the book and press Remind me to come back to try again."]);
   }
 }
 
