@@ -233,11 +233,65 @@
             <button class="link-button" id="bookPictureRemove" type="button" hidden>Remove picture</button>
           </div>
         </div>
+        <!-- The book's pages as paper slips, page 1 is the book itself, filled in by pages.js -->
+        <div class="pages-line" id="pagesLine">
+          <span>Pages</span>
+          <div class="page-slips" id="pageSlips"></div>
+          <p class="pages-note">Page 1 is the book itself. Each page can have its own link, notes and picture, up to 8 pages. Drag the slips to change their order.</p>
+        </div>
         <button class="card-button" id="catalogueSubmit" type="submit">Add to shelf</button>
         <p class="card-switch card-ends">
           <button class="link-button" id="catalogueCancel" type="button">Cancel</button>
           <button class="link-button danger-link" id="bookDelete" type="button" hidden>Delete book</button>
         </p>
+      </div>
+      <div class="catalogue-hole" aria-hidden="true"></div>
+    </form>
+  </div>
+</dialog>
+
+<!-- The card for one page of a book, opened from the page slips on the catalogue card -->
+<dialog class="card-dialog" id="pageDialog" aria-labelledby="pageTitle">
+  <div class="card-shadow">
+    <form class="member-card catalogue-card page-card" id="pageForm" novalidate>
+      <div class="catalogue-head">
+        <h2 id="pageTitle">Add a page</h2>
+        <span class="card-kind" id="pageKind">Page 2</span>
+      </div>
+      <div class="card-body">
+        <p class="card-note" id="pageNote" role="alert" hidden></p>
+        <label class="card-line">
+          <span>Title</span>
+          <input id="pageName" type="text" maxlength="100" autocomplete="off" placeholder="Etsy shop">
+        </label>
+        <label class="card-line">
+          <span>Link</span>
+          <input id="pageLink" type="text" maxlength="2000" inputmode="url" autocapitalize="off" spellcheck="false" autocomplete="off" placeholder="etsy.com/shop/someone">
+        </label>
+        <label class="card-notes">
+          <span>Notes, one point per line</span>
+          <textarea id="pageNotes" rows="3" maxlength="4000"></textarea>
+        </label>
+        <div class="picture-row">
+          <canvas class="picture-thumb" id="pagePicturePreview" aria-hidden="true" hidden></canvas>
+          <div class="picture-choices">
+            <label class="link-button file-pick"><span id="pagePictureLabel">Choose a picture</span><input id="pagePictureFile" type="file" accept="image/*"></label>
+            <button class="link-button" id="pagePictureRemove" type="button" hidden>Remove picture</button>
+          </div>
+        </div>
+        <button class="card-button" id="pageSave" type="submit">Add this page</button>
+        <p class="card-switch card-ends">
+          <button class="link-button" id="pageCancel" type="button">Cancel</button>
+          <button class="link-button danger-link" id="pageRemove" type="button" hidden>Remove page</button>
+        </p>
+        <!-- Taking a saved page out of the book: on its own, or into another book listed by shelf -->
+        <p class="card-switch page-own" id="pageOwnLine" hidden>
+          <button class="link-button" id="pageOwn" type="button">Make this page its own book</button>
+        </p>
+        <label class="card-line page-move" id="pageMoveLine" hidden>
+          <span>Move to</span>
+          <select id="pageMove"></select>
+        </label>
       </div>
       <div class="catalogue-hole" aria-hidden="true"></div>
     </form>
@@ -497,6 +551,7 @@
 <script src="offline.js"></script>
 <script src="record.js"></script>
 <script src="comeback.js"></script>
+<script src="pages.js"></script>
 <script src="install.js"></script>
 <script src="guide.js"></script>
 

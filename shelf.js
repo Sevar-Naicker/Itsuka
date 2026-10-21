@@ -195,6 +195,20 @@ async function CopyBook(Section, Book)
   const { data: Data, error } = await DB.from("books").insert(Details).select("*").single();
   if (error) throw error;
   Section.books.splice(Spot.Index, 0, Data);
+  // Its pages come too, each picture copied the same way, a page that cannot be copied is left out
+  Data.pages = [];
+  for (const Page of Array.isArray(Book.pages) ? Book.pages : [])
+  {
+    const Sheet = { book_id: Data.id, title: Page.title, link: Page.link || "", notes: Page.notes || "", picture: "", position: Data.pages.length + 1 };
+    if (Page.picture)
+    {
+      try { Sheet.picture = await StorePicture(await (await fetch(await PictureAddress(Page.picture))).blob()); }
+      catch (error) { console.error(error); }
+    }
+    const Added = await DB.from("book_pages").insert(Sheet).select("*").single();
+    if (Added.error) console.error(Added.error);
+    else Data.pages.push(Added.data);
+  }
 }
 
 // The AskForCard function opens the card for visitors who are not signed in, and notes this shelf so they come back to it after signing in

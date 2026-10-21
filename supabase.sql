@@ -1116,3 +1116,222 @@ drop trigger if exists come_back_day_check on public.come_back;
 create trigger come_back_day_check
   before insert or update on public.come_back
   for each row execute function public.come_back_check();
+
+-- Pages In Books Addition (page 1 of a book is the book itself, every book can have up to 7 more pages, each with a title, a link, notes and a picture, and the picture and sharing functions above learn about pages):
+
+-- Book Pages Table Creation (the extra pages of a book, in order of position, removed with the book, and so they always belong to whoever owns the book):
+create table if not exists public.book_pages
+(
+  id         uuid primary key default gen_random_uuid(),
+  book_id    uuid not null references public.books (id) on delete cascade,
+  added_by   uuid default auth.uid() references auth.users (id) on delete set null,
+  title      text not null,
+  link       text not null default '',
+  notes      text not null default '',
+  picture    text not null default '',
+  position   double precision not null default extract(epoch from now()),
+  created_at timestamptz not null default now(),
+  constraint book_pages_title_length   check (char_length(title) <= 100),
+  constraint book_pages_link_length    check (char_length(link) <= 2000),
+  constraint book_pages_notes_length   check (char_length(notes) <= 4000),
+  constraint book_pages_picture_length check (char_length(picture) <= 300),
+  constraint book_pages_link_web       check (link = '' or link ~* '^https?://')
+);
+
+-- Addition of a Book Index for finding a book's pages:
+create index if not exists book_pages_book_idx on public.book_pages (book_id, position);
+
+-- Ensuring everyone who can see a book can read its pages, and only the shelf's owner and whoever added the book can add, change, move or remove them:
+alter table public.book_pages enable row level security;
+revoke all on public.book_pages from anon, authenticated;
+grant select, insert, update, delete on public.book_pages to authenticated;
+
+drop policy if exists "people who can see a book read its pages" on public.book_pages;
+create policy "people who can see a book read its pages" on public.book_pages
+  for select to authenticated
+  using (exists (select 1 from public.books b where b.id = book_id));
+
+drop policy if exists "owners and adders add pages" on public.book_pages;
+create policy "owners and adders add pages" on public.book_pages
+  for insert to authenticated
+  with check (exists (select 1 from public.books b where b.id = book_id and (b.member_id = (select auth.uid()) or b.added_by = (select auth.uid()))));
+
+drop policy if exists "owners and adders change pages" on public.book_pages;
+create policy "owners and adders change pages" on public.book_pages
+  for update to authenticated
+  using (exists (select 1 from public.books b where b.id = book_id and (b.member_id = (select auth.uid()) or b.added_by = (select auth.uid()))))
+  with check (exists (select 1 from public.books b where b.id = book_id and (b.member_id = (select auth.uid()) or b.added_by = (select auth.uid()))));
+
+drop policy if exists "owners and adders remove pages" on public.book_pages;
+create policy "owners and adders remove pages" on public.book_pages
+  for delete to authenticated
+  using (exists (select 1 from public.books b where b.id = book_id and (b.member_id = (select auth.uid()) or b.added_by = (select auth.uid()))));
+
+-- Book Page Rules (a page goes wherever its book goes, who added it never changes, a new picture must be the member's own or in the shelf's folder, and a book holds at most 8 pages, page 1 included):
+create or replace function public.book_page_rules()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  shelf uuid;
+begin
+  select b.section_id into shelf from public.books b where b.id = new.book_id;
+  if tg_op = 'INSERT' then
+    new.added_by := coalesce(auth.uid(), new.added_by);
+  elsif new.added_by is distinct from old.added_by and new.added_by is not null then
+    raise exception 'Who added a page cannot be changed';
+  end if;
+  if auth.uid() is not null and new.picture <> '' and (tg_op = 'INSERT' or new.picture is distinct from old.picture)
+     and not (new.picture like auth.uid()::text || '/%' or new.picture like 'shelves/' || shelf::text || '/%') then
+    raise exception 'That picture does not belong to you';
+  end if;
+  if (tg_op = 'INSERT' or new.book_id is distinct from old.book_id)
+     and (select count(*) from public.book_pages p where p.book_id = new.book_id and p.id <> new.id) >= 7 then
+    raise exception 'This book is full';
+  end if;
+  return new;
+end;
+$$;
+
+revoke all on function public.book_page_rules() from public, anon, authenticated;
+
+-- Addition of the Book Page Rules Trigger:
+drop trigger if exists book_pages_rules on public.book_pages;
+create trigger book_pages_rules
+  before insert or update on public.book_pages
+  for each row execute function public.book_page_rules();
+
+-- Page Change Sending (tells everyone on a joint shelf that a book's pages changed, so their shelves fetch it again, a hiccup here never stops the change itself being saved):
+create or replace function public.send_page_change()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  page record;
+  shelves uuid[];
+  shelf uuid;
+begin
+  if tg_op = 'DELETE' then page := old; else page := new; end if;
+  select array_agg(distinct b.section_id) into shelves from public.books b
+  where b.id = page.book_id or (tg_op = 'UPDATE' and b.id = old.book_id);
+  foreach shelf in array coalesce(shelves, array[]::uuid[]) loop
+    if public.shelf_has_others(shelf) then
+      begin
+        perform realtime.send(jsonb_build_object('table', 'book_pages', 'op', tg_op, 'by', auth.uid(), 'id', page.id, 'book', page.book_id, 'section', shelf), 'change', 'shelf:' || shelf::text, true);
+      exception when others then
+        null;
+      end;
+    end if;
+  end loop;
+  return null;
+end;
+$$;
+
+revoke all on function public.send_page_change() from public, anon, authenticated;
+
+-- Addition of the Page Change Trigger:
+drop trigger if exists book_pages_live on public.book_pages;
+create trigger book_pages_live
+  after insert or update or delete on public.book_pages
+  for each row execute function public.send_page_change();
+
+-- Shared Shelf Function, updated (a shared shelf's books now carry their pages, in order):
+create or replace function public.shared_shelf(key text)
+returns json
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select json_build_object(
+    'name',    s.name,
+    'sort_by', s.sort_by,
+    'owner',   nullif(split_part(trim(coalesce(u.raw_user_meta_data ->> 'name', '')), ' ', 1), ''),
+    'books',   coalesce((
+      select json_agg(json_build_object(
+               'id', b.id, 'name', b.name, 'link', b.link, 'notes', b.notes, 'picture', b.picture, 'added', b.created_at,
+               'pages', coalesce((
+                 select json_agg(json_build_object('id', p.id, 'title', p.title, 'link', p.link, 'notes', p.notes, 'picture', p.picture) order by p.position)
+                 from public.book_pages p where p.book_id = b.id), '[]'::json))
+             order by b.position)
+      from public.books b
+      where b.section_id = s.id and b.member_id = s.member_id), '[]'::json)
+  )
+  from public.sections s
+  join auth.users u on u.id = s.member_id
+  where s.share_key = key;
+$$;
+
+-- Shared Picture Check, updated (a picture on a page of a book on a shared shelf can be seen too):
+create or replace function public.picture_is_shared(path text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.books b
+    join public.sections s on s.id = b.section_id
+    where b.picture = path and b.picture <> '' and s.share_key is not null)
+  or exists (
+    select 1
+    from public.book_pages p
+    join public.books b on b.id = p.book_id
+    join public.sections s on s.id = b.section_id
+    where p.picture = path and p.picture <> '' and s.share_key is not null);
+$$;
+
+-- Joint Picture Check, updated (a picture on a page of a book on a joint shelf is seen by everyone on it):
+create or replace function public.picture_on_my_shelves(path text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.books b
+    where b.picture = path and b.picture <> '' and public.on_shelf(b.section_id))
+  or exists (
+    select 1 from public.book_pages p
+    join public.books b on b.id = p.book_id
+    where p.picture = path and p.picture <> '' and public.on_shelf(b.section_id));
+$$;
+
+-- Unused Picture Check, updated (a picture a page still uses is not unused):
+create or replace function public.picture_unused(path text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select not exists (select 1 from public.books b where b.picture = path)
+     and not exists (select 1 from public.book_pages p where p.picture = path);
+$$;
+
+-- Pictures To Keep Function, updated (page pictures a joint shelf still needs are kept too when the member deletes their account):
+create or replace function public.pictures_to_keep()
+returns setof text
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select b.picture from public.books b
+  join public.sections s on s.id = b.section_id
+  where b.picture like auth.uid()::text || '/%'
+    and (s.member_id <> auth.uid() or exists (select 1 from public.shelf_members m where m.section_id = s.id))
+  union
+  select p.picture from public.book_pages p
+  join public.books b on b.id = p.book_id
+  join public.sections s on s.id = b.section_id
+  where p.picture like auth.uid()::text || '/%'
+    and (s.member_id <> auth.uid() or exists (select 1 from public.shelf_members m where m.section_id = s.id));
+$$;

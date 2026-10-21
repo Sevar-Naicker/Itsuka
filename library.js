@@ -72,11 +72,12 @@ function ShowLibraryNote(Message)
   LibraryNote.hidden = false;
 }
 
-// The Matches function checks whether a book fits the search, it looks at the book's name and notes
+// The Matches function checks whether a book fits the search, it looks at the book's name and notes, and the titles and notes of its pages
 function Matches(Book)
 {
   if (!SearchText) return true;
-  const Words = (Book.name + "\n" + (Book.notes || "")).toLowerCase();
+  const Pages = (Book.pages || []).map((Page) => Page.title + "\n" + (Page.notes || "")).join("\n");
+  const Words = (Book.name + "\n" + (Book.notes || "") + "\n" + Pages).toLowerCase();
   return Words.includes(SearchText);
 }
 
@@ -322,45 +323,6 @@ const SlideRight = document.getElementById("slideRight");
 const EditSections = document.getElementById("editSections");
 const BoardCount = document.getElementById("boardCount");
 
-// SLIDE_ARROW is the arrow pointing right, drawn as rows of letters like the shelf ornaments: a small brass plaque with an arrow pressed into it (the left arrow is the same picture flipped)
-const SLIDE_ARROW = { rows: [
-  ".bbbbbbbbbbbb.",
-  "bhhhhhhhhhhhhs",
-  "bhbbbbbbbbbbbs",
-  "bhbbbdbbbbbbbs",
-  "bhbbbddbbbbbbs",
-  "bhbbbdddbbbbbs",
-  "bhbbbddddbbbbs",
-  "bhbbbdddddbbbs",
-  "bhbbbddddbbbbs",
-  "bhbbbdddbbbbbs",
-  "bhbbbddbbbbbbs",
-  "bhbbbdbbbbbbbs",
-  "bhbbbbbbbbbbbs",
-  ".ssssssssssss.",
-], colours: { b: "var(--brass)", h: "color-mix(in srgb, var(--brass), white 40%)", s: "color-mix(in srgb, var(--brass), black 30%)", d: "#2A1A10" } };
-
-// The DrawArrow function turns the rows of letters into a crisp pixel picture, its colours come from the background so it changes with the scene
-function DrawArrow(Left)
-{
-  const Width = SLIDE_ARROW.rows[0].length;
-  const Picture = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-  Picture.setAttribute("viewBox", `0 0 ${Width} ${SLIDE_ARROW.rows.length}`);
-  Picture.setAttribute("shape-rendering", "crispEdges");
-  Picture.setAttribute("aria-hidden", "true");
-  SLIDE_ARROW.rows.forEach((Row, y) => [...Row].forEach((Letter, x) =>
-  {
-    if (!SLIDE_ARROW.colours[Letter]) return;
-    const Dot = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-    Dot.setAttribute("x", Left ? Width - 1 - x : x);
-    Dot.setAttribute("y", y);
-    Dot.setAttribute("width", 1.02);       // a hair wider than one dot, so no gaps show between them
-    Dot.setAttribute("height", 1.02);
-    Dot.style.fill = SLIDE_ARROW.colours[Letter];
-    Picture.append(Dot);
-  }));
-  return Picture;
-}
 SlideLeft.append(DrawArrow(true));
 SlideRight.append(DrawArrow(false));
 
@@ -727,7 +689,7 @@ async function PictureAsText(Path)
 async function DownloadLibrary(Button)
 {
   Button.disabled = true;
-  const Total = Library.reduce((Sum, Section) => Sum + Section.books.filter((Book) => Book.picture).length, 0);
+  const Total = Library.reduce((Sum, Section) => Sum + Section.books.reduce((Count, Book) => Count + [Book, ...(Book.pages || [])].filter((Page) => Page.picture).length, 0), 0);
   let Packed = 0;
   ShowLibraryStatus("Packing your library\u2026");
   try
@@ -745,6 +707,20 @@ async function DownloadLibrary(Button)
           catch (error) { console.error(error); }                    // a picture that cannot be fetched is left out, the book still goes in
           Packed++;
           ShowLibraryStatus("Packing pictures: " + Packed + " of " + Total + "\u2026");
+        }
+        // Its pages go in too, each with its own picture
+        Entry.pages = [];
+        for (const Page of Book.pages || [])
+        {
+          const Sheet = { title: Page.title, link: Page.link || "", notes: Page.notes || "", picture: null };
+          if (Page.picture)
+          {
+            try { Sheet.picture = await PictureAsText(Page.picture); }
+            catch (error) { console.error(error); }
+            Packed++;
+            ShowLibraryStatus("Packing pictures: " + Packed + " of " + Total + "\u2026");
+          }
+          Entry.pages.push(Sheet);
         }
         Shelf.books.push(Entry);
       }
@@ -826,7 +802,8 @@ async function LoadCopy(ChosenFile)
           try { Details.picture = await StorePicture(await PictureFromText(Entry.picture), Section.joint ? "shelves/" + Section.id : ""); }
           catch (error) { console.error(error); }                    // a picture that cannot be stored is left out, the book still goes in
         }
-        await SaveBook(Section, Details);
+        const Book = await SaveBook(Section, Details);
+        await LoadPages(Book, Entry.pages, Section);
         Added++;
       }
     }
@@ -839,6 +816,27 @@ async function LoadCopy(ChosenFile)
   }
   RenderTabs();
   Update();
+}
+
+// The LoadPages function adds the pages that travelled with a book in a copy, up to the most a book can hold, a page that cannot be added is left out and the book keeps the rest
+async function LoadPages(Book, Sheets, Section)
+{
+  Book.pages = [];
+  const Folder = Section.joint ? "shelves/" + Section.id : "";
+  for (const Sheet of (Array.isArray(Sheets) ? Sheets : []).slice(0, MOST_PAGES - 1))
+  {
+    if (!Sheet || typeof Sheet.title !== "string" || !Sheet.title.trim()) continue;
+    const Details = { book_id: Book.id, title: Sheet.title.trim().slice(0, 100), link: TidyLink(Sheet.link || "").slice(0, 2000), notes: String(Sheet.notes || "").slice(0, 4000), picture: "", position: Book.pages.length + 1 };
+    if (typeof Sheet.picture === "string" && Sheet.picture.startsWith("data:image/"))
+    {
+      try { Details.picture = await StorePicture(await PictureFromText(Sheet.picture), Folder); }
+      catch (error) { console.error(error); }
+    }
+    if (!DB) { Book.pages.push({ id: "local-page-" + Date.now() + "-" + Book.pages.length, ...Details }); continue; }
+    const { data: Data, error } = await DB.from("book_pages").insert(Details).select("*").single();
+    if (error) { console.error(error); continue; }
+    Book.pages.push(Data);
+  }
 }
 
 // The Download a copy button, and the Load a copy button which opens the file picker
@@ -898,6 +896,7 @@ function LiftBook(Elem, X, Y)
 // The CarryTo function moves the carried copy to the pointer and slides the book's slot to wherever it would land
 function CarryTo(X, Y)
 {
+  if (typeof CarryOver === "function" && CarryOver(X, Y)) return;     // pages.js: held over the middle of another book, to put it inside
   Carry.X = X;
   Carry.Y = Y;
   Carry.Copy.style.left = X - Carry.GrabX + "px";
@@ -958,6 +957,7 @@ function PutBack()
 // The DropBook function puts the carried book down where its slot is and saves its new shelf and place
 async function DropBook()
 {
+  if (typeof DropInside === "function" && DropInside()) return;      // pages.js: let go over the middle of another book
   const Was = StopCarrying();
   const Elem = Was.Elem;
   const Book = BookWithId(Elem.dataset.id);
@@ -1092,20 +1092,31 @@ function NoSignalNow()
 // The LoadLibrary function fetches the member's sections and books and puts each book inside its section
 async function LoadLibrary()
 {
-  const [Sections, Books, Rows, People] = await Promise.all([
+  const [Sections, Books, Rows, People, Pages] = await Promise.all([
     DB.from("sections").select("*"),
     DB.from("books").select("*"),
     Softly(() => DB.from("shelf_members").select("*")),
     Softly(() => DB.rpc("shelf_people")),
+    Softly(() => DB.from("book_pages").select("*")),
   ]);
   if (Sections.error) throw Sections.error;
   if (Books.error) throw Books.error;
+  GivePages(Books.data, Pages.error ? [] : Pages.data);          // pages need supabase-pages.sql, until it has been run books simply have none
   // Joint shelves need supabase-joint.sql, until it has been run every shelf is simply the member's own
   JointIsSetUp = !Rows.error && !People.error;
   const Mine = JointIsSetUp ? Rows.data.filter((Row) => Row.member_id === MyId()) : [];
   const Everyone = JointIsSetUp && Array.isArray(People.data) ? People.data : [];
   // Every section and book has a place, a number that decides its spot, so they are put in that order
   Library = Sections.data.filter((Section) => !WaitingGone.has(Section.id)).map((Section) => MakeShelf(Section, Books.data, Mine, Everyone)).sort((a, b) => a.position - b.position);
+}
+
+// The GivePages function puts each book's pages on it, in order, leaving out a page or book still waiting on its Undo note
+function GivePages(Books, Pages)
+{
+  Books.forEach((Book) =>
+  {
+    Book.pages = (Pages || []).filter((Page) => Page.book_id === Book.id && !WaitingGone.has(Page.id)).sort((a, b) => a.position - b.position);
+  });
 }
 
 // The MakeShelf function turns a section from the database into a shelf on the page, with its books, its people and the member's own place and sort for it
@@ -1309,6 +1320,7 @@ async function DeleteBook(Book)
     if (error) throw error;
   }
   DiscardPicture(Book.picture).catch(console.error);
+  (Book.pages || []).forEach((Page) => DiscardPicture(Page.picture).catch(console.error));    // its pages went with it
   Library.forEach((Section) => { Section.books = Section.books.filter((Other) => Other !== Book); });
 }
 
@@ -1360,7 +1372,8 @@ function UnpinNote(Note)
 
 // The DeleteLater function takes a book or a shelf off the page straight away and pins an Undo note, the delete is only saved when the note runs out
 // TakeOff takes it off the page, PutBack puts it back where it was (and may return a book's id to point at) and Save deletes it for good
-function DeleteLater(Id, Name, Words, TakeOff, PutBack, Save)
+// Failed is what the note says when saving goes wrong, for a move rather than a delete (pages.js)
+function DeleteLater(Id, Name, Words, TakeOff, PutBack, Save, Failed)
 {
   WaitingGone.add(Id);
   TakeOff();
@@ -1392,7 +1405,7 @@ function DeleteLater(Id, Name, Words, TakeOff, PutBack, Save)
       console.error(error);
       PutBack();
       RedrawAll();
-      PinNote(["\u201C" + Name + "\u201D could not be deleted, so it is back. " + ExplainDatabase(error)]);
+      PinNote([(Failed || "\u201C" + Name + "\u201D could not be deleted, so it is back.") + " " + ExplainDatabase(error)]);
     }
     WaitingGone.delete(Id);
   };
@@ -1565,6 +1578,7 @@ function OpenCatalogueCard(Book)
   NewSectionLine.hidden = BookSection.value !== "new";               // with no sections yet, "New section" is the only choice
   ShowCardPicture();
   if (typeof FillComeBackLine === "function") FillComeBackLine(Book);   // comeback.js fills in the Come back on line
+  if (typeof FillPagesLine === "function") FillPagesLine(Book);         // pages.js writes the book's pages as slips
 
   if (!DB) ShowCardNote(CatalogueNote, "Login is switched off, so changes show on the shelf but are not saved.");
   CatalogueDialog.showModal();
@@ -1616,6 +1630,7 @@ CatalogueForm.addEventListener("submit", async (event) =>
       Book = await SaveBook(Section, { name: Name, link: Link, notes: Notes, picture: Picture });
     }
     if (typeof SaveComeBackLine === "function") await SaveComeBackLine(Book);  // and saves the day to come back to it
+    if (typeof SavePagesLine === "function") await SavePagesLine(Book, Section);   // pages.js saves the pages added, changed, moved or removed on the card
 
     CatalogueDialog.close();
     if (Chosen.size) Chosen.add(Section.id);                           // make sure the shelf it is on is showing

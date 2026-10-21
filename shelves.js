@@ -215,6 +215,7 @@ function MakeBook(Book, ColourNumber)
   const Left = Make("div", "page left");
   const Picture = Make("canvas", "picture");                           // a block of colour until the book's picture is drawn on it
   Picture.style.background = PictureColours[Steady % PictureColours.length];
+  Picture.dataset.page = "0";                                          // page 1's picture, the book's own
   if (Book.picture) Elem.dataset.picture = Book.picture;            // fetched the first time the book is opened (see ShowPicture)
   Left.append(Picture);
 
@@ -238,9 +239,49 @@ function MakeBook(Book, ColourNumber)
   Open.append(Left, Right);
 
   Elem.append(Spine, Open);
+  DressPages(Elem, Book);                                              // a book with pages gets a thicker spine and the way to turn them
   return Elem;
 }
 
+// SLIDE_ARROW is the arrow pointing right, drawn as rows of letters like the shelf ornaments: a small brass plaque with an arrow pressed into it (the left arrow is the same picture flipped)
+const SLIDE_ARROW = { rows: [
+  ".bbbbbbbbbbbb.",
+  "bhhhhhhhhhhhhs",
+  "bhbbbbbbbbbbbs",
+  "bhbbbdbbbbbbbs",
+  "bhbbbddbbbbbbs",
+  "bhbbbdddbbbbbs",
+  "bhbbbddddbbbbs",
+  "bhbbbdddddbbbs",
+  "bhbbbddddbbbbs",
+  "bhbbbdddbbbbbs",
+  "bhbbbddbbbbbbs",
+  "bhbbbdbbbbbbbs",
+  "bhbbbbbbbbbbbs",
+  ".ssssssssssss.",
+], colours: { b: "var(--brass)", h: "color-mix(in srgb, var(--brass), white 40%)", s: "color-mix(in srgb, var(--brass), black 30%)", d: "#2A1A10" } };
+
+// The DrawArrow function turns the rows of letters into a crisp pixel picture, its colours come from the background so it changes with the scene, library.js uses it for the plaque row and the pages of a book use it too
+function DrawArrow(Left)
+{
+  const Width = SLIDE_ARROW.rows[0].length;
+  const Picture = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  Picture.setAttribute("viewBox", `0 0 ${Width} ${SLIDE_ARROW.rows.length}`);
+  Picture.setAttribute("shape-rendering", "crispEdges");
+  Picture.setAttribute("aria-hidden", "true");
+  SLIDE_ARROW.rows.forEach((Row, y) => [...Row].forEach((Letter, x) =>
+  {
+    if (!SLIDE_ARROW.colours[Letter]) return;
+    const Dot = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+    Dot.setAttribute("x", Left ? Width - 1 - x : x);
+    Dot.setAttribute("y", y);
+    Dot.setAttribute("width", 1.02);       // a hair wider than one dot, so no gaps show between them
+    Dot.setAttribute("height", 1.02);
+    Dot.style.fill = SLIDE_ARROW.colours[Letter];
+    Picture.append(Dot);
+  }));
+  return Picture;
+}
 // The MakeOrnament function paints an ornament onto a tiny canvas and sizes it so its dots match the page's dots
 function MakeOrnament(Which)
 {
@@ -270,6 +311,193 @@ function TidyOrnaments()
 }
 
 
+// Pages in a book:
+// Page 1 of a book is the book itself, a book can have up to 7 more pages, each with its own title, link, notes and picture
+
+// MOST_PAGES is how many pages a book can hold, page 1 included
+const MOST_PAGES = 8;
+// PAGES_KEY is where this device keeps the page each book was left open at, so the book opens there again with its bookmark ribbon
+const PAGES_KEY = "book-pages-left";
+// PageDroppedAt holds when a page was last dragged out of a book (pages.js), so that drag is not taken for a swipe
+let PageDroppedAt = 0;
+
+// The PagesOf function gives every page of a book in order: the book itself first, then its extra pages
+function PagesOf(Book)
+{
+  return [{ id: "", title: Book.name, link: Book.link, notes: Book.notes, picture: Book.picture }, ...(Array.isArray(Book.pages) ? Book.pages : [])];
+}
+
+// The PagesLeft function reads the pages the books were left open at on this device
+function PagesLeft()
+{
+  try
+  {
+    const Left = JSON.parse(Recall(PAGES_KEY));
+    return Left && typeof Left === "object" ? Left : {};
+  }
+  catch (error)
+  {
+    return {};
+  }
+}
+
+// The LeftAt function finds the page a book was left open at, page 1 when the page it was left at has gone
+function LeftAt(Book)
+{
+  const Id = PagesLeft()[Book.id];
+  const Index = Id ? PagesOf(Book).findIndex((Page) => Page.id === Id) : 0;
+  return Math.max(Index, 0);
+}
+
+// The LeaveAt function remembers the page a book is open at, page 1 is not kept since every book opens there anyway
+function LeaveAt(Book, Index)
+{
+  const Left = PagesLeft();
+  const Page = PagesOf(Book)[Index];
+  if (Index > 0 && Page) Left[Book.id] = Page.id;
+  else delete Left[Book.id];
+  Remember(PAGES_KEY, JSON.stringify(Left));
+}
+
+// The DressPages function gives a book with pages a spine a little thicker for each page, the arrows and page number on a tab under the open book, the bookmark ribbon and the swipe on a phone
+function DressPages(Elem, Book)
+{
+  const Pages = PagesOf(Book);
+  if (Pages.length < 2) return;
+  Elem.classList.add("has-pages");
+  Elem.BookOnPage = Book;                                               // the arrow keys turn this book's pages
+  const Width = parseInt(Elem.style.getPropertyValue("--w"), 10);
+  Elem.style.setProperty("--w", Math.min(Width + 4 * (Pages.length - 1), 76) + "px");
+  const Open = Elem.querySelector(".open-book");
+
+  // The arrows are the same brass ones as the ends of the plaque row, the page number between them goes back to page 1
+  const Bar = Make("div", "page-turn");
+  const Back = Make("button", "back");
+  Back.type = "button";
+  Back.setAttribute("aria-label", "Previous page");
+  Back.append(DrawArrow(true));
+  const Count = Make("button", "page-count");
+  Count.type = "button";
+  Count.title = "Back to page 1";
+  const Next = Make("button", "next");
+  Next.type = "button";
+  Next.setAttribute("aria-label", "Next page");
+  Next.append(DrawArrow(false));
+  Bar.append(Back, Count, Next);
+  Back.addEventListener("click", () => TurnTo(Elem, Book, Number(Elem.dataset.page) - 1));
+  Next.addEventListener("click", () => TurnTo(Elem, Book, Number(Elem.dataset.page) + 1));
+  Count.addEventListener("click", () => TurnTo(Elem, Book, 0));
+
+  // The bookmark ribbon hangs over the top of a book left open at a later page, in the colour of the plaques so it follows the background
+  const Ribbon = Make("i", "page-ribbon");
+  Ribbon.setAttribute("aria-hidden", "true");
+  Open.append(Bar, Ribbon);
+
+  // On a phone a swipe across the open book turns the page
+  let StartX = null;
+  let StartY = null;
+  Open.addEventListener("touchstart", (event) => { StartX = event.touches[0].clientX; StartY = event.touches[0].clientY; }, { passive: true });
+  Open.addEventListener("touchend", (event) =>
+  {
+    if (StartX === null) return;
+    const MovedX = event.changedTouches[0].clientX - StartX;
+    const MovedY = event.changedTouches[0].clientY - StartY;
+    StartX = null;
+    if (performance.now() - PageDroppedAt < 500) return;          // a page that was just dragged out is not a swipe
+    if (Math.abs(MovedX) > 40 && Math.abs(MovedX) > Math.abs(MovedY)) TurnTo(Elem, Book, Number(Elem.dataset.page) + (MovedX < 0 ? 1 : -1));
+  });
+  ShowPage(Elem, Book, LeftAt(Book), false);
+}
+
+// The TurnTo function turns to another page with a quick flip
+function TurnTo(Elem, Book, Index)
+{
+  if (Index < 0 || Index >= PagesOf(Book).length || Index === Number(Elem.dataset.page)) return;
+  Elem.classList.remove("is-turning");
+  void Elem.offsetWidth;                                               // so the flip starts again even when turning quickly
+  Elem.classList.add("is-turning");
+  setTimeout(() => ShowPage(Elem, Book, Index, true), 120);                  // the words change while the page is edge on
+  setTimeout(() => Elem.classList.remove("is-turning"), 260);
+}
+
+// The ShowPage function writes one page into the open book: page 1 is the book as it always was, the others have their own title, notes, link and picture
+// Fetch is true when the page is being looked at, so its picture is fetched, while the shelves are built it is false so no pictures are fetched until a book opens
+function ShowPage(Elem, Book, Index, Fetch)
+{
+  const Pages = PagesOf(Book);
+  const Page = Pages[Index];
+  Elem.dataset.page = String(Index);
+  LeaveAt(Book, Index);
+  Elem.classList.toggle("on-later-page", Index > 0);                   // styles.css hides page 1's words on a later page
+  const Right = Elem.querySelector(".page.right");
+  const Foot = Right.querySelector(".page-foot");
+  Right.querySelectorAll(".extra-page").forEach((Old) => Old.remove());
+  if (Index > 0)
+  {
+    const Extra = Make("div", "extra-page");
+    Extra.append(Make("h3", "", Page.title), Make("p", "page-of", "Page " + (Index + 1) + " of " + Book.name));
+    const Points = (Page.notes || "").split("\n").map((Line) => Line.trim()).filter(Boolean);
+    if (Points.length)
+    {
+      const List = Make("ul", "points");
+      Points.forEach((Point) => List.append(Make("li", "", Point)));
+      Extra.append(List);
+    }
+    if (Page.link && /^https?:\/\//i.test(Page.link))   // only web addresses become links
+    {
+      const Link = Make("a", "", ShortLink(Page.link));
+      Link.href = Page.link; Link.target = "_blank"; Link.rel = "noopener";
+      Extra.append(Link);
+    }
+    Foot.before(Extra);
+  }
+  Right.scrollTop = 0;
+  ShowPagePicture(Elem, Index, Page, Fetch);
+  const Bar = Elem.querySelector(".page-turn");
+  Bar.querySelector(".page-count").textContent = Index + 1 + " of " + Pages.length;
+  Bar.querySelector(".page-count").setAttribute("aria-label", "Page " + (Index + 1) + " of " + Pages.length + ", back to page 1");
+  Bar.querySelector(".back").disabled = Index === 0;
+  Bar.querySelector(".next").disabled = Index === Pages.length - 1;
+}
+
+// The ShowPagePicture function shows the picture for one page on the left, each page has its own block of colour until its picture is drawn
+function ShowPagePicture(Elem, Index, Page, Fetch)
+{
+  const Left = Elem.querySelector(".page.left");
+  let Picture = Left.querySelector('.picture[data-page="' + Index + '"]');
+  if (!Picture)
+  {
+    Picture = Make("canvas", "picture");
+    Picture.dataset.page = String(Index);
+    Picture.style.background = PictureColours[(NumberFrom(Elem.dataset.id) + Index) % PictureColours.length];
+    if (Page.picture) Picture.dataset.picture = Page.picture;
+    Left.append(Picture);
+  }
+  Left.querySelectorAll(".picture").forEach((Other) => { Other.hidden = Other !== Picture; });
+  // Page 1's picture is fetched by ShowPicture when the book opens, the others the first time their page is looked at
+  if (Fetch && Index > 0 && Picture.dataset.picture && !Picture.dataset.pictureShown)
+  {
+    Picture.dataset.pictureShown = "yes";
+    PictureAddress(Picture.dataset.picture)
+      .then(LoadPicture)
+      .then((LoadedImage) => PaintPixelated(Picture, LoadedImage, BOOK_DOTS))
+      .catch(console.error);                       // if it cannot be fetched, the block of colour stays
+  }
+}
+
+// The left and right arrow keys turn the pages of the open book
+document.addEventListener("keydown", (event) =>
+{
+  if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+  if (event.target.closest && event.target.closest("input, textarea, select, dialog")) return;
+  const Elem = document.querySelector(".book.is-open.has-pages");
+  if (!Elem) return;
+  const Book = Elem.BookOnPage;
+  if (!Book) return;
+  event.preventDefault();
+  TurnTo(Elem, Book, Number(Elem.dataset.page) + (event.key === "ArrowRight" ? 1 : -1));
+});
+
 // Opening and closing books:
 
 // The ShowPicture function fetches and draws a book's picture the first time the book is opened instead of when the page loads
@@ -283,10 +511,18 @@ function ShowPicture(Book)
     .catch(console.error);                       // if it cannot be fetched, the block of colour stays
 }
 
+// The ShowOpenPage function fetches the picture of the page a book with pages is open at, when the book is opened on a later page
+function ShowOpenPage(Elem)
+{
+  const Index = Number(Elem.dataset.page || 0);
+  if (Index > 0 && Elem.BookOnPage) ShowPagePicture(Elem, Index, PagesOf(Elem.BookOnPage)[Index], true);
+}
+
 // The Place function puts a book's open pages just above its spine (or below when there is no room) and keeps them on the screen
 function Place(Book)
 {
   ShowPicture(Book);
+  ShowOpenPage(Book);
   const Open = Book.querySelector(".open-book");
   const Slot = Book.getBoundingClientRect();                         // where this book's slot is on screen
   const ScreenWidth = document.documentElement.clientWidth;

@@ -56,6 +56,10 @@ const NEWS = [
   { number: 13, title: "Books due", items: [
     { title: "Come back on", text: "Give any book a day to come back to it, on its catalogue card or with Remind me to come back inside the book. When the day comes, a Books due slip greets you with Open it, Later and Clear.", show: "spine" },
   ] },
+  { number: 14, title: "Pages in a book", items: [
+    { title: "More pages", text: "A book can now hold up to 8 pages, each with its own title, link, notes and picture. Press Edit on a book, then + Add a page. Turn the pages with the brass arrows under the open book, or swipe on a phone.", show: "spine" },
+    { title: "Moving pages", text: "Drag a page out of an open book onto another book, or hold one book over the middle of another's spine to put it inside. A bookmark ribbon remembers the page you left each book on.", show: "" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -71,12 +75,14 @@ const GUIDE = [
   { group: "Finding", lines: [
     ["Plaques", "The plaques at the top switch shelves on and off, All shows every shelf. With lots of shelves, the brass arrows at each end slide the row along."],
     ["Shelves down the side", "On a laptop, switch this on in Settings to stand the plaques in a list beside your shelves instead."],
-    ["Find", "Find searches the names and notes of every book."],
+    ["Find", "Find searches the names and notes of every book, and every page inside them."],
     ["Pull a book", "Picks a book you haven't finished, for when you can't decide."],
     ["Books due", "Give a book a Come back on day on its card, or press Remind me to come back inside it. On the day, the Books due slip lists it. Later picks a new day, Clear forgets it. Your days are only yours, even on a joint shelf."],
   ] },
   { group: "Arranging", lines: [
     ["Move a book", "Drag a book by its spine. On a phone, rest your finger on the spine until it lifts, then drag."],
+    ["Pages", "Press Edit on a book, then + Add a page, for up to 8 pages with their own link, notes and picture. Turn them with the arrows under the open book or swipe on a phone, and press the page number to go back to page 1. Drag the slips on the card to change their order. A page can become its own book or move into another."],
+    ["Pages between books", "Open a book on a later page and drag the page onto another book (on a phone, rest your finger on it first). Hold a whole book over the middle of another's spine to put it inside. Undo puts either back."],
     ["Edit sections", "Rename shelves, move them up or down, sort their books (A to Z, newest or oldest first), invite friends, share or delete them."],
     ["Undo", "After deleting a book or a shelf, press Undo on the note at the bottom within a few seconds to put it back."],
   ] },

@@ -130,6 +130,10 @@ function ExplainDatabase(error)
 {
   // We make all text lowercase so that they can be standardised despite Supabase capitalising them
   const Text = (error.message || "").toLowerCase();
+  if (Text.includes("book_pages") && Text.includes("row-level security")) return "Only the shelf's owner and whoever added this book can change its pages.";
+  if (Text.includes("book_pages")) return "Pages in books are not set up in Supabase yet. Run supabase-pages.sql in the SQL Editor, then try again.";
+  if (Text.includes("this book is full")) return "That book is full, a book holds up to 8 pages.";
+  if (Text.includes("picture does not belong to you")) return "That picture belongs to another shelf. Choose it again from your device.";
   if (Text.includes("bucket not found") || Text.includes("row-level security"))
   {
     return "Picture storage is not set up in Supabase yet. Run supabase.sql in the SQL Editor, then try again.";

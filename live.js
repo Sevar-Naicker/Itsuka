@@ -95,7 +95,7 @@ function NoteChange(Change)
 // The IsBusy function checks whether the member is in the middle of something a redraw would spoil: dragging, an open book, a card or a pick
 function IsBusy()
 {
-  return Boolean(Carry) || Pulling || Boolean(LibraryRoot.querySelector(".book.is-open")) || Boolean(document.querySelector("dialog[open]"));
+  return Boolean(Carry) || Pulling || document.body.classList.contains("carrying-page") || Boolean(LibraryRoot.querySelector(".book.is-open")) || Boolean(document.querySelector("dialog[open]"));
 }
 
 // The FetchChanges function fetches the changed shelves again and redraws them, it waits while the member is busy so nothing moves under them
@@ -148,6 +148,11 @@ async function FetchShelves(Ids)
   ]);
   const Failed = [Sections, Books, Rows, People].find((Result) => Result.error);
   if (Failed) throw Failed.error;
+  // The pages of those shelves' books come after, once it is known which books they are
+  const BookIds = Books.data.map((Book) => Book.id);
+  const Pages = BookIds.length ? await Softly(() => DB.from("book_pages").select("*").in("book_id", BookIds)) : { data: [] };
+  if (Pages.error && !/book_pages/i.test(String(Pages.error.message))) throw Pages.error;      // a missing table means supabase-pages.sql has not been run yet
+  GivePages(Books.data, Pages.error ? [] : Pages.data);
   const Everyone = Array.isArray(People.data) ? People.data : [];
   Ids.forEach((Id) =>
   {
