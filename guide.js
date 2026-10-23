@@ -64,7 +64,7 @@ const NEWS = [
     { title: "When you shelved it", text: "Each book now has a little sticky note in its corner with the day you added it. Don't want them? Switch off Date added in Settings, under Shelves.", show: "settings shelves" },
   ] },
   { number: 16, title: "Day and night", items: [
-    { title: "Day and night", text: "Your background now follows the time of day: a pink dawn, bright daylight, a golden sunset and a dark night with the fires and candles still glowing. Switch off Day and night in Settings, under Shelves, to keep it as it was.", show: "settings shelves" },
+    { title: "Day and night", text: "Your background now follows the time of day: a pink dawn, bright daylight, a golden sunset and a dark night with the fires and candles still glowing. Switch off Day and night in Settings, under Background, to keep it as it was.", show: "settings background" },
     { title: "Tidy shelves", text: "When a shelf is sorted or a book is moved, the books now slide into their new places.", show: "" },
   ] },
 ];
@@ -97,7 +97,7 @@ const GUIDE = [
     ["Done", "Open a book and tick Done. It gets a ribbon and a stamp, and Hide done tucks it away."],
     ["Dust", "A book you haven't opened in two months gathers dust. Opening it blows the dust off."],
     ["Date added", "The sticky note in a book's corner shows the day it was added. Switch off Date added in Settings, under Shelves, to hide the notes."],
-    ["Day and night", "The background follows the time on your device, from morning light to a dark night. Switch off Day and night in Settings, under Shelves, to keep each background as it was painted."],
+    ["Day and night", "The background follows the time on your device, from morning light to a dark night. Switch off Day and night in Settings, under Background, to keep each background as it was painted. Like the background itself, it is chosen on each device."],
     ["Reading record", "On your library card. Every book you tick done is stamped with the day, with totals and the book that has waited longest. On a joint shelf a book goes on the record of whoever ticked it. A deleted book stays until you press Take off."],
   ] },
   { group: "Sharing", lines: [

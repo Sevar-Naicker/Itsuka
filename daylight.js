@@ -1,7 +1,7 @@
 // This file contains day and night: the background follows the time on the member's own device, a pink dawn, bright day, golden sunset and a dark blue night with the fires, candles and lamps still glowing
-// It loads straight after backgrounds.js on every page and lights each frame backgrounds.js paints, the Day and night lever in Settings switches it off
+// It loads straight after backgrounds.js on every page and lights each frame backgrounds.js paints, the Day and night switch on the Background page of Settings turns it off on this device
 
-// DAYLIGHT_KEY is where this device keeps whether day and night is on, library.js keeps it in step with the member's own setting
+// DAYLIGHT_KEY is where this device keeps whether day and night is on, like the background itself it is chosen on each device
 const DAYLIGHT_KEY = "library-daylight";
 // DaylightOn holds whether the background follows the time of day, it starts on
 let DaylightOn = Recall(DAYLIGHT_KEY) !== "off";
@@ -135,13 +135,21 @@ function Daylight(Pen, Wide, High)
 
 // Section: Switching it on and off
 
-// The SetDaylight function is called by library.js with the member's setting, the background is painted again straight away
+// The SetDaylight function turns day and night on or off on this device, the background is painted again straight away
 function SetDaylight(On)
 {
   if (DaylightOn === On) return;
   DaylightOn = On;
   Remember(DAYLIGHT_KEY, On ? "on" : "off");
   DrawFrame(MotionOn ? performance.now() / 1000 : 20);
+}
+
+// The Day and night switch on the Background page of Settings, only on the library page
+const DaylightSwitch = document.getElementById("daylightSwitch");
+if (DaylightSwitch)
+{
+  DaylightSwitch.checked = DaylightOn;
+  DaylightSwitch.addEventListener("change", () => SetDaylight(DaylightSwitch.checked));
 }
 
 // A still background (moving backgrounds off) is painted again every minute so it keeps up with the time, a moving one does so by itself
