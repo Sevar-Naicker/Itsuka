@@ -46,13 +46,14 @@ const SETTING_LIST = [
   { key: "hover", label: "Open books on hover", hint: "On a laptop, a book opens when you point at it" },
   { key: "dust", label: "Dusty books", hint: "Books you have not opened in a while gather dust" },
   { key: "added", label: "Date added", hint: "A sticky note inside each book with the day it was added" },
+  { key: "daylight", label: "Day and night", hint: "The room follows the time of day, from morning light to a dark night" },
   { key: "sideList", label: "Shelves down the side", hint: "On a laptop, the plaques stand in a list beside the shelves" },
   { key: "sway", label: "Swaying sign", hint: "With no signal, the sign sways gently, off keeps it still" },
 ];
 // JointIsSetUp holds whether the database has joint shelves (supabase-joint.sql), until then the Invite button explains what to run
 let JointIsSetUp = true;
 // ShelfSettings holds which tools are switched on, they all start on apart from Shelves down the side, and the member's own choices are loaded over them
-const ShelfSettings = { find: true, done: true, hideDone: true, pull: true, drag: true, ornaments: true, hover: true, dust: true, added: true, sideList: false, sway: true };
+const ShelfSettings = { find: true, done: true, hideDone: true, pull: true, drag: true, ornaments: true, hover: true, dust: true, added: true, daylight: true, sideList: false, sway: true };
 // WaitingGone holds the books and shelves deleted in the last few seconds, kept off the page while their Undo note is showing, even if the shelves are fetched again
 const WaitingGone = new Set();
 const SettingsList = document.getElementById("settingsList");
@@ -373,6 +374,7 @@ EditSections.addEventListener("click", OpenSectionsCard);
 // The RenderShelves function builds the shelves for whichever sections are switched on
 function RenderShelves()
 {
+  const Before = BookSpots();                    // where each book stands now, so the ones that move can slide to their new places
   LibraryRoot.replaceChildren();
 
   if (!Library.length)
@@ -437,6 +439,49 @@ function RenderShelves()
 
   ApplyTheme(Current.theme);     // colour the new books to match the background
   TidyOrnaments();
+  SlideBooks(Before);
+}
+
+// Shelf tidy: books slide into their new places instead of jumping
+
+// TIDY_MOST is how many books may appear or disappear at once and still slide, a bigger change (like switching shelves) simply redraws
+const TIDY_MOST = 2;
+// LastView holds which shelves, search and done books were showing at the last redraw, books only slide when the view itself stayed the same
+let LastView = "";
+
+// The BookSpots function notes where every book on the shelves is on the screen, by its id
+function BookSpots()
+{
+  const Spots = new Map();
+  LibraryRoot.querySelectorAll(".book").forEach((Elem) => Spots.set(Elem.dataset.id, Elem.getBoundingClientRect()));
+  return Spots;
+}
+
+// The SlideBooks function slides every book that moved from where it stood to its new place, a few dots at a time, one that changes shelf lifts a little on its way
+function SlideBooks(Before)
+{
+  const View = [...Chosen].sort().join(",") + "|" + SearchText + "|" + HidingDone();
+  const SameView = View === LastView;
+  LastView = View;
+  if (!SameView || !Before.size || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const After = BookSpots();
+  const Changed = [...After.keys()].filter((Id) => !Before.has(Id)).length + [...Before.keys()].filter((Id) => !After.has(Id)).length;
+  if (Changed > TIDY_MOST) return;
+  LibraryRoot.querySelectorAll(".book").forEach((Elem) =>
+  {
+    const Old = Before.get(Elem.dataset.id);
+    if (!Old) return;
+    const New = After.get(Elem.dataset.id);
+    const X = Old.left - New.left;
+    const Y = Old.top - New.top;
+    if (Math.abs(X) < 1 && Math.abs(Y) < 1) return;
+    const Lift = Math.abs(Y) > 1 ? -14 : -4;
+    Elem.animate([
+      { transform: `translate(${X}px, ${Y}px)` },
+      { transform: `translate(${X / 2}px, ${Y / 2 + Lift}px)`, offset: 0.5 },
+      { transform: "none" },
+    ], { duration: 520, easing: "steps(10, end)" });
+  });
 }
 
 // The Update function lights up the plaques that are switched on and then rebuilds the shelves
@@ -589,6 +634,7 @@ function ApplyShelfSettings()
   document.body.classList.toggle("side-list", ShelfSettings.sideList);
   document.body.classList.toggle("still-sign", !ShelfSettings.sway);
   document.body.classList.toggle("no-added", !ShelfSettings.added);
+  if (typeof SetDaylight === "function") SetDaylight(ShelfSettings.daylight);     // daylight.js lights the background for the time of day
   if (!ShelfSettings.find && !SearchLine.hidden) ShowSearch(false);
   SettingsList.querySelectorAll("input").forEach((Box) =>
   {

@@ -2,7 +2,7 @@
 
 // Canvas is the sheet behind the page and Ctx is the pen that draws on it
 const Canvas = document.getElementById("backdrop");
-const Ctx = Canvas.getContext("2d");
+const Ctx = Canvas.getContext("2d", { willReadFrequently: true });     // daylight.js reads each frame back to light it for the time of day
 
 // Small helpers used by every scene:
 
@@ -1091,7 +1091,9 @@ if (MotionSwitch) MotionSwitch.checked = MotionOn;
 // The DrawFrame function paints one frame of the current scene
 function DrawFrame(Seconds)
 {
+  if (typeof StartDaylight === "function") StartDaylight();                         // daylight.js starts a fresh sky map for this frame
   Current.draw(Ctx, Canvas.width, Canvas.height, Seconds);
+  if (typeof Daylight === "function") Daylight(Ctx, Canvas.width, Canvas.height);    // and then lights the frame for the time of day
 }
 
 // The FitCanvas function sizes the canvas in dots so the art looks equally chunky on a phone and a laptop
