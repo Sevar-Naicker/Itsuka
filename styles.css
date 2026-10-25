@@ -28,6 +28,7 @@
 
 /* Variables */
 :root {
+  color-scheme: only light;   /* the browser's dark mode leaves the colours as they are */
   --dot:   4px;   /* size of one dot */
   --font:  "Pixelify Sans", "Courier New", monospace;   /* pixel font with fallbacks */
 
