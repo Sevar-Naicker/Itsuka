@@ -123,13 +123,24 @@
       <!-- Background page: moving or still, Shuffle and the pictures -->
       <section class="journal-section" id="pageBackground" role="tabpanel" aria-labelledby="tabBackground" data-page="background">
         <h3 class="settings-title">Background on this device</h3>
-        <label class="motion-switch">
-          <input type="checkbox" id="motionSwitch"> Moving backgrounds
-        </label>
-        <!-- The background follows the time of day, kept by daylight.js -->
-        <label class="motion-switch">
-          <input type="checkbox" id="daylightSwitch"> Day and night
-        </label>
+        <!-- Moving or still, day and night, and the weather from a city, all kept on this device -->
+        <div class="background-choices">
+          <label class="motion-switch">
+            <input type="checkbox" id="motionSwitch"> Moving backgrounds
+          </label>
+          <label class="motion-switch">
+            <input type="checkbox" id="daylightSwitch"> Day and night
+          </label>
+          <label class="weather-choice">
+            <span>Weather</span>
+            <select id="weatherChoice">
+              <option value="joburg">Johannesburg</option>
+              <option value="pretoria">Pretoria</option>
+              <option value="capetown">Cape Town</option>
+              <option value="off">Off</option>
+            </select>
+          </label>
+        </div>
         <div class="scene-list" id="sceneList"></div>
         <div class="shuffle-options" id="shuffleOptions" hidden>
           <span>A new background</span>
@@ -544,6 +555,7 @@
 
 <script src="backgrounds.js"></script>
 <script src="daylight.js"></script>
+<script src="weather.js"></script>
 <!-- The Supabase library, pinned to one exact version so an update cannot change how the site behaves -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3"></script>
 <script src="config.js"></script>

@@ -37,18 +37,30 @@ const DAY_SKY = new Set([
   "#F2C6B4", "#F4CDB8", "#F2C0B6", "#EDB2B6", "#E3A2B4", "#D494B2",  // mountain temple
 ].map((Hex) => Hex.toLowerCase()));
 
-// SkyMap is a hidden copy of the background where every dot of night sky is white, day sky grey and everything painted over them black, so the sky is still found after the room's evening shade is laid over it
+// MOON holds the colours the moons are painted with, they sit in the sky so clouds can pass in front of them (weather.js)
+const MOON = new Set(["#F4EBC8", "#DCD1A6", "#F0EBD2"].map((Hex) => Hex.toLowerCase()));
+
+// SNOWY holds the backgrounds where the white dots in the windows are falling snow, which stays by day, everywhere else they are stars, which fade by day
+const SNOWY = new Set(["cabin", "snow"]);
+
+// SkyMap is a hidden copy of the background where every dot of night sky is white, day sky grey, the moon nearly black and everything else black, so the sky is still found after the room's evening shade is laid over it
 const SkyMap = document.createElement("canvas");
 const SkyPen = SkyMap.getContext("2d", { willReadFrequently: true });
+// The SkyMapWanted function checks whether the sky map is needed: for day and night, or for weather.js when the sky is not clear
+function SkyMapWanted()
+{
+  return DaylightOn || (typeof WeatherPlace !== "undefined" && WeatherPlace !== "off" && WeatherKind !== "clear");
+}
+
 // Every rectangle painted on the background is painted on the map too, white for night sky, grey for day sky and black for anything else
 const RealFillRect = Ctx.fillRect;
 Ctx.fillRect = function (X, Y, W, H)
 {
   RealFillRect.call(this, X, Y, W, H);
-  if (!DaylightOn) return;
+  if (!SkyMapWanted()) return;
   // Only solid colours count, see-through shade and glows leave the map as it is
   if (typeof this.fillStyle !== "string" || this.fillStyle[0] !== "#") return;
-  SkyPen.fillStyle = NIGHT_SKY.has(this.fillStyle) ? "#FFFFFF" : DAY_SKY.has(this.fillStyle) ? "#808080" : "#000000";
+  SkyPen.fillStyle = NIGHT_SKY.has(this.fillStyle) ? "#FFFFFF" : DAY_SKY.has(this.fillStyle) ? "#808080" : MOON.has(this.fillStyle) ? "#202020" : "#000000";
   SkyPen.fillRect(X, Y, W, H);
 };
 
@@ -62,10 +74,10 @@ function HourNow()
   return Now.getHours() + Now.getMinutes() / 60;
 }
 
-// The StartDaylight function is called by backgrounds.js before each frame, it sizes the sky map to the background and clears it
+// The StartDaylight function is called by backgrounds.js before each frame, it sizes the sky map to the background and clears it, weather.js uses the map too
 function StartDaylight()
 {
-  if (!DaylightOn) return;
+  if (!SkyMapWanted()) return;
   if (SkyMap.width !== Canvas.width || SkyMap.height !== Canvas.height)
   {
     SkyMap.width = Canvas.width;
@@ -98,12 +110,22 @@ function Daylight(Pen, Wide, High)
   const Frame = Pen.getImageData(0, 0, Wide, High);
   const Dots = Frame.data;
   const Sky = SkyPen.getImageData(0, 0, Wide, High).data;
+  const Stars = Light.sky > 0 && !SNOWY.has(Current.id);
+  // The NightSkyAt function checks whether a dot is night sky, dots off the edge are not
+  const NightSkyAt = (X, Y) => X >= 0 && Y >= 0 && X < Wide && Y < High && Sky[(Y * Wide + X) * 4] >= 192;
   for (let i = 0; i < Dots.length; i += 4)
   {
     let R = Dots[i], G = Dots[i + 1], B = Dots[i + 2];
     const Bright = Math.max(R, G, B);
+    // A bright dot with night sky on both sides of it is a star, by day it fades into the sky like the sky around it
+    let Star = false;
+    if (Stars && Sky[i] < 64 && Bright > 150)
+    {
+      const X = (i >> 2) % Wide, Y = Math.floor((i >> 2) / Wide);
+      for (let Gap = 1; Gap <= 3 && !Star; Gap++) Star = (NightSkyAt(X - Gap, Y) && NightSkyAt(X + Gap, Y)) || (NightSkyAt(X, Y - Gap) && NightSkyAt(X, Y + Gap));
+    }
     // A warm, bright dot is a flame or a lamp, it stays as it is however dark the room gets
-    const Glowing = ((R > 235 && G > 140) || (R > 220 && R > B + 110)) && Sky[i] < 64;
+    const Glowing = ((R > 235 && G > 140) || (R > 220 && R > B + 110)) && Sky[i] < 64 && !Star;
     // A dot of sky painted in daylight turns to a night sky after dark
     const DaySky = Sky[i] > 64 && Sky[i] < 192;
     if (DaySky && Light.sky < 1)
@@ -114,9 +136,9 @@ function Daylight(Pen, Wide, High)
       B += (66 * Shade - B) * (1 - Light.sky);
     }
     // A dot of night sky through a window takes the day's sky colour by day
-    if (Light.sky > 0 && Sky[i] >= 192)
+    if (Light.sky > 0 && (Sky[i] >= 192 || Star))
     {
-      const Shade = 0.8 + Bright / 255 * 0.9;                        // the sky's bands stay a little lighter towards the horizon
+      const Shade = Star ? 1.05 : 0.8 + Bright / 255 * 0.9;           // the sky's bands stay a little lighter towards the horizon, a faded star is just sky
       R += (Light.skyColour[0] * Shade - R) * Light.sky;
       G += (Light.skyColour[1] * Shade - G) * Light.sky;
       B += (Light.skyColour[2] * Shade - B) * Light.sky;

@@ -67,6 +67,9 @@ const NEWS = [
     { title: "Day and night", text: "Your background now follows the time of day: a pink dawn, bright daylight, a golden sunset and a dark night with the fires and candles still glowing. Switch off Day and night in Settings, under Background, to keep it as it was.", show: "settings background" },
     { title: "Tidy shelves", text: "When a shelf is sorted or a book is moved, the books now slide into their new places.", show: "" },
   ] },
+  { number: 17, title: "Weather in the windows", items: [
+    { title: "Weather", text: "The skies in your background now show the weather outside: clouds drifting past, rain on the windows and the odd flash of lightning in a storm. Pick Johannesburg, Pretoria or Cape Town in Settings, under Background, or turn it off.", show: "settings background" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -98,6 +101,7 @@ const GUIDE = [
     ["Dust", "A book you haven't opened in two months gathers dust. Opening it blows the dust off."],
     ["Date added", "The sticky note in a book's corner shows the day it was added. Switch off Date added in Settings, under Shelves, to hide the notes."],
     ["Day and night", "The background follows the time on your device, from morning light to a dark night. Switch off Day and night in Settings, under Background, to keep each background as it was painted. Like the background itself, it is chosen on each device."],
+    ["Weather", "The skies show the weather in Johannesburg, Pretoria or Cape Town, whichever you pick under Background in Settings: clouds, rain or a storm. It is checked every half hour, and Off keeps the skies clear."],
     ["Reading record", "On your library card. Every book you tick done is stamped with the day, with totals and the book that has waited longest. On a joint shelf a book goes on the record of whoever ticked it. A deleted book stays until you press Take off."],
   ] },
   { group: "Sharing", lines: [

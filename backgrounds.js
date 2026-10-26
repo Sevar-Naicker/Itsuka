@@ -1094,6 +1094,7 @@ function DrawFrame(Seconds)
   if (typeof StartDaylight === "function") StartDaylight();                         // daylight.js starts a fresh sky map for this frame
   Current.draw(Ctx, Canvas.width, Canvas.height, Seconds);
   if (typeof Daylight === "function") Daylight(Ctx, Canvas.width, Canvas.height);    // and then lights the frame for the time of day
+  if (typeof ShowWeather === "function") ShowWeather(Ctx, Canvas.width, Canvas.height, Seconds);    // weather.js adds clouds and rain
 }
 
 // The FitCanvas function sizes the canvas in dots so the art looks equally chunky on a phone and a laptop

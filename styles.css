@@ -192,6 +192,13 @@ h1 {
   .motion-switch input::before, .setting input::before { transition: none; }
 }
 
+/* Moving backgrounds, day and night and the weather, side by side above the pictures */
+.background-choices { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 32px; margin: 0 0 14px; }
+.background-choices .motion-switch { margin: 0; }
+.weather-choice { display: flex; align-items: center; gap: 10px; font-size: 0.9375rem; }
+.weather-choice select { padding: 4px 6px; border: 2px solid var(--page-ink); background: transparent; color: var(--page-ink); font: inherit; font-size: 0.9375rem; cursor: pointer; }
+.weather-choice select:focus-visible { outline: 3px solid var(--page-gold); outline-offset: 2px; }
+
 /* The background thumbnails, in a grid */
 .scene-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(134px, 1fr)); gap: 14px 12px; }
 @media (max-width: 640px) {
