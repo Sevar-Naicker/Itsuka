@@ -54,6 +54,98 @@ const Ornaments = [
       ".mmmm...",
     ], colours: { s: "#D5DCEE", m: "#B9C4DE", M: "#E6EAF5", h: "#B9C4DE" } },
   { rows: CatShape, colours: CatColours },   // the cat, asleep
+  { rows: [                                  // globe on a brass stand
+      "...bbbbb...",
+      "..bBBgBBb..",
+      ".bBggggBBb.",
+      ".bBgggBBBb.",
+      "bBBBgBBBggb",
+      "bBBBBBBgggb",
+      "bBBBBBBBggb",
+      ".bBBgBBBBb.",
+      ".bBggBBBBb.",
+      "..bbBBBbb..",
+      ".....n.....",
+      "....nnn....",
+      "...nNNNn...",
+    ], colours: { b: "#24305E", B: "#55608F", g: "#6E9E4A", n: "#8A6A2E", N: "#C9A14A" } },
+  { rows: [                                  // hourglass
+      "WWWWWWW",
+      ".w...w.",
+      ".gsssg.",
+      ".gsssg.",
+      "..gsg..",
+      "...s...",
+      "..g.g..",
+      ".g.s.g.",
+      ".gsssg.",
+      ".wsssw.",
+      "WWWWWWW",
+    ], colours: { W: "#6B4226", w: "#8E5A34", g: "#BFD6DA", s: "#E3C27A" } },
+  { rows: [                                  // cactus with a flower, in a blue pot
+      "....p....",
+      "...cCc...",
+      ".c.cCc...",
+      ".c.cCc.c.",
+      ".cccCc.c.",
+      "...cCcccc",
+      "...cCc...",
+      "...cCc...",
+      ".ttttttt.",
+      ".tTTTTTt.",
+      "..tTTTt..",
+      "..ttttt..",
+    ], colours: { p: "#E58AA8", c: "#6E9E4A", C: "#4C7A33", t: "#3F5C8C", T: "#6E8CC2" } },
+  { rows: [                                  // jar of fireflies, y and Y glow in turn
+      "..lllll..",
+      "..LLLLL..",
+      ".jaaaaaj.",
+      "jaaaaaaaj",
+      "jaayaaaaj",
+      "jaaaaaYaj",
+      "jaYaaaaaj",
+      "jaaaayaaj",
+      "jaaYaaaaj",
+      "jaaaaaayj",
+      ".jaaaaaj.",
+      "..jjjjj..",
+    ], colours: { l: "#7A5A3A", L: "#A0784E", j: "#9CB8C0", a: "#2B3A48", y: "#F2E36A", Y: "#F2E36A" }, blink: true },
+  { rows: [                                  // small lantern
+      "...k...",
+      "..k.k..",
+      "..kkk..",
+      ".kkkkk.",
+      ".kyYyk.",
+      ".kYWYk.",
+      ".kYWYk.",
+      ".kyYyk.",
+      ".kkkkk.",
+      "..kkk..",
+    ], colours: { k: "#2E2A28", y: "#E3A13C", Y: "#FFD15C", W: "#FFF1B0" } },
+  { rows: [                                  // teapot
+      ".....kk.....",
+      "....pPPp....",
+      "..pppppppp..",
+      "s.pPPPPPPp.h",
+      "sspPwPPwPp.h",
+      ".spPPPPPPphh",
+      "..pPPPPPPp..",
+      "...pppppp...",
+      "....bbbb....",
+    ], colours: { k: "#C9A14A", p: "#2F6B6B", P: "#4E9C9A", w: "#E6EAF5", s: "#2F6B6B", h: "#2F6B6B", b: "#1F4A4A" } },
+  { rows: [                                  // owl on a branch
+      ".o....o.",
+      ".oooooo.",
+      "oWWooWWo",
+      "oWkooWko",
+      "ooooyooo",
+      "oOOOOOOo",
+      "oOoOOoOo",
+      "oOOOOOOo",
+      ".OOOOOO.",
+      "..y..y..",
+      "dddddddd",
+    ], colours: { o: "#8A5A3C", O: "#C49A6C", W: "#F6ECD2", k: "#22231F", y: "#E3A13C", d: "#5A3921" } },
 ];
 
 
@@ -282,6 +374,28 @@ function DrawArrow(Left)
   }));
   return Picture;
 }
+// The OrnamentFor function picks a shelf's ornament from its id, so every shelf gets what looks like a random one that stays the same each visit, and never the same one as the shelf before it
+function OrnamentFor(Id, Before)
+{
+  const Which = NumberFrom(Id) % Ornaments.length;
+  return Which === Before ? (Which + 1) % Ornaments.length : Which;
+}
+
+// The PaintOrnament function paints an ornament onto its canvas, in a blinking one (the jar of fireflies) Moving swaps which fireflies glow
+function PaintOrnament(Picture, Moving)
+{
+  const Ornament = Picture.Ornament;
+  const Colours = Object.assign({}, Ornament.colours);
+  if (Ornament.blink)
+  {
+    if (Moving) Colours.y = Colours.a;
+    else Colours.Y = Colours.a;
+  }
+  const Pen = Picture.getContext("2d");
+  Pen.clearRect(0, 0, Picture.width, Picture.height);
+  Sprite(Pen, 0, 0, Ornament.rows, Colours);
+}
+
 // The MakeOrnament function paints an ornament onto a tiny canvas and sizes it so its dots match the page's dots
 function MakeOrnament(Which)
 {
@@ -291,7 +405,9 @@ function MakeOrnament(Which)
   const Picture = document.createElement("canvas");
   Picture.width = Ornament.rows[0].length;
   Picture.height = Ornament.rows.length;
-  Sprite(Picture.getContext("2d"), 0, 0, Ornament.rows, Ornament.colours);
+  Picture.Ornament = Ornament;
+  PaintOrnament(Picture, false);
+  if (Ornament.blink) Picture.className = "is-blinking";
   Picture.style.width = `calc(var(--dot) * ${Picture.width})`;
   Picture.style.height = `calc(var(--dot) * ${Picture.height})`;
   Holder.append(Picture);
@@ -591,3 +707,12 @@ document.addEventListener("keydown", (event) =>
 {
   if (event.key === "Escape") CloseAll();
 });
+
+// Every little while the fireflies in the jar glow and fade in turn, only while moving backgrounds are on
+let OrnamentTick = false;
+setInterval(() =>
+{
+  if (!MotionOn) return;
+  OrnamentTick = !OrnamentTick;
+  document.querySelectorAll("canvas.is-blinking").forEach((Picture) => PaintOrnament(Picture, OrnamentTick));
+}, 700);

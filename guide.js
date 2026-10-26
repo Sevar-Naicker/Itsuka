@@ -70,6 +70,10 @@ const NEWS = [
   { number: 17, title: "Weather in the windows", items: [
     { title: "Weather", text: "The skies in your background now show the weather outside: clouds drifting past, rain on the windows and the odd flash of lightning in a storm. Pick Johannesburg, Pretoria or Cape Town in Settings, under Background, or turn it off.", show: "settings background" },
   ] },
+  { number: 18, title: "New ornaments", items: [
+    { title: "Shelf ornaments", text: "Seven new ornaments have come to stay: a globe, an hourglass, a cactus, a jar of fireflies, a lantern, a teapot and an owl. Each shelf now gets its own, picked at random.", show: "" },
+    { title: "Cabin windows", text: "The cabin's windows now look out over rolling hills, with fireflies out after dark.", show: "" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;

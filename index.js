@@ -132,13 +132,295 @@ const LanternShape = [
   ".MMMMMMMMMMMM.",
 ];
 
-// ShelfItems holds the list the picker is built from, each with its name, id and picture
+// FishbowlShape is a goldfish in a round bowl with sand and weed, FishbowlSwim is the fish further along with the bubbles risen
+const FishbowlShape = [
+  "......................",
+  ".....JJJJJJJJJJJJ.....",
+  "......JJJJJJJJJJ......",
+  ".....jjiiiiiiiijj.....",
+  "....jiiiiiiiiiiiij....",
+  "...jisiiiiqiiiiiiij...",
+  "..jjAAAAAAAAAAAAAAjj..",
+  "..jasaaaaqaaaaaaaaaj..",
+  "..jasaaaaaaaaaaaaaaj..",
+  ".jjaaaaaaaaafffafaajj.",
+  ".jjaaaGaaaafFkFffaajj.",
+  ".jjaaGaaaaaafffafaajj.",
+  "..jaaaGaaaaaaaaaaaaj..",
+  "..jaaGaGaaaaaaaaaaaj..",
+  "..jjaGGaaaaaaaaaaajj..",
+  "...juuUuuUuuUuuUuuj...",
+  "....jUuuUuuUuuUuuj....",
+  ".....jjaaaaaaaajj.....",
+  "......jjjjjjjjjj......",
+];
+const FishbowlSwim = [
+  "......................",
+  ".....JJJJJJJJJJJJ.....",
+  "......JJJJJJJJJJ......",
+  ".....jjiiiiiiiijj.....",
+  "....jiiiiiiiiiiiij....",
+  "...jisiiiiiiiiiiiij...",
+  "..jjAAAAAqAAAAAAAAjj..",
+  "..jasaaaaaaaaaaaaaaj..",
+  "..jasaaaaaqaaaaaaaaj..",
+  ".jjaaaafafffaaaaaaajj.",
+  ".jjaaaGffFkFfaaaaaajj.",
+  ".jjaaGafafffaaaaaaajj.",
+  "..jaaaGaaaaaaaaaaaaj..",
+  "..jaaGaGaaaaaaaaaaaj..",
+  "..jjaGGaaaaaaaaaaajj..",
+  "...juuUuuUuuUuuUuuj...",
+  "....jUuuUuuUuuUuuj....",
+  ".....jjaaaaaaaajj.....",
+  "......jjjjjjjjjj......",
+];
+
+// FirefliesShape is a big jar of fireflies over long grass, FirefliesGlow has the other half of them lit
+const FirefliesShape = [
+  "...llllllll...",
+  "...LLLLLLLL...",
+  "...llllllll...",
+  "..jjjjjjjjjj..",
+  ".jaaaaaaaaaaj.",
+  "jasahaaaazaaaj",
+  "jashYhaaaaaaaj",
+  "jasahaaaaaazaj",
+  "jaaaaahaaaaaaj",
+  "jaaaahYhaaaaaj",
+  "jaaaaahaaazaaj",
+  "jaahaaaaaaaaaj",
+  "jahYhaaaaaaaaj",
+  "jaahaaaazaaaaj",
+  "jaaaahaaaaaaaj",
+  "jaGahYhaGaagaj",
+  "jGgagGaGgagGaj",
+  "jgGgGgGgGgGgGj",
+  ".GgGgGgGgGgGg.",
+  "..jjjjjjjjjj..",
+];
+const FirefliesGlow = [
+  "...llllllll...",
+  "...LLLLLLLL...",
+  "...llllllll...",
+  "..jjjjjjjjjj..",
+  ".jaaaaaaahaaj.",
+  "jasaaaaahYhaaj",
+  "jasazaaaahahaj",
+  "jasaaaaaaahYhj",
+  "jaaaaaaaaaahaj",
+  "jaaaaazaaahaaj",
+  "jaaaaaaaahYhaj",
+  "jaaaaaaaaahaaj",
+  "jaazaaaahaaaaj",
+  "jaaaaaahYhaaaj",
+  "jaaaaaaahaaaaj",
+  "jaGaazaaGaagaj",
+  "jGgagGaGgagGaj",
+  "jgGgGgGgGgGgGj",
+  ".GgGgGgGgGgGg.",
+  "..jjjjjjjjjj..",
+];
+
+// GlobeShape is a globe on a brass stand, GlobeTurned is the same globe turned a little
+const GlobeShape = [
+  "...........n......",
+  "........bb...n....",
+  ".....bbbmmbbb..n..",
+  "....bBBBmmmVVb.n..",
+  "...bBsBBBmmVVVb.n.",
+  "..bBsBBBBmBVVVVb.n",
+  "..bBBBBBBBBVmmmb.n",
+  "..bmBBBBBBBmmmmb.n",
+  ".bmBBBBBBBBVmmmVbn",
+  ".bBBBmmmBBBVVmmVbn",
+  "..bBmmmmmBBVmmmb.n",
+  "..bBBmmmmBBVVmmb.n",
+  "..bBBmmmBBBVVmVb.n",
+  "...bBBmmBBBVVVb.n.",
+  "....bBmBBBBVVb.n..",
+  ".....bbbBmbbb..n..",
+  "........bb...n....",
+  "...........n......",
+  "........nN........",
+  "........nN........",
+  "........nN........",
+  ".....NNNNNNNN.....",
+  "....nnnnnnnnnn....",
+];
+const GlobeTurned = [
+  "...........n......",
+  "........bb...n....",
+  ".....bbbmmbbb..n..",
+  "....bBBmmmBVVb.n..",
+  "...bBsBBmmBVVVb.n.",
+  "..bBsBBBmBBVVVVb.n",
+  "..bBBBBBBBBmmmVb.n",
+  "..bBBBBBBBmmmmmb.n",
+  ".bBBBBBBBBBmmmVVbn",
+  ".bBBmmmBBBBVmmVVbn",
+  "..bmmmmmBBBmmmmb.n",
+  "..bBmmmmBBBVmmmb.n",
+  "..bBmmmBBBBVmVVb.n",
+  "...bBmmBBBBVVVb.n.",
+  "....bmBBBBBVVb.n..",
+  ".....bbbmmbbb..n..",
+  "........bb...n....",
+  "...........n......",
+  "........nN........",
+  "........nN........",
+  "........nN........",
+  ".....NNNNNNNN.....",
+  "....nnnnnnnnnn....",
+];
+
+// HourglassShape is an hourglass, HourglassFall has the falling sand a dot further down
+const HourglassShape = [
+  "WWWWWWWWWWWWW",
+  "wwwwwwwwwwwww",
+  ".PgcccccccgP.",
+  ".PgsccccccgP.",
+  ".PgsccccccgP.",
+  ".P.gcccccg.P.",
+  ".P.gSSSSSg.P.",
+  ".P..gSSSg..P.",
+  ".P...gSg...P.",
+  ".P...gSg...P.",
+  ".P...gSg...P.",
+  ".P..gcccg..P.",
+  ".P.gccSccg.P.",
+  ".P.gcccccg.P.",
+  ".PgccSSSccgP.",
+  ".PgcSSSSScgP.",
+  ".PgSSSSSSSgP.",
+  ".PgSSSSSSSgP.",
+  ".PgcccccccgP.",
+  "wwwwwwwwwwwww",
+  "WWWWWWWWWWWWW",
+];
+const HourglassFall = [
+  "WWWWWWWWWWWWW",
+  "wwwwwwwwwwwww",
+  ".PgcccccccgP.",
+  ".PgsccccccgP.",
+  ".PgsccccccgP.",
+  ".P.gcccccg.P.",
+  ".P.gSSSSSg.P.",
+  ".P..gSSSg..P.",
+  ".P...gSg...P.",
+  ".P...gSg...P.",
+  ".P...gcg...P.",
+  ".P..gcScg..P.",
+  ".P.gcccccg.P.",
+  ".P.gccSccg.P.",
+  ".PgccSSSccgP.",
+  ".PgcSSSSScgP.",
+  ".PgSSSSSSSgP.",
+  ".PgSSSSSSSgP.",
+  ".PgcccccccgP.",
+  "wwwwwwwwwwwww",
+  "WWWWWWWWWWWWW",
+];
+
+// CassetteShape is a cassette player, CassetteTurn has the reels turned
+const CassetteShape = [
+  ".......hhhhhhhhhhhhhh.......",
+  ".......h............h.......",
+  ".......h............h.......",
+  "RRRRRRRRRRRRRRRRRRRRRRRRRRRD",
+  "RrrrrrrrrrrrrrrrrrrrrrrrerrD",
+  "RrrrrrrrrCCCCCCCCCCrrrrrrrrD",
+  "RrrkkkkrrCckcccckcCrrkkkkrrD",
+  "RrkKKKKkrCkwkttkwkCrkKKKKkrD",
+  "RkKKKKKKkCckcccckcCkKKKKKKkD",
+  "RkKKkkKKkCccccccccCkKKkkKKkD",
+  "RkKKkkKKkCcttttttcCkKKkkKKkD",
+  "RkKKKKKKkCCCCCCCCCCkKKKKKKkD",
+  "RrkKKKKkrrrrrrrrrrrrkKKKKkrD",
+  "RrrkkkkrrryrnrnrnrrrrkkkkrrD",
+  "RrrrrrrrrrrrrrrrrrrrrrrrrrrD",
+  "RDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+];
+const CassetteTurn = [
+  ".......hhhhhhhhhhhhhh.......",
+  ".......h............h.......",
+  ".......h............h.......",
+  "RRRRRRRRRRRRRRRRRRRRRRRRRRRD",
+  "RrrrrrrrrrrrrrrrrrrrrrrryrrD",
+  "RrrrrrrrrCCCCCCCCCCrrrrrrrrD",
+  "RrrkkkkrrCkckcckckCrrkkkkrrD",
+  "RrkKKKKkrCcwttttwcCrkKKKKkrD",
+  "RkKKKKKKkCkckcckckCkKKKKKKkD",
+  "RkKKkkKKkCccccccccCkKKkkKKkD",
+  "RkKKkkKKkCcttttttcCkKKkkKKkD",
+  "RkKKKKKKkCCCCCCCCCCkKKKKKKkD",
+  "RrkKKKKkrrrrrrrrrrrrkKKKKkrD",
+  "RrrkkkkrrryrnrnrnrrrrkkkkrrD",
+  "RrrrrrrrrrrrrrrrrrrrrrrrrrrD",
+  "RDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+];
+
+// OwlShape is an owl sitting on two books, OwlBlink has its eyes closed
+const OwlShape = [
+  "...o........o.....",
+  "...oo......oo.....",
+  "...oooooooooo.....",
+  "..ooWWWooWWWoo....",
+  "..oWWkWooWkWWo....",
+  "..oWWWWooWWWWo....",
+  "..ooWWWyyWWWoo....",
+  "..oooooyyooooo....",
+  "..oOOOOOOOOOOo....",
+  "..oOOoOOoOOoOo....",
+  "..oOOOOOOOOOOo....",
+  "..oOoOOoOOoOOo....",
+  "..ooOOOOOOOOoo....",
+  "...oOOOOOOOOo.....",
+  "....yy....yy......",
+  "EEEEEEEEEEEEEEEEE.",
+  "EeEwwwwwwwwwwwwww.",
+  "EEEEEEEEEEEEEEEEE.",
+  ".AAAAAAAAAAAAAAAAA",
+  ".AaAwwwwwwwwwwwwww",
+  ".AAAAAAAAAAAAAAAAA",
+];
+const OwlBlink = [
+  "...o........o.....",
+  "...oo......oo.....",
+  "...oooooooooo.....",
+  "..oooooooooooo....",
+  "..oddddoodddddo...",
+  "..oooooooooooo....",
+  "..ooWWWyyWWWoo....",
+  "..oooooyyooooo....",
+  "..oOOOOOOOOOOo....",
+  "..oOOoOOoOOoOo....",
+  "..oOOOOOOOOOOo....",
+  "..oOoOOoOOoOOo....",
+  "..ooOOOOOOOOoo....",
+  "...oOOOOOOOOo.....",
+  "....yy....yy......",
+  "EEEEEEEEEEEEEEEEE.",
+  "EeEwwwwwwwwwwwwww.",
+  "EEEEEEEEEEEEEEEEE.",
+  ".AAAAAAAAAAAAAAAAA",
+  ".AaAwwwwwwwwwwwwww",
+  ".AAAAAAAAAAAAAAAAA",
+];
+
+// ShelfItems holds the list the picker is built from, each with its name, id and picture, the newer ones also carry their second moment (moving) and their own colours
 const ShelfItems = [
   { name: "Cat", id: "cat", rows: BigCatShape },
   { name: "Armchair", id: "armchair", rows: ArmchairShape },
   { name: "Tea and books", id: "tea", rows: TeaShape },
   { name: "Plant", id: "plant", rows: PlantShape },
   { name: "Lantern", id: "lantern", rows: LanternShape },
+  { name: "Fishbowl", id: "fishbowl", rows: FishbowlShape, moving: FishbowlSwim, colours: { j: "#BFD6DA", J: "#E6F0F2", i: "#2B3A48", a: "#3E7FA6", A: "#7FB6D3", u: "#E3C27A", U: "#C9A14A", G: "#4E8B3A", f: "#E07A2E", F: "#F5A04A", k: "#22231F", q: "#D5EAF2", s: "#F4FAFB" } },
+  { name: "Fireflies", id: "fireflies", rows: FirefliesShape, moving: FirefliesGlow, colours: { l: "#7A5A3A", L: "#A0784E", j: "#9CB8C0", a: "#1E2A38", G: "#2F5E2A", g: "#3E7A35", Y: "#FFF2A0", h: "#6E6A3A", z: "#1E2A38", s: "#D5EAF2" } },
+  { name: "Globe", id: "globe", rows: GlobeShape, moving: GlobeTurned, colours: { b: "#1A2448", B: "#55608F", V: "#3F4A7A", m: "#6E9E4A", n: "#8A6A2E", N: "#C9A14A", s: "#A9B4D6" } },
+  { name: "Hourglass", id: "hourglass", rows: HourglassShape, moving: HourglassFall, colours: { W: "#6B4226", w: "#8E5A34", P: "#5A3921", g: "#BFD6DA", c: "#2E3A46", S: "#E3C27A", s: "#F4FAFB" } },
+  { name: "Cassette player", id: "cassette", rows: CassetteShape, moving: CassetteTurn, colours: { h: "#3A3A3A", r: "#C2505E", R: "#E07A6A", D: "#8A3440", k: "#22231F", K: "#4A4A4A", c: "#F4EFE2", C: "#8A8270", t: "#6B4226", w: "#F4EFE2", y: "#F6E27F", n: "#E6EAF5", e: "#7A2A34" } },
+  { name: "Owl", id: "owl", rows: OwlShape, moving: OwlBlink, colours: { o: "#8A5A3C", O: "#C49A6C", W: "#F6ECD2", k: "#22231F", y: "#E3A13C", d: "#5A3921", E: "#2F5D3A", e: "#6E9E7A", A: "#8C2F39", a: "#C2707A", w: "#F4EFE2" } },
 ];
 // DEFAULT_ITEM is the id of the item shown until the visitor chooses another
 const DEFAULT_ITEM = "tea";
@@ -191,9 +473,9 @@ function ShelfColours()
 // The PaintItem function paints an item with the given pen, when Moving is true it paints the item's second moment
 function PaintItem(Pen, Item, Moving)
 {
-  const Colours = ShelfColours();
+  const Colours = Object.assign(ShelfColours(), Item.colours);         // the newer items bring their own colours
   Pen.clearRect(0, 0, Item.rows[0].length, Item.rows.length);
-  Sprite(Pen, 0, 0, Item.rows, Colours);
+  Sprite(Pen, 0, 0, Moving && Item.moving ? Item.moving : Item.rows, Colours);
   if (Item.id === "armchair") Sprite(Pen, 5, 7, CurledCatShape, Colours);
   if (!Moving) return;
 
@@ -280,7 +562,7 @@ PaintChoices();
 SetShelfItem(Recall("library-shelf-item"));
 window.addEventListener("resize", SizeShelf);
 
-// Every little while the item moves a little: the cats breathe, the steam drifts and the flame leans
+// Every little while the item moves a little: the cats breathe, the steam drifts, the flame leans, the fish swims, the fireflies glow, the globe turns, the sand falls, the reels turn and the owl blinks
 setInterval(() =>
 {
   Tick = !Tick;

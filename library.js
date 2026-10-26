@@ -387,6 +387,7 @@ function RenderShelves()
     return;
   }
 
+  let LastOrnament = -1;                         // the ornament on the shelf above, so two shelves in a row never get the same one
   Library.forEach((Section, Index) =>
   {
     if (Chosen.size && !Chosen.has(Section.id)) return;
@@ -405,7 +406,8 @@ function RenderShelves()
     {
       if (Visible(Book)) Shelf.append(MakeLibraryBook(Book, Index * 3 + i));
     });
-    Shelf.append(MakeOrnament(Index));
+    LastOrnament = OrnamentFor(Section.id, LastOrnament);
+    Shelf.append(MakeOrnament(LastOrnament));
     Block.append(Shelf);
     LibraryRoot.append(Block);
   });
