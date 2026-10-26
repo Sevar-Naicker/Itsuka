@@ -121,24 +121,57 @@ function FireGlow(c, Cx, Cy, Size, t)
 
 // Scene 1 (a log cabin with a fireplace):
 
-// The CabinWindow function paints one cabin window looking out on a snowy night
+// The PaintedRain function checks whether a background's own painted rain should fall: always with the weather off, otherwise only when it is raining in the chosen city (weather.js)
+function PaintedRain()
+{
+  return typeof WeatherPlace === "undefined" || WeatherPlace === "off" || WeatherKind === "rain" || WeatherKind === "storm";
+}
+
+// The MixColour function blends two colours like "#13203A", Share 0 gives the first and 1 the second, the answer is a colour of the same kind so the sky map still reads it
+function MixColour(From, To, Share)
+{
+  const Part = (Colour, At) => parseInt(Colour.slice(At, At + 2), 16);
+  let Answer = "#";
+  for (let At = 1; At < 7; At += 2) Answer += Math.round(Part(From, At) + (Part(To, At) - Part(From, At)) * Share).toString(16).padStart(2, "0");
+  return Answer.toUpperCase();
+}
+
+// The FirefliesOut function checks whether the fireflies outside the cabin are out: only at night (always, with day and night off) and never in the rain (weather.js)
+function FirefliesOut()
+{
+  if (typeof WeatherPlace !== "undefined" && WeatherPlace !== "off" && (WeatherKind === "rain" || WeatherKind === "storm")) return false;
+  if (typeof DaylightOn !== "undefined" && DaylightOn) return LightAt(HourNow()).sky < 0.5;
+  return true;
+}
+
+// The CabinWindow function paints one cabin window looking out over rolling hills at night, with a few stars and fireflies blinking above the grass
 function CabinWindow(c, x, y, w, h, t)
 {
+  const Tick = Math.floor(t * 8);
   Rect(c, x, y, w, h, "#3A2314");                                     // frame
   Rect(c, x + 2, y + 2, w - 4, h - 4, "#141C3D");                     // night sky through the glass
   Rect(c, x + 2, y + 2 + (h - 4) * 0.5, w - 4, (h - 4) * 0.5, "#1B2650");
-  for (let i = 0; i * 5 < w - 4; i++)
-{                               // far trees outside
-    const Th = 4 + Math.round(Hash(i, x) * 5);
-    Rect(c, x + 2 + i * 5, y + h - 4 - Th, 3, Th, "#0D1530");
+  for (let n = 0; n < Math.round(w * h / 80); n++)
+  {                                                                   // stars, each blinking off now and then
+    if (Hash(n + x, Math.floor(Tick / 9) + n) < 0.2) continue;
+    const Sx = x + 2 + Math.floor(Hash(n, 31 + x) * (w - 4));
+    const Sy = y + 2 + Math.floor(Hash(n, 32 + x) * (h - 4) * 0.6);
+    Rect(c, Sx, Sy, 1, 1, Hash(n, 33) > 0.6 ? "#FFF6D8" : "#AEB8DC");
   }
-  for (let n = 0; n < Math.round(w * h / 60); n++)
-{                  // snow falling outside
-    const Sx = x + 2 + Math.floor(Hash(n, 1 + x) * (w - 4));
-    const Sy = y + 2 + Math.floor((Hash(n, 2 + x) * (h - 4) + t * 5 * (0.5 + Hash(n, 3))) % (h - 4));
-    Rect(c, Sx, Sy, 1, 1, "#DCE5F5");
+  const HillColour = MixColour("#13203A", "#4F7A3F", typeof DaylightOn !== "undefined" && DaylightOn ? LightAt(HourNow()).sky : 0);
+  for (let i = x + 2; i < x + w - 2; i++)
+  {                                                                   // rolling hills in the distance, dark at night and green by day
+    const Hill = Math.round(Math.sin((i + x) * 0.18) * 2 + Math.sin((i + x) * 0.07) * 3);
+    Rect(c, i, y + h - 10 + Hill, 1, 10 - Hill, HillColour);
   }
-  Rect(c, x + 2, y + h - 4, w - 4, 2, "#C4CFE6");                     // snow piled on the outside ledge
+  for (let n = 0; n < (FirefliesOut() ? Math.max(3, Math.round(w / 6)) : 0); n++)
+  {                                                                   // fireflies, each glowing and fading on its own
+    if (Hash(n + x, Math.floor(t * 2) + n * 3) < 0.45) continue;
+    const Fx = x + 3 + Math.floor(Hash(n, 41 + x) * (w - 6)) + Math.round(Math.sin(t + n) * 1.5);
+    const Fy = y + h - 12 - Math.floor(Hash(n, 42 + x) * 8);
+    Rect(c, Fx, Fy, 1, 1, "#F2E36A");
+  }
+  Rect(c, x + 2, y + h - 4, w - 4, 2, "#2A1A10");                     // the dark outside ledge
   Rect(c, x + (w >> 1) - 1, y, 2, h, "#3A2314");                      // the cross in the middle
   Rect(c, x, y + (h >> 1) - 1, w, 2, "#3A2314");
   Rect(c, x - 1, y + h, w + 2, 2, "#5E3C24");                         // sill
@@ -942,13 +975,13 @@ function DrawKeepersCottage(c, W, H, t)
     Rect(c, Bx, LBase - LTall - 2 - Spread, 1, Spread * 2 + 1, `rgba(255,240,190,${(0.25 + 0.35 * Math.max(0, Facing)) * (1 - d / Ww)})`);
   }
   if (Facing > 0.92) Rect(c, Wx, Wy, Ww, Wh, "rgba(255,240,200,0.12)");                                  // the flash when it points straight at us
-  // Rain lashing the glass at a slant, and drops running down
-  for (let n = 0; n < W * 0.8; n++)
+  // Rain lashing the glass at a slant, and drops running down, only when it rains (or with the weather off)
+  for (let n = 0; n < (PaintedRain() ? W * 0.8 : 0); n++)
   {
     const x = Wx + (Hash(n, 561) * Ww + t * 14) % Ww, y = Wy + (Hash(n, 562) * Wh + t * (50 + Hash(n, 563) * 20)) % Wh;
     Rect(c, x, y, 1, 2, "rgba(200,215,235,0.4)");
   }
-  for (let n = 0; n < 12; n++)
+  for (let n = 0; n < (PaintedRain() ? 12 : 0); n++)
   {
     const x = Wx + 2 + Math.floor(Hash(n, 571) * (Ww - 4)), Life = (t * (0.05 + Hash(n, 572) * 0.05) + Hash(n, 573)) % 1;
     Rect(c, x, Wy + Math.floor(Life * Wh), 1, 2, "rgba(230,238,250,0.75)");

@@ -41,7 +41,7 @@ const DAY_SKY = new Set([
 const MOON = new Set(["#F4EBC8", "#DCD1A6", "#F0EBD2"].map((Hex) => Hex.toLowerCase()));
 
 // SNOWY holds the backgrounds where the white dots in the windows are falling snow, which stays by day, everywhere else they are stars, which fade by day
-const SNOWY = new Set(["cabin", "snow"]);
+const SNOWY = new Set(["snow"]);
 
 // SkyMap is a hidden copy of the background where every dot of night sky is white, day sky grey, the moon nearly black and everything else black, so the sky is still found after the room's evening shade is laid over it
 const SkyMap = document.createElement("canvas");
@@ -117,9 +117,9 @@ function Daylight(Pen, Wide, High)
   {
     let R = Dots[i], G = Dots[i + 1], B = Dots[i + 2];
     const Bright = Math.max(R, G, B);
-    // A bright dot with night sky on both sides of it is a star, by day it fades into the sky like the sky around it
+    // A bright dot with night sky on both sides of it is a star, by day it fades into the sky like the sky around it (the cabin's firelight dims its stars, so a little under full bright still counts)
     let Star = false;
-    if (Stars && Sky[i] < 64 && Bright > 150)
+    if (Stars && Sky[i] < 64 && Bright > 110)
     {
       const X = (i >> 2) % Wide, Y = Math.floor((i >> 2) / Wide);
       for (let Gap = 1; Gap <= 3 && !Star; Gap++) Star = (NightSkyAt(X - Gap, Y) && NightSkyAt(X + Gap, Y)) || (NightSkyAt(X, Y - Gap) && NightSkyAt(X, Y + Gap));
@@ -138,7 +138,7 @@ function Daylight(Pen, Wide, High)
     // A dot of night sky through a window takes the day's sky colour by day
     if (Light.sky > 0 && (Sky[i] >= 192 || Star))
     {
-      const Shade = Star ? 1.05 : 0.8 + Bright / 255 * 0.9;           // the sky's bands stay a little lighter towards the horizon, a faded star is just sky
+      const Shade = Star ? 0.97 : 0.8 + Bright / 255 * 0.9;           // the sky's bands stay a little lighter towards the horizon, a faded star is just sky
       R += (Light.skyColour[0] * Shade - R) * Light.sky;
       G += (Light.skyColour[1] * Shade - G) * Light.sky;
       B += (Light.skyColour[2] * Shade - B) * Light.sky;
