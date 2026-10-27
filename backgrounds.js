@@ -188,6 +188,37 @@ const CatShape = [
 ];
 const CatColours = { o: "#D98A3A", s: "#B4682A", t: "#C27A32" };
 
+// CAT_SPOTS holds where the cat sleeps in each indoor background, worked out from the room's size the same way its Draw function places things
+const CAT_SPOTS = {
+  cabin: (W, H) => { const FloorY = Math.round(H * 0.8); return { x: (W >> 1) + 8, y: FloorY + Math.round((H - FloorY) * 0.38) - 4 }; },      // on the rug by the fire
+  attic: (W, H) => ({ x: (W >> 1) - 6, y: Math.round(H * 0.82) + 2 }),                                                        // on the rug
+  library: (W, H) => ({ x: (W >> 1) - 7, y: Math.round(H * 0.84) - 4 }),                                                     // under the reading table
+  cafe: (W, H) => ({ x: Math.round(W * 0.44), y: Math.round(H * 0.74) - 6 }),                                                // on the window sill
+  keeper: (W, H) => ({ x: Math.round(W * 0.45), y: Math.round(H * 0.7) }),                                                   // on the table under the window
+};
+
+// CatOut is true while the cat is out wandering the shelves, so its sleeping spot is left empty (extras.js)
+let CatOut = false;
+
+// BlownOut holds when each candle that was pressed lights again, and LightsOffUntil when the snowy cabin's lights come back on (extras.js)
+const BlownOut = {};
+let LightsOffUntil = 0;
+
+// The IsLit function checks whether a candle is lit, it is only out for a moment after being pressed, and never in the thumbnails
+function IsLit(c, Key)
+{
+  return c !== Ctx || !(BlownOut[Key] > performance.now());
+}
+
+// The SleepingCat function paints the cat asleep at its spot in an indoor background, breathing slowly, unless it is out wandering the shelves (only the big background, the thumbnails always show it)
+function SleepingCat(c, Id, W, H, Tick)
+{
+  if (CatOut && c === Ctx) return;
+  const Spot = CAT_SPOTS[Id](W, H);
+  Sprite(c, Spot.x, Spot.y, CatShape, CatColours);
+  if (Math.floor(Tick / 10) % 2) Rect(c, Spot.x + 6, Spot.y, 5, 1, CatColours.o);       // its back rises as it breathes
+}
+
 // The DrawCabin function paints scene 1: a log cabin with a fireplace
 function DrawCabin(c, W, H, t)
 {
@@ -233,7 +264,7 @@ function DrawCabin(c, W, H, t)
   }
   // Windows either side of the fireplace when the screen is wide (laptops)
   const SideSpace = Fx - 4;
-  if (SideSpace >= 40)
+  if (SideSpace >= 34)
   {
     const Wy = Math.max(6, Math.round(FloorY * 0.3));
     const Wh = Math.min(36, FloorY - Wy - 16);
@@ -248,9 +279,7 @@ function DrawCabin(c, W, H, t)
   Rect(c, Cx - RugW / 2 + 3, RugY + 1, RugW - 6, 1, "#C9A14A");
   Rect(c, Cx - RugW / 2 + 3, RugY + RugH - 2, RugW - 6, 1, "#C9A14A");
   for (let x = Cx - RugW / 2 + 5; x < Cx + RugW / 2 - 5; x += 4) Rect(c, x, RugY + (RugH >> 1), 2, 1, "#A8483F");
-  const CatX = Cx + 8, CatY = RugY - 4;
-  Sprite(c, CatX, CatY, CatShape, CatColours);
-  if (Math.floor(Tick / 10) % 2) Rect(c, CatX + 6, CatY, 5, 1, CatColours.o);      // its back rises as it breathes
+  SleepingCat(c, "cabin", W, H, Tick);
 
   // Stone surround
   Rect(c, Fx, Fy, Fw, Fh, "#3D3936");
@@ -287,8 +316,8 @@ function DrawCabin(c, W, H, t)
   Rect(c, Cx - 6, FloorY - 5, 3, 1, "#FF9A3C"); Rect(c, Cx + 2, FloorY - 6, 2, 1, "#FFD15C");
   Fire(c, Cx, FloorY - 6, Math.min(Ow - 8, 22), Oh - 10, t);
   // Candle flames
-  Rect(c, Fx + 2 + (Tick % 2), Fy - 12, 1, 2, "#FFD15C");
-  Rect(c, Fx + Fw - 4 + ((Tick + 1) % 2), Fy - 11, 1, 2, "#FFD15C");
+  if (IsLit(c, "cabin0")) Rect(c, Fx + 2 + (Tick % 2), Fy - 12, 1, 2, "#FFD15C");
+  if (IsLit(c, "cabin1")) Rect(c, Fx + Fw - 4 + ((Tick + 1) % 2), Fy - 11, 1, 2, "#FFD15C");
 }
 
 // Scene 2 (a green woodland):
@@ -476,13 +505,14 @@ function DrawSnowyCabin(c, W, H, t)
     Rect(c, Cx - Half, WallY - 15 + r, Half * 2, 1, r > 11 ? "#C7D0E6" : "#F1F4FA");
   }
   Rect(c, X0 - 4, WallY, Cw + 8, 2, "#3A2314");                                 // eaves
-  const Lit = Math.floor(Tick / 6) % 5 === 0 ? "#FFC766" : "#FFD98A";
+  const LightsOn = c !== Ctx || LightsOffUntil < performance.now();               // pressing the cabin switches its lights off for a moment (extras.js)
+  const Lit = !LightsOn ? "#3A3450" : Math.floor(Tick / 6) % 5 === 0 ? "#FFC766" : "#FFD98A";
   [X0 + 6, X0 + Cw - 15].forEach((Wx) =>
   {
     Rect(c, Wx - 1, WallY + 5, 11, 10, "#3A2314");
     Rect(c, Wx, WallY + 6, 9, 8, Lit);
     Rect(c, Wx + 4, WallY + 6, 1, 8, "#3A2314"); Rect(c, Wx, WallY + 9, 9, 1, "#3A2314");
-    Rect(c, Wx - 1, BaseY + 1, 11, 4, "rgba(255,205,120,0.35)");              // light spilling onto the snow
+    if (LightsOn) Rect(c, Wx - 1, BaseY + 1, 11, 4, "rgba(255,205,120,0.35)");  // light spilling onto the snow
   });
   Rect(c, Cx - 4, WallY + 7, 8, Ch - 7, "#3E2618");
   Rect(c, Cx - 2, WallY + 9, 4, 3, Lit);
@@ -586,6 +616,7 @@ function DrawCafe(c, W, H, t)
     const Life = (t * 0.25 + n / 3) % 1;
     Rect(c, Mx + 2 + n + Math.round(Math.sin(Life * 6 + n) * 1.5), SillY - 8 - Math.round(Life * 10), 1, 2, `rgba(240,235,225,${0.5 * (1 - Life)})`);
   }
+  SleepingCat(c, "cafe", W, H, Tick);                                           // the cat asleep on the sill
   const Px = Math.round(W * 0.24);
   Rect(c, Px, SillY - 5, 6, 5, "#B5532E");
   Rect(c, Px - 1, SillY - 9, 3, 4, "#4E8C5F"); Rect(c, Px + 2, SillY - 11, 2, 6, "#3F7A45"); Rect(c, Px + 4, SillY - 8, 3, 3, "#4E8C5F");
@@ -700,6 +731,7 @@ function DrawAttic(c, W, H, t)
   for (let x = 0; x < W; x += 12) Rect(c, x, FloorY, 1, H - FloorY, "#2E1E14");
   Rect(c, Cx - 26, FloorY + 4, 52, Math.max(4, H - FloorY - 7), "#3E4A6B");
   Rect(c, Cx - 24, FloorY + 5, 48, 1, "#C9A14A");
+  SleepingCat(c, "attic", W, H, Tick);                                          // the cat asleep on the rug
   // A little desk with the lamp, a stack of books and a ticking clock
   const Dx = Math.round(W * 0.66), Dy = FloorY - 12;
   Rect(c, Dx - 14, Dy, 28, 3, "#6E4A30"); Rect(c, Dx - 12, Dy + 3, 2, 9, "#4A2E1E"); Rect(c, Dx + 10, Dy + 3, 2, 9, "#4A2E1E");
@@ -774,6 +806,7 @@ function DrawGrandLibrary(c, W, H, t)
   Rect(c, Cx + 12, Ty - 1, 6, 1, "#2A180E"); Rect(c, Cx + 14, Ty - 6, 1, 5, "#C9A14A"); Rect(c, Cx + 10, Ty - 9, 10, 3, "#2E6A4A");
   Disc(c, Cx + 15, Ty - 3, 14, "rgba(255,220,140,0.08)"); Disc(c, Cx + 15, Ty - 3, 7, "rgba(255,220,140,0.1)");
   Rect(c, Cx - 14, Ty - 2, 8, 2, "#EDE3C8"); Rect(c, Cx - 10, Ty - 2, 1, 2, "#B8A888");
+  SleepingCat(c, "library", W, H, Tick);                                        // the cat asleep under the table
   // Moonlight falling from the window across the floor, with dust drifting in it
   for (let y = Ay + Ah; y < H; y++)
   {
@@ -790,6 +823,7 @@ function DrawGrandLibrary(c, W, H, t)
   {
     const Sy = Math.round(H * 0.32);
     Rect(c, Sx - 2, Sy, 5, 2, "#C9A14A"); Rect(c, Sx, Sy - 4, 1, 4, "#EDE3C8");
+    if (!IsLit(c, "library" + i)) return;                                         // blown out for a moment
     Rect(c, Sx + ((Tick + i) % 2), Sy - 6, 1, 2, "#FFD15C");
     Disc(c, Sx, Sy - 4, 10, "rgba(255,190,100,0.08)");
   });
@@ -1016,6 +1050,7 @@ function DrawKeepersCottage(c, W, H, t)
     Rect(c, Kx + 11 + Math.round(Life * 4), Oy - 7 - Math.round(Life * 10), 1, 2, `rgba(240,240,240,${0.55 * (1 - Life)})`);
   }
   Rect(c, Kx + 16, Oy - 5, 5, 5, "#B4383A"); Rect(c, Kx + 21, Oy - 4, 1, 2, "#B4383A");
+  SleepingCat(c, "keeper", W, H, Tick);                                         // the cat asleep on the table
   Rect(c, 0, 0, W, H, "rgba(20,14,10,0.1)");
 }
 
@@ -1128,6 +1163,7 @@ function DrawFrame(Seconds)
   Current.draw(Ctx, Canvas.width, Canvas.height, Seconds);
   if (typeof Daylight === "function") Daylight(Ctx, Canvas.width, Canvas.height);    // and then lights the frame for the time of day
   if (typeof ShowWeather === "function") ShowWeather(Ctx, Canvas.width, Canvas.height, Seconds);    // weather.js adds clouds and rain
+  if (typeof ShowExtras === "function") ShowExtras(Ctx);                                            // extras.js adds sparks, hearts and the like
 }
 
 // The FitCanvas function sizes the canvas in dots so the art looks equally chunky on a phone and a laptop

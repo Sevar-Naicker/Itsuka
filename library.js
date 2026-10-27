@@ -43,6 +43,7 @@ const SETTING_LIST = [
   { key: "pull", label: "Pull a book", hint: "Opens a random book that is not done" },
   { key: "drag", label: "Drag to move books", hint: "Pick a book up by its spine" },
   { key: "ornaments", label: "Shelf ornaments", hint: "The little things at the end of each shelf" },
+  { key: "cat", label: "Wandering cat", hint: "In the indoor rooms, the cat now and then wanders along your shelves" },
   { key: "hover", label: "Open books on hover", hint: "On a laptop, a book opens when you point at it" },
   { key: "dust", label: "Dusty books", hint: "Books you have not opened in a while gather dust" },
   { key: "added", label: "Date added", hint: "A sticky note inside each book with the day it was added" },
@@ -52,7 +53,7 @@ const SETTING_LIST = [
 // JointIsSetUp holds whether the database has joint shelves (supabase-joint.sql), until then the Invite button explains what to run
 let JointIsSetUp = true;
 // ShelfSettings holds which tools are switched on, they all start on apart from Shelves down the side, and the member's own choices are loaded over them
-const ShelfSettings = { find: true, done: true, hideDone: true, pull: true, drag: true, ornaments: true, hover: true, dust: true, added: true, sideList: false, sway: true };
+const ShelfSettings = { find: true, done: true, hideDone: true, pull: true, drag: true, ornaments: true, cat: true, hover: true, dust: true, added: true, sideList: false, sway: true };
 // WaitingGone holds the books and shelves deleted in the last few seconds, kept off the page while their Undo note is showing, even if the shelves are fetched again
 const WaitingGone = new Set();
 const SettingsList = document.getElementById("settingsList");

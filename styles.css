@@ -1664,3 +1664,38 @@ body.carrying-page .open-book { visibility: hidden !important; }
 .added-note small { font-size: 0.5625rem; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.75; }
 .added-note b { font-size: 0.6875rem; text-align: center; }
 body.no-added .added-note, .book.on-later-page .added-note { display: none; }
+
+/* The wandering cat: stands on the shelf board in front of the books, fades in and out at the ends, leaps over the page between shelves */
+.shelf.has-cat { position: relative; }
+.wander-cat { position: absolute; z-index: 8; transform: translateY(-100%); margin-top: calc(var(--board) * -1 + 3px); cursor: pointer; transition: opacity 0.6s steps(4); }
+.wander-cat canvas { display: block; image-rendering: crisp-edges; image-rendering: pixelated; }
+.wander-cat.is-fading { opacity: 0; }
+.wander-cat.is-leaping { position: fixed; z-index: 70; margin-top: 0; }
+.wander-cat.is-asleep::after { content: "z"; position: absolute; left: 4px; top: -14px; color: #F3DDB5; font-family: var(--font); font-size: 0.875rem; animation: cat-z 1.8s steps(4) infinite; }
+@keyframes cat-z { from { transform: translate(0, 6px); opacity: 0; } 50% { opacity: 1; } to { transform: translate(-6px, -10px); opacity: 0; } }
+.cat-heart { position: absolute; top: -4px; width: 10px; height: 9px; background: #D04A5A; clip-path: polygon(0 20%, 20% 0, 50% 20%, 80% 0, 100% 20%, 100% 50%, 50% 100%, 0 50%); animation: cat-heart 1.4s steps(7) both; pointer-events: none; }
+@keyframes cat-heart { from { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } to { transform: translateY(-36px); opacity: 0; } }
+
+/* A book the cat nudged leans crooked until it is pressed */
+.book.is-nudged .spine { transform: rotate(-4deg); transform-origin: bottom left; transition: transform 0.25s steps(3); }
+.book.is-straightened .spine { animation: book-wobble 0.4s steps(3); transform-origin: bottom center; }
+@keyframes book-wobble { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-3deg); } 65% { transform: rotate(2deg); } }
+
+/* Typing itsuka: the books hop one after another */
+.book.is-hopping .spine { animation: book-hop 0.5s steps(4) both var(--hop-delay, 0ms); }
+@keyframes book-hop { 0%, 100% { transform: translateY(0); } 40% { transform: translateY(-14px); } }
+
+/* Speech bubbles over the cat and the room */
+.say-bubble { position: fixed; z-index: 80; padding: 2px 6px; border: 2px solid #160E08; background: #FAF8F2; color: #2A1A10; font-family: var(--font); font-size: 0.75rem; white-space: nowrap; pointer-events: none; transform: translate(-50%, -100%); animation: say-up 1.6s steps(6) forwards; }
+@keyframes say-up { from { transform: translate(-50%, -100%); opacity: 0; } 15% { opacity: 1; } 75% { opacity: 1; } to { transform: translate(-50%, -160%); opacity: 0; } }
+.say-spot { position: fixed; width: 1px; height: 1px; }
+
+/* Things in the room that can be pressed: a hand and a little twinkle */
+body.over-room-spot { cursor: pointer; }
+.press-twinkle { position: fixed; z-index: 81; width: 12px; height: 12px; pointer-events: none; background: #FFF2B0; clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); animation: twinkle 0.9s steps(5) forwards; }
+@keyframes twinkle { 0% { transform: scale(0.2); opacity: 0; } 40% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(0.4); opacity: 0; } }
+
+/* Less movement when the device asks for it */
+@media (prefers-reduced-motion: reduce) {
+  .book.is-hopping .spine, .book.is-straightened .spine, .cat-heart, .say-bubble, .press-twinkle, .wander-cat.is-asleep::after { animation: none; }
+}

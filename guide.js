@@ -74,6 +74,10 @@ const NEWS = [
     { title: "Shelf ornaments", text: "Seven new ornaments have come to stay: a globe, an hourglass, a cactus, a jar of fireflies, a lantern, a teapot and an owl. Each shelf now gets its own, picked at random.", show: "" },
     { title: "Cabin windows", text: "The cabin's windows now look out over rolling hills, with fireflies out after dark.", show: "" },
   ] },
+  { number: 19, title: "The cat and the rooms", items: [
+    { title: "The cat", text: "In the cabin, café, attic, grand library and keeper's cottage, a cat sleeps somewhere in the room. Now and then it wanders along your shelves and nudges a book crooked: press the book to stand it straight. Press the cat once to pet it, twice to send it home. Switch off Wandering cat in Settings, under Shelves.", show: "settings shelves" },
+    { title: "Things to press", text: "Every background now has a few things that do something when you press them. Point at the room and look for the little twinkle, or watch for one now and then. Try typing cozy, too.", show: "" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -105,6 +109,8 @@ const GUIDE = [
     ["Dust", "A book you haven't opened in two months gathers dust. Opening it blows the dust off."],
     ["Date added", "The sticky note in a book's corner shows the day it was added. Switch off Date added in Settings, under Shelves, to hide the notes."],
     ["Day and night", "The background follows the time on your device, from morning light to a dark night. Switch off Day and night in Settings, under Background, to keep each background as it was painted. Like the background itself, it is chosen on each device."],
+    ["The cat", "In the indoor backgrounds, the cat now and then wanders along your shelves. Press it once to pet it, twice to send it home, and press a book it knocked crooked to stand it up. Wandering cat in Settings, under Shelves, keeps it asleep."],
+    ["Things to press", "Each background has a few things that do something when you press them, wherever the shelves leave them showing. A hand and a twinkle show them when you point, and now and then one twinkles by itself."],
     ["Weather", "The skies show the weather in Johannesburg, Pretoria or Cape Town, whichever you pick under Background in Settings: clouds, rain or a storm. It is checked every half hour, and Off keeps the skies clear."],
     ["Reading record", "On your library card. Every book you tick done is stamped with the day, with totals and the book that has waited longest. On a joint shelf a book goes on the record of whoever ticked it. A deleted book stays until you press Take off."],
   ] },
