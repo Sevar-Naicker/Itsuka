@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Itsuka has its own colours, so browsers are asked not to darken it in their dark mode -->
+<meta name="color-scheme" content="only light">
+<title>Page not found: Itsuka</title>
+<!-- Search engines are asked not to list this page -->
+<meta name="robots" content="noindex">
+<!-- GitHub Pages shows this page for any address it cannot find, so every file is linked from the top of the site -->
+<meta name="theme-color" content="#1F3A2E">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/icon-180.png">
+<link rel="manifest" href="/manifest.json">
+<!-- The pixel font is hosted with the site, fetching it early makes the lettering appear sooner -->
+<link rel="preload" href="/fonts/pixelify-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body class="lost-page">
+
+<!-- The librarian's desk in the colours of the chosen background, drawn by lost.js -->
+<canvas class="backdrop" id="backdrop" aria-hidden="true"></canvas>
+
+<!-- The top of the page: the title, which leads back to the landing page -->
+<header class="top">
+  <h1><a href="/">Itsuka</a></h1>
+</header>
+
+<!-- What happened and the way back, on the brass plate on the front of the desk -->
+<main class="lost">
+  <div class="lost-card">
+    <h2 class="lost-head">Page not found</h2>
+    <p class="lost-text">We looked on every shelf, but there's no page at this address.</p>
+    <nav class="lost-actions">
+      <a class="plain-button lost-main" href="/library.html">Back to the library</a>
+      <a class="plain-button lost-home" href="/">Home</a>
+    </nav>
+  </div>
+</main>
+
+<script src="/backgrounds.js"></script>
+<script src="/daylight.js"></script>
+<script src="/lost.js"></script>
+
+</body>
+</html>

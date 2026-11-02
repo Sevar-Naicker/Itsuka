@@ -1695,6 +1695,24 @@ body.over-room-spot { cursor: pointer; }
 .press-twinkle { position: fixed; z-index: 81; width: 12px; height: 12px; pointer-events: none; background: #FFF2B0; clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%); animation: twinkle 0.9s steps(5) forwards; }
 @keyframes twinkle { 0% { transform: scale(0.2); opacity: 0; } 40% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(0.4); opacity: 0; } }
 
+/* The page not found (404.html): the words sit on the brass plate lost.js draws on the front of the librarian's desk, and lost.js places and sizes them to fit it */
+.lost { position: fixed; left: 50%; top: 80%; z-index: 2; width: min(36rem, calc(100% - 32px)); transform: translate(-50%, -50%); transform-origin: 50% 50%; text-align: center; }
+.lost-card { position: relative; display: grid; justify-items: center; gap: 6px; }
+.lost-head { margin: 0; color: #2A1A10; font-size: 1.25rem; font-weight: 700; letter-spacing: 0.05em; text-shadow: 0 1px 0 rgba(255, 244, 210, 0.5); }   /* engraved: dark with a line of light under each letter */
+.lost-text { margin: 0; max-width: 34rem; color: #3A2812; font-size: 0.9375rem; line-height: 1.4; text-shadow: 0 1px 0 rgba(255, 244, 210, 0.35); }
+.lost-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 2px; }
+.lost-actions .plain-button { padding: 6px 14px; justify-content: center; text-align: center; }
+.lost-main { background: #3A2416; border-color: #3A2416; color: var(--gilt); box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3); }
+.lost-home { background: rgba(255, 244, 210, 0.12); border-color: #3A2416; color: #2A1A10; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.2); }
+@media (min-width: 561px) {   /* on a wider screen the plate is wide and short: the words on the left, the two buttons stacked on the right */
+  .lost-card { grid-template-columns: minmax(0, 1fr) auto; column-gap: 22px; row-gap: 4px; align-items: center; justify-items: start; text-align: left; }
+  .lost-head, .lost-text { grid-column: 1; }
+  .lost-actions { grid-column: 2; grid-row: 1 / span 2; flex-direction: column; align-items: stretch; gap: 8px; margin: 0; }
+}
+@media (max-width: 560px) {
+  .lost-head { font-size: 1.1875rem; }
+}
+
 /* Less movement when the device asks for it */
 @media (prefers-reduced-motion: reduce) {
   .book.is-hopping .spine, .book.is-straightened .spine, .cat-heart, .say-bubble, .press-twinkle, .wander-cat.is-asleep::after { animation: none; }

@@ -8,9 +8,9 @@ const FILES_COPY = "itsuka-files-1";
 const SUPABASE_LIBRARY = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3";
 // FILES holds what is copied straight away, everything else the site loads is copied the first time it is used
 const FILES = [
-  "./", "index.html", "library.html", "privacy.html", "styles.css", "manifest.json",
+  "./", "index.html", "library.html", "privacy.html", "404.html", "styles.css", "manifest.json",
   "backgrounds.js", "daylight.js", "weather.js", "config.js", "auth.js", "pictures.js", "shelves.js", "member.js", "library.js",
-  "joint.js", "live.js", "letters.js", "offline.js", "record.js", "comeback.js", "pages.js", "extras.js", "install.js", "guide.js", "index.js",
+  "joint.js", "live.js", "letters.js", "offline.js", "record.js", "comeback.js", "pages.js", "extras.js", "install.js", "guide.js", "index.js", "lost.js",
   "fonts/pixelify-sans-latin.woff2", "icons/icon-192.png", "icons/icon-32.png", SUPABASE_LIBRARY,
 ];
 
