@@ -11,7 +11,7 @@ const FILES = [
   "./", "index.html", "library.html", "privacy.html", "404.html", "styles.css", "manifest.json",
   "backgrounds.js", "daylight.js", "weather.js", "config.js", "auth.js", "pictures.js", "shelves.js", "member.js", "library.js",
   "joint.js", "live.js", "letters.js", "offline.js", "record.js", "comeback.js", "pages.js", "extras.js", "install.js", "guide.js", "index.js", "lost.js",
-  "fonts/pixelify-sans-latin.woff2", "icons/icon-192.png", "icons/icon-32.png", SUPABASE_LIBRARY,
+  "fonts/pixelify-sans-latin.woff2", "fonts/itsuka-writing.woff2", "icons/icon-192.png", "icons/icon-32.png", SUPABASE_LIBRARY,
 ];
 
 // Section: Keeping the copy

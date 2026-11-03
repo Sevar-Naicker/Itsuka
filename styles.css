@@ -1,6 +1,6 @@
 /* This file contains how everything looks, it is linked from index.html, library.html, login.html and shelf.html */
 
-/* Pixel font, hosted with the site */
+/* Pixel fonts, hosted with the site: Pixelify Sans, and Itsuka Writing (the handwriting, loaded three times at three sizes, used by the Lettering choice) */
 @font-face {
   font-family: "Pixelify Sans";
   font-style: normal;
@@ -25,6 +25,9 @@
   src: url("fonts/pixelify-sans-cyrillic.woff2") format("woff2");
   unicode-range: U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;
 }
+@font-face { font-family: "Itsuka Writing"; font-weight: 100 900; font-display: swap; size-adjust: 130%; src: url("fonts/itsuka-writing.woff2") format("woff2"); }        /* names and headings, the weight range keeps the browser from smudging it bold */
+@font-face { font-family: "Itsuka Writing Notes"; font-weight: 100 900; font-display: swap; size-adjust: 120%; src: url("fonts/itsuka-writing.woff2") format("woff2"); }  /* notes and longer words */
+@font-face { font-family: "Itsuka Writing Small"; font-weight: 100 900; font-display: swap; size-adjust: 115%; src: url("fonts/itsuka-writing.woff2") format("woff2"); }  /* the tight spots: spines, buttons, plaques and tabs */
 
 /* Variables */
 :root {
@@ -59,8 +62,18 @@ body {
   background: var(--wall);
   color: var(--paper);
   font-family: var(--font);
+  font-weight: 500;   /* Pixelify a step heavier than its lightest, so it is not flat */
   font-variant-ligatures: none;
 }
+
+/* Lettering: the plaques, spine names, headings and buttons heavier again (with handwriting the font has one weight, so this changes nothing) */
+:root :is(.plaque, .spine span, h1, h2, h3, .plain-button, .brass-button, .card-button, .tab) { font-weight: 700; }
+/* Handwriting everywhere: the small size for the whole site, the parts below take the bigger sizes */
+html[data-lettering="all"] { --font: "Itsuka Writing Small", "Pixelify Sans", "Courier New", monospace; }
+/* Handwritten notes and everywhere: names and headings at the biggest size, notes a touch smaller, spine names smaller again */
+html[data-lettering="notes"] :is(.page h3, .journal-card .catalogue-head h2, .journal-page h2, .guide-group, .settings-title), html[data-lettering="all"] :is(.page h3, .journal-card .catalogue-head h2, .journal-page h2, .guide-group, .settings-title) { font-family: "Itsuka Writing", "Pixelify Sans", monospace; }
+html[data-lettering="notes"] :is(.page p, .page li, .page a, .card-notes textarea, .journal-card .card-body p, .journal-card li, .guide-line, .news-words, .setting-words, .settings-help, .letter-page p, .tour-note, .undo-note, .live-note, .added-note, .journal-card .card-line > span, .journal-card .card-notes span), html[data-lettering="all"] :is(.page p, .page li, .page a, .card-notes textarea, .journal-card .card-body p, .journal-card li, .guide-line, .news-words, .setting-words, .settings-help, .letter-page p, .tour-note, .undo-note, .live-note, .added-note, .journal-card .card-line > span, .journal-card .card-notes span) { font-family: "Itsuka Writing Notes", "Pixelify Sans", monospace; }
+html[data-lettering="notes"] .spine span, html[data-lettering="all"] .spine span { font-family: "Itsuka Writing Small", "Pixelify Sans", monospace; }
 
 /* Background canvas */
 .backdrop {
@@ -1079,8 +1092,8 @@ a.card-button { display: block; box-sizing: border-box; text-align: center; text
 .guide-body { max-height: min(52vh, 30rem); margin: 0 -4px 4px; padding: 0 4px; overflow-y: auto; }
 .guide-group { margin: 14px 0 6px; padding-bottom: 4px; border-bottom: 2px solid #D9D3C2; font-size: 1rem; font-weight: 700; }
 .guide-group:first-child { margin-top: 0; }
-.guide-line { margin: 0 0 8px; font-size: 0.9375rem; line-height: 1.4; color: var(--faded); }
-.guide-line b { color: var(--ink); }
+.guide-line { margin: 0 0 12px; font-size: 0.9375rem; line-height: 1.4; color: var(--faded); }
+.guide-line b { display: block; margin-bottom: 2px; color: var(--ink); }   /* the name of each thing on its own line, what it does under it */
 
 /* What's new card */
 .news-list { max-height: min(56vh, 32rem); margin: 0 -4px 4px; padding: 0 4px; overflow-y: auto; list-style: none; }

@@ -78,6 +78,9 @@ const NEWS = [
     { title: "The cat", text: "In the cabin, café, attic, grand library and keeper's cottage, a cat sleeps somewhere in the room. Now and then it wanders along your shelves and nudges a book crooked: press the book to stand it straight. Press the cat once to pet it, twice to send it home. Switch off Wandering cat in Settings, under Shelves.", show: "settings shelves" },
     { title: "Things to press", text: "Every background now has a few things that do something when you press them. Point at the room and look for the little twinkle, or watch for one now and then. Try typing cozy, too.", show: "" },
   ] },
+  { number: 20, title: "Lettering", items: [
+    { title: "Lettering", text: "The pixel letters are a little bolder now. You can also switch to handwriting: Handwritten notes puts it on the book names, the words inside your books and the journal pages, and Handwritten everywhere puts it on the whole library. Pick it in Settings, under Background.", show: "settings background" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -112,6 +115,7 @@ const GUIDE = [
     ["The cat", "In the indoor backgrounds, the cat now and then wanders along your shelves. Press it once to pet it, twice to send it home, and press a book it knocked crooked to stand it up. Wandering cat in Settings, under Shelves, keeps it asleep."],
     ["Things to press", "Each background has a few things that do something when you press them, wherever the shelves leave them showing. A hand and a twinkle show them when you point, and now and then one twinkles by itself."],
     ["Weather", "The skies show the weather in Johannesburg, Pretoria or Cape Town, whichever you pick under Background in Settings: clouds, rain or a storm. It is checked every half hour, and Off keeps the skies clear."],
+    ["Lettering", "Pick how the words look under Background in Settings: Pixel, Handwritten notes (handwriting on the book names, the words inside books and the journal pages) or Handwritten everywhere. Like the background, it is chosen on each device."],
     ["Reading record", "On your library card. Every book you tick done is stamped with the day, with totals and the book that has waited longest. On a joint shelf a book goes on the record of whoever ticked it. A deleted book stays until you press Take off."],
   ] },
   { group: "Sharing", lines: [

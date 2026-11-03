@@ -1156,6 +1156,32 @@ let MotionOn = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 if (Recall("library-motion") !== null) MotionOn = Recall("library-motion") === "on";
 if (MotionSwitch) MotionSwitch.checked = MotionOn;
 
+
+// Section: Lettering
+
+// LETTERING_KEY is where this device keeps the lettering chosen: pixel (to start with), notes for handwritten notes, or all for handwriting everywhere
+const LETTERING_KEY = "library-lettering";
+
+// The ShowLettering function puts the lettering on the page, styles.css does the rest from the html tag's data-lettering
+function ShowLettering(Choice)
+{
+  document.documentElement.dataset.lettering = ["notes", "all"].includes(Choice) ? Choice : "pixel";
+}
+
+ShowLettering(Recall(LETTERING_KEY));
+
+// The Lettering choice on the Background page of Settings, only on the library page
+const LetteringChoice = document.getElementById("letteringChoice");
+if (LetteringChoice)
+{
+  LetteringChoice.value = document.documentElement.dataset.lettering;
+  LetteringChoice.addEventListener("change", () =>
+  {
+    ShowLettering(LetteringChoice.value);
+    Remember(LETTERING_KEY, LetteringChoice.value);
+  });
+}
+
 // The DrawFrame function paints one frame of the current scene
 function DrawFrame(Seconds)
 {

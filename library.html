@@ -120,10 +120,10 @@
 
     <div class="journal-page" id="journalPage">
 
-      <!-- Background page: moving or still, Shuffle and the pictures -->
+      <!-- Background page: moving or still, the lettering, Shuffle and the pictures -->
       <section class="journal-section" id="pageBackground" role="tabpanel" aria-labelledby="tabBackground" data-page="background">
         <h3 class="settings-title">Background on this device</h3>
-        <!-- Moving or still, day and night, and the weather from a city, all kept on this device -->
+        <!-- Moving or still, day and night, the weather from a city and the lettering, all kept on this device -->
         <div class="background-choices">
           <label class="motion-switch">
             <input type="checkbox" id="motionSwitch"> Moving backgrounds
@@ -138,6 +138,14 @@
               <option value="pretoria">Pretoria</option>
               <option value="capetown">Cape Town</option>
               <option value="off">Off</option>
+            </select>
+          </label>
+          <label class="weather-choice">
+            <span>Lettering</span>
+            <select id="letteringChoice">
+              <option value="pixel">Pixel</option>
+              <option value="notes">Handwritten notes</option>
+              <option value="all">Handwritten everywhere</option>
             </select>
           </label>
         </div>
