@@ -777,6 +777,11 @@ revoke execute on function public.note_visit() from anon;
 revoke execute on function public.ledger() from anon;
 revoke execute on function public.shelf_has_others(uuid) from anon, authenticated;
 
+-- Ensuring the trigger functions can only be run by their triggers, never called by a visitor or a member (the database runs them itself whenever a book or shelf changes):
+revoke execute on function public.book_owner() from public, anon, authenticated;
+revoke execute on function public.book_change_check() from public, anon, authenticated;
+revoke execute on function public.send_shelf_change() from public, anon, authenticated;
+
 -- Ensuring the Ledger's tables can only be reached through the Ledger's own functions, never read or changed from a browser:
 revoke all on public.site_admins, public.last_visits, public.daily_visits, public.ledger_snapshots from anon, authenticated;
 
