@@ -1759,17 +1759,31 @@ body.align-centre .sections { justify-content: center; }
     linear-gradient(var(--shelf), var(--shelf)) 0 var(--dot) / 100% calc(var(--dot) * 3) no-repeat,
     linear-gradient(var(--case-darker), var(--case-darker)) 0 calc(var(--dot) * 4) / 100% var(--dot) no-repeat; }
 .case .section { display: flex; flex-direction: column; align-items: stretch; }
-.case .plaque { align-self: center; margin-bottom: calc(var(--dot) * 2); }
 .case .shelf { width: 100%; box-sizing: border-box; min-width: 0; padding: 0 calc(var(--dot) * 2); }
 
 /* The bookcase wall: the bays sit side by side in one case sharing an upright, every bay in a row as tall as the tallest, and on a phone one bay above another */
 body.measuring-bays .sections { column-gap: calc(var(--dot) * 4); padding: 0 calc(var(--dot) * 6); }
 body.layout-bookcase .sections { row-gap: calc(var(--dot) * 4); }
 .case.bays { flex-direction: row; align-items: stretch; }
-.case.bays .section { margin-top: 0; padding: calc(var(--dot) * 3) 0 var(--dot); }
+.case.bays .section { margin-top: 0; padding: 0 0 var(--dot); }
 .case.bays .section + .section { padding-left: calc(var(--dot) * 4); box-shadow: inset var(--dot) 0 0 var(--edge), inset calc(var(--dot) * 3) 0 0 var(--shelf), inset calc(var(--dot) * 4) 0 0 var(--case-dark); }
 .case.bays.stacked { flex-direction: column; }
-.case.bays.stacked .section + .section { padding-left: 0; padding-top: calc(var(--dot) * 7); box-shadow: inset 0 var(--dot) 0 var(--edge), inset 0 calc(var(--dot) * 3) 0 var(--shelf), inset 0 calc(var(--dot) * 4) 0 var(--case-dark); }
+.case.bays.stacked .section + .section { padding-left: 0; padding-top: calc(var(--dot) * 4); box-shadow: inset 0 var(--dot) 0 var(--edge), inset 0 calc(var(--dot) * 3) 0 var(--shelf), inset 0 calc(var(--dot) * 4) 0 var(--case-dark); }
+
+/* The bookcase's plaques: each one hangs from the top of its bay on two little brass chains, behind the glass, with room either side so a narrow bay never squashes it, and it swings a little when the door opens */
+.hanging-sign { position: relative; align-self: center; flex: none; margin: 0 calc(var(--dot) * 4) calc(var(--dot) * 2); padding-top: calc(var(--dot) * 5); transform-origin: 50% 0; }
+.hanging-sign::before { content: ""; position: absolute; top: 0; left: 16px; right: 16px; height: calc(var(--dot) * 5);
+  background:
+    linear-gradient(var(--case-darker), var(--case-darker)) 0 0 / calc(var(--dot) * 2) var(--dot) no-repeat,
+    linear-gradient(var(--case-darker), var(--case-darker)) 100% 0 / calc(var(--dot) * 2) var(--dot) no-repeat,
+    repeating-linear-gradient(to bottom, var(--fitting) 0 var(--dot), var(--fitting-lo) var(--dot) calc(var(--dot) * 2)) 0 var(--dot) / var(--dot) 100% no-repeat,
+    repeating-linear-gradient(to bottom, var(--fitting) 0 var(--dot), var(--fitting-lo) var(--dot) calc(var(--dot) * 2)) 100% var(--dot) / var(--dot) 100% no-repeat; }
+.hanging-sign .plaque { display: block; margin: 0; white-space: nowrap; padding: 6px 14px; font-size: 0.875rem; filter: drop-shadow(var(--dot) var(--dot) 0 rgba(0, 0, 0, 0.35)); }
+.section.door-open .hanging-sign, .section:has(.book.is-open) .hanging-sign { animation: sign-swing 1.4s steps(14, end); }
+@keyframes sign-swing { 0% { transform: rotate(0); } 20% { transform: rotate(3deg); } 45% { transform: rotate(-2deg); } 70% { transform: rotate(1deg); } 100% { transform: rotate(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .hanging-sign { animation: none !important; }
+}
 
 /* Wall shelves: each shelf floats on the wall on two pixel brackets, with a shadow under the board */
 body.layout-floating .sections { column-gap: calc(var(--dot) * 10); }
@@ -1780,11 +1794,34 @@ body.layout-floating .shelf::after { right: 12%; transform: scaleX(-1); }
 
 /* Cubbies: each shelf in its own open-backed cubby, only as many as there are shelves, fitted together side by side */
 body.layout-cubbies .sections { column-gap: 0; margin-top: calc(var(--dot) * 5); }
-body.layout-cubbies .section { display: flex; flex-direction: column; align-items: stretch; min-width: 260px; margin: 0; padding: calc(var(--dot) * 4) calc(var(--dot) * 4) var(--dot); background: rgba(20, 12, 8, 0.12); box-shadow: inset 0 0 0 var(--dot) var(--edge), inset 0 0 0 calc(var(--dot) * 2) var(--shelf), inset 0 0 0 calc(var(--dot) * 3) var(--case-darker), var(--dot) var(--dot) 0 rgba(0, 0, 0, 0.3); }
-body.layout-cubbies .plaque { align-self: center; padding: 6px 12px; font-size: 0.875rem; }
+body.layout-cubbies .section { display: flex; flex-direction: column; align-items: stretch; min-width: 260px; margin: 0; padding: calc(var(--dot) * 4) calc(var(--dot) * 5) var(--dot); background: rgba(20, 12, 8, 0.12); box-shadow: inset 0 0 0 var(--dot) var(--edge), inset 0 0 0 calc(var(--dot) * 2) var(--shelf), inset 0 0 0 calc(var(--dot) * 3) var(--case-darker), var(--dot) var(--dot) 0 rgba(0, 0, 0, 0.3); }
+/* The cubbies' labels: a pale index card behind a little holder in the plaque colour, screwed to the top of the cubby in front of the glass, lit from the top (a bright lip above, a shadowed lip below), with a faint ruled line on the card and a gleam across it now and then */
+body.layout-cubbies .section .plaque {
+  --holder: var(--brass); --holder-hi: color-mix(in srgb, var(--brass), white 45%); --holder-lo: color-mix(in srgb, var(--brass), black 30%); --holder-dark: color-mix(in srgb, var(--brass), black 62%); --card: color-mix(in srgb, var(--brass), white 84%); --rule: color-mix(in srgb, var(--card), #C0574A 30%);
+  position: relative; z-index: 4; align-self: center; margin: calc(var(--dot) * -3) 0 calc(var(--dot) * 2); padding: calc(var(--dot) * 2 + 5px) calc(var(--dot) * 5 + 10px) calc(var(--dot) * 2 + 4px); color: color-mix(in srgb, var(--shelf), black 30%); font-size: 0.8125rem; line-height: 1.1; white-space: nowrap; clip-path: none;
+  background:
+    linear-gradient(var(--holder-dark), var(--holder-dark)) calc(var(--dot) * 2) 50% / calc(var(--dot) * 2) calc(var(--dot) * 2) no-repeat,
+    linear-gradient(var(--holder-dark), var(--holder-dark)) calc(100% - var(--dot) * 2) 50% / calc(var(--dot) * 2) calc(var(--dot) * 2) no-repeat,
+    linear-gradient(var(--rule), var(--rule)) 50% calc(100% - var(--dot) * 2 - 3px) / calc(100% - var(--dot) * 12) 1px no-repeat,
+    linear-gradient(rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.16)) calc(var(--dot) * 5) calc(var(--dot) * 2) / calc(100% - var(--dot) * 10) var(--dot) no-repeat,
+    linear-gradient(rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)) calc(var(--dot) * 5) calc(var(--dot) * 2) / var(--dot) calc(100% - var(--dot) * 4) no-repeat,
+    linear-gradient(var(--card), var(--card)) calc(var(--dot) * 5) calc(var(--dot) * 2) / calc(100% - var(--dot) * 10) calc(100% - var(--dot) * 4) no-repeat,
+    linear-gradient(var(--holder-hi), var(--holder-hi)) 0 var(--dot) / 100% var(--dot) no-repeat,
+    linear-gradient(var(--holder-lo), var(--holder-lo)) 0 calc(100% - var(--dot)) / 100% var(--dot) no-repeat,
+    var(--holder);
+  box-shadow: inset 0 0 0 var(--dot) var(--holder-dark), var(--dot) var(--dot) 0 rgba(0, 0, 0, 0.45); }
+body.layout-cubbies .section .plaque::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, 0.5) 40% 45%, transparent 45% 50%, rgba(255, 255, 255, 0.25) 50% 53%, transparent 53%) 100% 0 / 300% 100% no-repeat; animation: holder-gleam 11s steps(1, end) infinite; }
+body.layout-cubbies .section:nth-child(3n + 2) .plaque::before { animation-delay: -4s; }
+body.layout-cubbies .section:nth-child(3n) .plaque::before { animation-delay: -7.5s; }
+@keyframes holder-gleam { 0%, 88% { background-position: 100% 0; } 90% { background-position: 75% 0; } 92% { background-position: 50% 0; } 94% { background-position: 25% 0; } 96%, 100% { background-position: 0 0; } }
+body.layout-cubbies .section .plaque.is-joint { padding-right: calc(var(--dot) * 5 + 34px); }
+body.layout-cubbies .section .plaque.is-joint::after { top: calc(var(--dot) * 2); right: calc(var(--dot) * 5 + 4px); height: calc(100% - var(--dot) * 4); padding-top: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  body.layout-cubbies .section .plaque::before { animation: none; }
+}
 body.layout-cubbies .shelf { width: 100%; box-sizing: border-box; }
 
-/* Glass doors: a glass door on each bay and each cubby, framed in the shelves' wood, with a shine across it and a brass knob on the right */
+/* Glass doors: a glass door on each bay and each cubby, framed in the shelves' wood, with a shine across it and a brass knob on the right (the bookcase's signs hang inside, the cubbies' labels sit on the front) */
 body { --glass-edge: rgba(236, 250, 255, 0.8); --glass-tint: rgba(196, 232, 242, 0.08); --glint: rgba(255, 255, 255, 0.16); --fitting: #C9A14A; --fitting-lo: #7A5E24; }
 body.glass-doors .case.bays .section, body.glass-doors.layout-cubbies .section { position: relative; }
 body.glass-doors .case.bays .section::after, body.glass-doors.layout-cubbies .section::after { content: ""; display: block; position: absolute; z-index: 3; pointer-events: none; transform-origin: left center; transition: transform 0.32s steps(4, end);
@@ -1796,7 +1833,7 @@ body.glass-doors .case.bays .section::after, body.glass-doors.layout-cubbies .se
   box-shadow: inset 0 0 0 var(--dot) var(--shelf), inset 0 0 0 calc(var(--dot) * 2) var(--case-dark), inset calc(var(--dot) * 3) calc(var(--dot) * 3) 0 calc(var(--dot) * -2) var(--glass-edge); }
 body.glass-doors .case.bays .section::after { inset: calc(var(--dot) * 2) 0 0 0; }
 body.glass-doors .case.bays .section + .section::after { left: calc(var(--dot) * 4); }
-body.glass-doors .case.bays.stacked .section + .section::after { left: 0; top: calc(var(--dot) * 6); }
+body.glass-doors .case.bays.stacked .section + .section::after { left: 0; top: calc(var(--dot) * 4); }
 body.glass-doors.layout-cubbies .section::after { inset: calc(var(--dot) * 3); }
 /* A door swings back on its hinge to a thin edge while the cat is inside or one of its books is open or picked up */
 body.glass-doors .section.door-open::after, body.glass-doors .section:has(.book.is-open, .book.is-lifted)::after { transform: scaleX(0.14); }

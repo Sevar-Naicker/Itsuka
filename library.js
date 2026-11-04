@@ -771,12 +771,20 @@ GlassSwitch.addEventListener("change", () => ChangeShelfLook("glass", GlassSwitc
 LoadShelfLook();
 ShowShelfLook();
 
-// The StandInCase function stands the shelves in a bookcase wall for the Bookcase look: the shelves are bays side by side sharing their uprights, with a crown and plinth along each row and a new row when the screen is full, and on a phone one bay above another
+// The StandInCase function stands the shelves in a bookcase wall for the Bookcase look: the shelves are bays side by side sharing their uprights, with a crown and plinth along each row and a new row when the screen is full, and on a phone one bay above another, each bay's plaque hanging from a little sign
 function StandInCase()
 {
   if (ShelfLook.style !== "bookcase") return;
   const Blocks = [...LibraryRoot.querySelectorAll(":scope > .section")];
   if (!Blocks.length) return;
+  Blocks.forEach((Block) =>
+  {
+    const Plaque = Block.querySelector(":scope > .plaque");
+    if (!Plaque) return;
+    const Sign = Make("div", "hanging-sign");
+    Block.prepend(Sign);
+    Sign.append(Plaque);
+  });
   const Rows = PhoneWidth.matches ? [Blocks] : RowsOf(Blocks);
   Rows.forEach((Row) =>
   {

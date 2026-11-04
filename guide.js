@@ -87,6 +87,9 @@ const NEWS = [
     { title: "Name your library", text: "Your library's name goes on a little sign under Itsuka. In Settings, under Library.", show: "settings library" },
     { title: "Brightness and bigger text", text: "Dim the background, or make all the words a size bigger. In Settings, under Background.", show: "settings background" },
   ] },
+  { number: 22, title: "Signs and labels", items: [
+    { title: "Signs and labels", text: "In the bookcase, each shelf's name now hangs on a little sign inside its bay, and it swings when the door opens. The cubbies have a card in a little holder on the front instead. They both take their colours from your background.", show: "settings shelves" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -107,7 +110,7 @@ const GUIDE = [
     ["Books due", "Give a book a Come back on day on its card, or press Remind me to come back inside it. On the day, the Books due slip lists it. Later picks a new day, Clear forgets it. Your days are only yours, even on a joint shelf."],
   ] },
   { group: "Arranging", lines: [
-    ["How the shelves look", "Under Shelves in Settings: Plain, Wall shelves, Cubbies or Bookcase (a bookcase wall, with a new row when the screen is full), lined up on the left or centred, with Cosy or Compact books. The bookcase and cubbies can have glass doors, which swing open when you open a book. It is chosen on each device, so a phone and a laptop can each have their own."],
+    ["How the shelves look", "Under Shelves in Settings: Plain, Wall shelves, Cubbies or Bookcase (a bookcase wall, with a new row when the screen is full), lined up on the left or centred, with Cosy or Compact books. In the bookcase each shelf's name hangs on a little sign, and the cubbies have a card in a holder on the front. The bookcase and cubbies can have glass doors, which swing open when you open a book. It is chosen on each device, so a phone and a laptop can each have their own."],
     ["Move a book", "Drag a book by its spine. On a phone, rest your finger on the spine until it lifts, then drag."],
     ["Pages", "Press Edit on a book, then + Add a page, for up to 8 pages with their own link, notes and picture. Turn them with the arrows under the open book or swipe on a phone, and press the page number to go back to page 1. Drag the slips on the card to change their order. A page can become its own book or move into another."],
     ["Pages between books", "Open a book on a later page and drag the page onto another book (on a phone, rest your finger on it first). Hold a whole book over the middle of another's spine to put it inside. Undo puts either back."],

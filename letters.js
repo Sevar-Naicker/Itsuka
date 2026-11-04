@@ -65,7 +65,7 @@ function PlaceLetters()
     const Label = "A letter about what changed on " + Section.name + " while you were away";
 
     // On the shelf's own plaque the letter is a button of its own
-    const ShelfPlaque = LibraryRoot.querySelector('.section[data-section="' + Section.id + '"] > .plaque');
+    const ShelfPlaque = LibraryRoot.querySelector('.section[data-section="' + Section.id + '"] .plaque');      // the plaque may hang from a sign in the bookcase
     if (ShelfPlaque)
     {
       const Letter = Make("button", "shelf-letter");
