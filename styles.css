@@ -1730,3 +1730,103 @@ body.over-room-spot { cursor: pointer; }
 @media (prefers-reduced-motion: reduce) {
   .book.is-hopping .spine, .book.is-straightened .spine, .cat-heart, .say-bubble, .press-twinkle, .wander-cat.is-asleep::after { animation: none; }
 }
+
+/* How the shelves look (Settings, Shelves page): plain, wall shelves, cubbies or a bookcase wall, all in the background's own wood, lined up left or centred (always centred on a phone) */
+body { --case-back: color-mix(in srgb, var(--shelf), black 22%); --case-dark: color-mix(in srgb, var(--shelf), black 42%); --case-darker: color-mix(in srgb, var(--shelf), black 58%); }
+body.align-centre .sections { justify-content: center; }
+@media (max-width: 640px) {
+  .sections { justify-content: center; }
+}
+
+/* The bookcase: an open-backed case (the room shows through) with bevelled side posts, a three-step crown on top and a plinth at the foot */
+.case { position: relative; display: flex; flex-direction: column; align-items: stretch; width: fit-content; max-width: 100%; box-sizing: border-box; margin: calc(var(--dot) * 9) 0 calc(var(--dot) * 7); padding: calc(var(--dot) * 2) calc(var(--dot) * 6);
+  background:
+    linear-gradient(to right, var(--edge) 0 var(--dot), var(--shelf) var(--dot) calc(var(--dot) * 3), var(--case-dark) calc(var(--dot) * 3) calc(var(--dot) * 4), transparent calc(var(--dot) * 4) calc(100% - var(--dot) * 4), var(--edge) calc(100% - var(--dot) * 4) calc(100% - var(--dot) * 3), var(--shelf) calc(100% - var(--dot) * 3) calc(100% - var(--dot)), var(--case-dark) calc(100% - var(--dot)) 100%),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.22) 0 calc(var(--dot) * 3), transparent calc(var(--dot) * 3)),
+    rgba(20, 12, 8, 0.12); }
+.case::before { content: ""; position: absolute; left: calc(var(--dot) * -3); right: calc(var(--dot) * -3); top: calc(var(--dot) * -7); height: calc(var(--dot) * 7);
+  background:
+    linear-gradient(var(--edge), var(--edge)) 0 0 / 100% var(--dot) no-repeat,
+    linear-gradient(var(--shelf), var(--shelf)) 0 var(--dot) / 100% calc(var(--dot) * 2) no-repeat,
+    linear-gradient(var(--case-dark), var(--case-dark)) 0 calc(var(--dot) * 3) / 100% var(--dot) no-repeat,
+    linear-gradient(var(--edge), var(--edge)) var(--dot) calc(var(--dot) * 4) / calc(100% - var(--dot) * 2) var(--dot) no-repeat,
+    linear-gradient(var(--shelf), var(--shelf)) var(--dot) calc(var(--dot) * 5) / calc(100% - var(--dot) * 2) var(--dot) no-repeat,
+    linear-gradient(var(--case-darker), var(--case-darker)) calc(var(--dot) * 2) calc(var(--dot) * 6) / calc(100% - var(--dot) * 4) var(--dot) no-repeat;
+  filter: drop-shadow(calc(var(--dot) * 2) calc(var(--dot) * 2) 0 rgba(0, 0, 0, 0.35)); }
+.case::after { content: ""; position: absolute; left: calc(var(--dot) * -1); right: calc(var(--dot) * -1); bottom: calc(var(--dot) * -5); height: calc(var(--dot) * 5);
+  background:
+    linear-gradient(var(--edge), var(--edge)) 0 0 / 100% var(--dot) no-repeat,
+    linear-gradient(var(--shelf), var(--shelf)) 0 var(--dot) / 100% calc(var(--dot) * 3) no-repeat,
+    linear-gradient(var(--case-darker), var(--case-darker)) 0 calc(var(--dot) * 4) / 100% var(--dot) no-repeat; }
+.case .section { display: flex; flex-direction: column; align-items: stretch; }
+.case .plaque { align-self: center; margin-bottom: calc(var(--dot) * 2); }
+.case .shelf { width: 100%; box-sizing: border-box; min-width: 0; padding: 0 calc(var(--dot) * 2); }
+
+/* The bookcase wall: the bays sit side by side in one case sharing an upright, every bay in a row as tall as the tallest, and on a phone one bay above another */
+body.measuring-bays .sections { column-gap: calc(var(--dot) * 4); padding: 0 calc(var(--dot) * 6); }
+body.layout-bookcase .sections { row-gap: calc(var(--dot) * 4); }
+.case.bays { flex-direction: row; align-items: stretch; }
+.case.bays .section { margin-top: 0; padding: calc(var(--dot) * 3) 0 var(--dot); }
+.case.bays .section + .section { padding-left: calc(var(--dot) * 4); box-shadow: inset var(--dot) 0 0 var(--edge), inset calc(var(--dot) * 3) 0 0 var(--shelf), inset calc(var(--dot) * 4) 0 0 var(--case-dark); }
+.case.bays.stacked { flex-direction: column; }
+.case.bays.stacked .section + .section { padding-left: 0; padding-top: calc(var(--dot) * 7); box-shadow: inset 0 var(--dot) 0 var(--edge), inset 0 calc(var(--dot) * 3) 0 var(--shelf), inset 0 calc(var(--dot) * 4) 0 var(--case-dark); }
+
+/* Wall shelves: each shelf floats on the wall on two pixel brackets, with a shadow under the board */
+body.layout-floating .sections { column-gap: calc(var(--dot) * 10); }
+body.layout-floating .shelf { position: relative; margin-bottom: calc(var(--dot) * 6); filter: drop-shadow(0 var(--dot) 0 rgba(0, 0, 0, 0.35)); }
+body.layout-floating .shelf::before, body.layout-floating .shelf::after { content: ""; position: absolute; bottom: calc(var(--dot) * -5); width: calc(var(--dot) * 5); height: calc(var(--dot) * 5); background: var(--case-dark); clip-path: polygon(0 0, 100% 0, 100% 20%, 80% 20%, 80% 40%, 60% 40%, 60% 60%, 40% 60%, 40% 80%, 20% 80%, 20% 100%, 0 100%); }
+body.layout-floating .shelf::before { left: 12%; }
+body.layout-floating .shelf::after { right: 12%; transform: scaleX(-1); }
+
+/* Cubbies: each shelf in its own open-backed cubby, only as many as there are shelves, fitted together side by side */
+body.layout-cubbies .sections { column-gap: 0; margin-top: calc(var(--dot) * 5); }
+body.layout-cubbies .section { display: flex; flex-direction: column; align-items: stretch; min-width: 260px; margin: 0; padding: calc(var(--dot) * 4) calc(var(--dot) * 4) var(--dot); background: rgba(20, 12, 8, 0.12); box-shadow: inset 0 0 0 var(--dot) var(--edge), inset 0 0 0 calc(var(--dot) * 2) var(--shelf), inset 0 0 0 calc(var(--dot) * 3) var(--case-darker), var(--dot) var(--dot) 0 rgba(0, 0, 0, 0.3); }
+body.layout-cubbies .plaque { align-self: center; padding: 6px 12px; font-size: 0.875rem; }
+body.layout-cubbies .shelf { width: 100%; box-sizing: border-box; }
+
+/* Glass doors: a glass door on each bay and each cubby, framed in the shelves' wood, with a shine across it and a brass knob on the right */
+body { --glass-edge: rgba(236, 250, 255, 0.8); --glass-tint: rgba(196, 232, 242, 0.08); --glint: rgba(255, 255, 255, 0.16); --fitting: #C9A14A; --fitting-lo: #7A5E24; }
+body.glass-doors .case.bays .section, body.glass-doors.layout-cubbies .section { position: relative; }
+body.glass-doors .case.bays .section::after, body.glass-doors.layout-cubbies .section::after { content: ""; display: block; position: absolute; z-index: 3; pointer-events: none; transform-origin: left center; transition: transform 0.32s steps(4, end);
+  background:
+    linear-gradient(var(--fitting), var(--fitting)) calc(100% - var(--dot) * 3) 50% / var(--dot) calc(var(--dot) * 3) no-repeat,
+    linear-gradient(var(--fitting-lo), var(--fitting-lo)) calc(100% - var(--dot) * 2) 50% / var(--dot) calc(var(--dot) * 3) no-repeat,
+    linear-gradient(115deg, transparent 14%, var(--glint) 14% 17%, transparent 17% 21%, rgba(255, 255, 255, 0.08) 21% 22.5%, transparent 22.5% 60%, rgba(255, 255, 255, 0.1) 60% 62%, transparent 62%),
+    var(--glass-tint);
+  box-shadow: inset 0 0 0 var(--dot) var(--shelf), inset 0 0 0 calc(var(--dot) * 2) var(--case-dark), inset calc(var(--dot) * 3) calc(var(--dot) * 3) 0 calc(var(--dot) * -2) var(--glass-edge); }
+body.glass-doors .case.bays .section::after { inset: calc(var(--dot) * 2) 0 0 0; }
+body.glass-doors .case.bays .section + .section::after { left: calc(var(--dot) * 4); }
+body.glass-doors .case.bays.stacked .section + .section::after { left: 0; top: calc(var(--dot) * 6); }
+body.glass-doors.layout-cubbies .section::after { inset: calc(var(--dot) * 3); }
+/* A door swings back on its hinge to a thin edge while the cat is inside or one of its books is open or picked up */
+body.glass-doors .section.door-open::after, body.glass-doors .section:has(.book.is-open, .book.is-lifted)::after { transform: scaleX(0.14); }
+@media (prefers-reduced-motion: reduce) {
+  body.glass-doors .section::after { transition: none; }
+}
+
+/* Compact books: slimmer, shorter spines on lower shelves */
+body.size-compact { --row: 158px; }
+body.size-compact #library .spine { width: calc(var(--w) * 0.78); height: calc(var(--h) * 0.74); font-size: 0.6875rem; }
+
+/* Bigger text (Settings, Background page): every word a size up */
+html.big-text { font-size: 115%; }
+html.big-text #library .spine { font-size: 0.9375rem; }
+
+/* The library's name: a plaque of its own under the title */
+.top-title { display: flex; flex-direction: column; align-items: flex-start; }
+.library-sign { display: block; width: fit-content; margin: 8px 0 0; font-size: 1rem; text-shadow: none; }
+.library-sign[hidden] { display: none; }
+
+/* Settings: the groups of choices on the Shelves and Library pages, the name boxes and the brightness slider */
+.shelf-look { margin-bottom: 18px; }
+.journal-section > .shelf-look:first-child > .settings-title { margin-top: 0; }
+.shelf-look .settings-help { margin-top: 8px; }
+.settings-text { width: 11rem; padding: 4px 8px; border: 2px solid var(--page-ink); background: transparent; color: var(--page-ink); font: inherit; font-size: 0.9375rem; }
+.settings-text:focus-visible { outline: 3px solid var(--page-gold); outline-offset: 2px; }
+/* The brightness slider: a brass groove with a square cream knob, in pixels like the switches */
+.journal-page input[type="range"] { width: 6.5rem; height: 18px; margin: 0; background: transparent; appearance: none; -webkit-appearance: none; cursor: pointer; }
+.journal-page input[type="range"]::-webkit-slider-runnable-track { height: 6px; background: var(--brass); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25); }
+.journal-page input[type="range"]::-moz-range-track { height: 6px; background: var(--brass); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25); }
+.journal-page input[type="range"]::-webkit-slider-thumb { width: 14px; height: 18px; margin-top: -6px; border: 2px solid #2A1A10; border-radius: 0; background: #FAF8F2; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3); appearance: none; -webkit-appearance: none; }
+.journal-page input[type="range"]::-moz-range-thumb { width: 10px; height: 14px; border: 2px solid #2A1A10; border-radius: 0; background: #FAF8F2; box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.3); }
+.journal-page input[type="range"]:focus-visible { outline: 3px solid var(--page-gold); outline-offset: 2px; }

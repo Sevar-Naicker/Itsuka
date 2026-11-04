@@ -439,6 +439,7 @@ function RenderShelves()
     return;
   }
 
+  StandInCase();                 // for the Bookcase look the shelves stand in a bookcase wall
   ApplyTheme(Current.theme);     // colour the new books to match the background
   TidyOrnaments();
   SlideBooks(Before);
@@ -713,6 +714,186 @@ function BuildSettingsList()
     });
   });
 }
+
+// How the shelves look:
+
+// LOOK_KEY is where this device keeps how the shelves look, as it suits the screen: the style, which way they line up, the book size and glass doors
+const LOOK_KEY = "library-shelf-look";
+// ShelfLook holds how the shelves look on this device, plain shelves lined up on the left with cosy books to start with
+const ShelfLook = { style: "plain", align: "left", size: "cosy", glass: false };
+// LOOK_CHOICES holds what each part of the look can be, the first one is where it starts
+const LOOK_CHOICES = { style: ["plain", "floating", "cubbies", "bookcase"], align: ["left", "centre"], size: ["cosy", "compact"] };
+// PhoneWidth matches a phone-sized screen, where the bays of the bookcase stand one above another
+const PhoneWidth = window.matchMedia("(max-width: 640px)");
+const ShelfStyleChoice = document.getElementById("shelfStyleChoice");
+const ShelfAlignChoice = document.getElementById("shelfAlignChoice");
+const BookSizeChoice = document.getElementById("bookSizeChoice");
+const GlassSwitch = document.getElementById("glassSwitch");
+const GlassLine = document.getElementById("glassLine");
+
+// The LoadShelfLook function reads how the shelves look from this device, anything it does not know stays as it starts
+function LoadShelfLook()
+{
+  let Saved = null;
+  try { Saved = JSON.parse(Recall(LOOK_KEY)); }
+  catch (error) { Saved = null; }
+  if (!Saved) return;
+  Object.keys(LOOK_CHOICES).forEach((Key) => { if (LOOK_CHOICES[Key].includes(Saved[Key])) ShelfLook[Key] = Saved[Key]; });
+  if (typeof Saved.glass === "boolean") ShelfLook.glass = Saved.glass;
+}
+
+// The ShowShelfLook function puts the look on the page for styles.css and marks it in Settings, Glass doors is only offered for the bookcase and cubbies
+function ShowShelfLook()
+{
+  ["floating", "cubbies", "bookcase"].forEach((Name) => document.body.classList.toggle("layout-" + Name, ShelfLook.style === Name));
+  document.body.classList.toggle("align-centre", ShelfLook.align === "centre");
+  document.body.classList.toggle("size-compact", ShelfLook.size === "compact");
+  document.body.classList.toggle("glass-doors", ShelfLook.glass);
+  ShelfStyleChoice.value = ShelfLook.style;
+  ShelfAlignChoice.value = ShelfLook.align;
+  BookSizeChoice.value = ShelfLook.size;
+  GlassSwitch.checked = ShelfLook.glass;
+  GlassLine.hidden = !["bookcase", "cubbies"].includes(ShelfLook.style);
+}
+
+// The ChangeShelfLook function changes one part of the look, keeps it on this device and builds the shelves again
+function ChangeShelfLook(Key, Value)
+{
+  ShelfLook[Key] = Value;
+  Remember(LOOK_KEY, JSON.stringify(ShelfLook));
+  ShowShelfLook();
+  Update();
+}
+ShelfStyleChoice.addEventListener("change", () => ChangeShelfLook("style", ShelfStyleChoice.value));
+ShelfAlignChoice.addEventListener("change", () => ChangeShelfLook("align", ShelfAlignChoice.value));
+BookSizeChoice.addEventListener("change", () => ChangeShelfLook("size", BookSizeChoice.value));
+GlassSwitch.addEventListener("change", () => ChangeShelfLook("glass", GlassSwitch.checked));
+LoadShelfLook();
+ShowShelfLook();
+
+// The StandInCase function stands the shelves in a bookcase wall for the Bookcase look: the shelves are bays side by side sharing their uprights, with a crown and plinth along each row and a new row when the screen is full, and on a phone one bay above another
+function StandInCase()
+{
+  if (ShelfLook.style !== "bookcase") return;
+  const Blocks = [...LibraryRoot.querySelectorAll(":scope > .section")];
+  if (!Blocks.length) return;
+  const Rows = PhoneWidth.matches ? [Blocks] : RowsOf(Blocks);
+  Rows.forEach((Row) =>
+  {
+    const Case = Make("div", "case bays" + (PhoneWidth.matches ? " stacked" : ""));
+    Case.append(...Row);
+    LibraryRoot.append(Case);
+  });
+}
+
+// The RowsOf function works out which shelves fit side by side in each row of the bookcase, by laying them out with the uprights' gaps and seeing where the rows break
+function RowsOf(Blocks)
+{
+  document.body.classList.add("measuring-bays");
+  const Rows = [];
+  let Top = null;
+  Blocks.forEach((Block) =>
+  {
+    if (Top === null || Math.abs(Block.offsetTop - Top) > 4)
+    {
+      Rows.push([]);
+      Top = Block.offsetTop;
+    }
+    Rows[Rows.length - 1].push(Block);
+  });
+  document.body.classList.remove("measuring-bays");
+  return Rows;
+}
+
+// When the window changes size the bookcase is stood again so its rows fit, the shelves are moved rather than built again so an open book or the cat stays put
+let CaseWait = 0;
+window.addEventListener("resize", () =>
+{
+  if (ShelfLook.style !== "bookcase") return;
+  clearTimeout(CaseWait);
+  CaseWait = setTimeout(() =>
+  {
+    LibraryRoot.querySelectorAll(":scope > .case").forEach((Case) => Case.replaceWith(...Case.children));
+    StandInCase();
+  }, 150);
+});
+
+// Your library's name and the cat:
+
+// LibraryName and CatName hold the name on the sign under the title and the cat's name, both empty to start with, they are kept with the member's account (or on this device while login is off)
+let LibraryName = "";
+let CatName = "";
+const LibrarySign = document.getElementById("librarySign");
+const LibraryNameBox = document.getElementById("libraryNameBox");
+const CatNameBox = document.getElementById("catNameBox");
+const CatCoatChoice = document.getElementById("catCoatChoice");
+const NameNote = document.getElementById("nameNote");
+const CatNote = document.getElementById("catNote");
+
+// The LoadNameAndCat function reads the library's name and the cat's coat and name from the member's account, or from this device while login is off
+function LoadNameAndCat(Member)
+{
+  const Saved = Member ? Member.user_metadata || {} : { library_name: Recall("library-name"), cat_name: Recall("library-cat-name"), cat_coat: Recall(COAT_KEY) };
+  LibraryName = typeof Saved.library_name === "string" ? Saved.library_name.slice(0, 24) : "";
+  CatName = typeof Saved.cat_name === "string" ? Saved.cat_name.slice(0, 16) : "";
+  if (typeof Saved.cat_coat === "string") WearCoat(Saved.cat_coat);
+  Remember(COAT_KEY, CatCoat);                         // the cat on the other pages wears it too
+  ShowNameAndCat();
+}
+
+// The ShowNameAndCat function puts the name on the sign (no sign without one), shows the choices in Settings and paints the sleeping cat in its coat
+function ShowNameAndCat()
+{
+  LibrarySign.textContent = LibraryName;
+  LibrarySign.hidden = !LibraryName;
+  LibraryNameBox.value = LibraryName;
+  CatNameBox.value = CatName;
+  CatCoatChoice.value = CatCoat;
+  if (!MotionOn) DrawFrame(20);                          // a still background is painted again so the cat changes coat
+}
+
+// The SaveNameAndCat function saves the library's name and the cat with the member's account so they follow them to every device
+async function SaveNameAndCat()
+{
+  if (DB && SignedIn)
+  {
+    const { data: Data, error } = await DB.auth.updateUser({ data: { library_name: LibraryName, cat_name: CatName, cat_coat: CatCoat } });
+    if (error) throw error;
+    SignedIn = Data.user;
+  }
+  else
+  {
+    Remember("library-name", LibraryName);
+    Remember("library-cat-name", CatName);
+  }
+  Remember(COAT_KEY, CatCoat);
+}
+
+// The ChangeNameOrCat function puts a new name or coat on straight away and saves it, if the save fails it shows why under the choice
+async function ChangeNameOrCat(Note)
+{
+  NameNote.hidden = true;
+  CatNote.hidden = true;
+  ShowNameAndCat();
+  try
+  {
+    await SaveNameAndCat();
+  }
+  catch (error)
+  {
+    console.error(error);
+    Note.textContent = "That could not be saved. " + ExplainDatabase(error);
+    Note.hidden = false;
+  }
+}
+LibraryNameBox.addEventListener("input", () =>                     // the sign changes as the name is typed, it is saved once they finish
+{
+  LibrarySign.textContent = LibraryNameBox.value.trim();
+  LibrarySign.hidden = !LibrarySign.textContent;
+});
+LibraryNameBox.addEventListener("change", () => { LibraryName = LibraryNameBox.value.trim(); ChangeNameOrCat(NameNote); });
+CatNameBox.addEventListener("change", () => { CatName = CatNameBox.value.trim(); ChangeNameOrCat(CatNote); });
+CatCoatChoice.addEventListener("change", () => { WearCoat(CatCoatChoice.value); ChangeNameOrCat(CatNote); });
 
 // Saving a copy of the library and loading one back:
 
@@ -2268,6 +2449,7 @@ async function StartLibrary()
   }
   if (Member) NoteVisit();
   LoadShelfSettings(Member);
+  LoadNameAndCat(Member);
   BuildSettingsList();
   ApplyShelfSettings();                          // this also builds the plaques and the shelves
   OpenSharedArrival();                           // a link shared from another app opens on a new catalogue card

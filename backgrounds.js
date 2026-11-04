@@ -188,6 +188,29 @@ const CatShape = [
 ];
 const CatColours = { o: "#D98A3A", s: "#B4682A", t: "#C27A32" };
 
+// CAT_COATS holds the colours of each coat the cat can wear: o is its fur, s its stripes and shadow, d the darker fur under it, w its chest and muzzle and e its eyes
+const CAT_COATS = {
+  ginger: { o: "#D98A3A", s: "#B4682A", d: "#C27A32", w: "#F3DDB5", e: "#3A2414" },
+  black: { o: "#2E2A2E", s: "#1C1A1C", d: "#252225", w: "#3E3A3E", e: "#E8C64A" },
+  grey: { o: "#8E8E96", s: "#5E5E66", d: "#7A7A82", w: "#E6E6EA", e: "#2A2A33" },
+  calico: { o: "#F3EDE2", s: "#D98A3A", d: "#3A3236", w: "#FFFFFF", e: "#2A2A33" },
+  white: { o: "#F3EFE6", s: "#DCD6CA", d: "#E6E0D4", w: "#FFFFFF", e: "#6E9EC4" },
+};
+// COAT_KEY is where this device keeps the cat's coat, so the cat on every page wears it even before the member's account has loaded
+const COAT_KEY = "library-cat-coat";
+// CatCoat holds the coat the cat is wearing, ginger to start with
+let CatCoat = "ginger";
+
+// The WearCoat function puts a coat on the cat asleep in the room (and on the cat ornament), keeps it on this device, and tells extras.js so the wandering cat matches
+function WearCoat(Name)
+{
+  CatCoat = CAT_COATS[Name] ? Name : "ginger";
+  const Coat = CAT_COATS[CatCoat];
+  Object.assign(CatColours, { o: Coat.o, s: Coat.s, t: Coat.d });
+  if (typeof DressWanderer === "function") DressWanderer();
+}
+WearCoat(Recall(COAT_KEY));
+
 // CAT_SPOTS holds where the cat sleeps in each indoor background, worked out from the room's size the same way its Draw function places things
 const CAT_SPOTS = {
   cabin: (W, H) => { const FloorY = Math.round(H * 0.8); return { x: (W >> 1) + 8, y: FloorY + Math.round((H - FloorY) * 0.38) - 4 }; },      // on the rug by the fire
@@ -1179,6 +1202,48 @@ if (LetteringChoice)
   {
     ShowLettering(LetteringChoice.value);
     Remember(LETTERING_KEY, LetteringChoice.value);
+  });
+}
+
+// Section: Brightness and bigger text
+
+// BRIGHTNESS_KEY and BIG_TEXT_KEY are where this device keeps how bright the background is (50 to 100, 100 to start with) and whether the text is bigger
+const BRIGHTNESS_KEY = "library-brightness";
+const BIG_TEXT_KEY = "library-big-text";
+
+// The ShowBrightness function dims the background to a share of its full brightness and gives back the share it used
+function ShowBrightness(Percent)
+{
+  const Share = Math.min(100, Math.max(50, Math.round(Number(Percent)) || 100));
+  Canvas.style.filter = Share < 100 ? "brightness(" + Share / 100 + ")" : "";
+  return Share;
+}
+
+// The ShowBigText function makes all the words on the page a size bigger, or back to their usual size
+function ShowBigText(On)
+{
+  document.documentElement.classList.toggle("big-text", On);
+}
+
+const Brightness = ShowBrightness(Recall(BRIGHTNESS_KEY));
+ShowBigText(Recall(BIG_TEXT_KEY) === "on");
+
+// The Brightness slider and Bigger text switch on the Background page of Settings, only on the library page
+const BrightnessChoice = document.getElementById("brightnessChoice");
+const BigTextSwitch = document.getElementById("bigTextSwitch");
+if (BrightnessChoice)
+{
+  BrightnessChoice.value = Brightness;
+  BrightnessChoice.addEventListener("input", () => ShowBrightness(BrightnessChoice.value));                       // it dims as the slider moves
+  BrightnessChoice.addEventListener("change", () => Remember(BRIGHTNESS_KEY, String(ShowBrightness(BrightnessChoice.value))));
+}
+if (BigTextSwitch)
+{
+  BigTextSwitch.checked = document.documentElement.classList.contains("big-text");
+  BigTextSwitch.addEventListener("change", () =>
+  {
+    ShowBigText(BigTextSwitch.checked);
+    Remember(BIG_TEXT_KEY, BigTextSwitch.checked ? "on" : "off");
   });
 }
 

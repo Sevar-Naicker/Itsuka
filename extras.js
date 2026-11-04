@@ -139,8 +139,19 @@ const WANDER_CAT = {
   ],
 };
 
-// WANDER_COLOURS holds the cat's colours: the same orange as the cat asleep in the room, with a cream chest and muzzle and a pink nose
+// WANDER_COLOURS holds the cat's colours: the same coat as the cat asleep in the room (ginger to start with), with a pink nose
 const WANDER_COLOURS = { o: "#D98A3A", s: "#B4682A", d: "#C27A32", w: "#F3DDB5", p: "#E58F86", e: "#3A2414", k: "#3A2414" };
+
+// The DressWanderer function gives the wandering cat the coat the cat is wearing (backgrounds.js keeps which one)
+function DressWanderer()
+{
+  const Coat = CAT_COATS[CatCoat];
+  Object.assign(WANDER_COLOURS, { o: Coat.o, s: Coat.s, d: Coat.d, w: Coat.w, e: Coat.e, k: Coat.e });
+}
+DressWanderer();
+
+// The CatWords function puts the cat's name in front of what it does when it has one (library.js keeps the name), or gives back the plain sound
+const CatWords = (Doing, Sound) => (typeof CatName === "string" && CatName ? CatName + " " + Doing : Sound);
 
 // FIRST_WANDER and NEXT_WANDER hold how long the cat waits before setting off, in seconds: the first time a while after the page opens, then now and then after that
 const FIRST_WANDER = [45, 120];
@@ -209,7 +220,24 @@ function PlaceOn(Shelf, Left)
   const LastRow = Books.filter((Book) => Book.offsetTop === Books[Books.length - 1].offsetTop);
   Kitty.cat.style.top = LastRow[0].offsetTop + LastRow[0].offsetHeight + "px";
   Kitty.cat.style.left = Left + "px";
+  OpenDoor(Shelf);
   return LastRow;
+}
+
+// The OpenDoor function swings open the glass door of the bay or cubby the cat stands on (only drawn with Glass doors on), and closes the doors it has left a moment later
+let DoorWait = 0;
+function OpenDoor(Shelf)
+{
+  Shelf.closest(".section").classList.add("door-open");
+  clearTimeout(DoorWait);
+  DoorWait = setTimeout(CloseDoors, 900);
+}
+
+// The CloseDoors function closes every glass door the cat is not standing behind
+function CloseDoors()
+{
+  const Here = Kitty.cat && Kitty.shelf ? Kitty.shelf.closest(".section") : null;
+  LibraryRoot.querySelectorAll(".section.door-open").forEach((Bay) => { if (Bay !== Here) Bay.classList.remove("door-open"); });
 }
 
 // The CatHome function gives where the cat sleeps in this background on the screen, so it sets off from and heads back to that side of the shelves
@@ -277,7 +305,7 @@ async function LeapTo(Shelf)
 // The PetCat function is one press on the cat: a purr and a few hearts, it stays where it is
 function PetCat()
 {
-  Say(Kitty.cat, "prrr");
+  Say(Kitty.cat, CatWords("purrs", "prrr"));
   for (let n = 0; n < 3; n++)
   {
     const Heart = Make("span", "cat-heart");
@@ -398,6 +426,7 @@ async function SendCat()
   Kitty.shelf = null;
   CatOut = false;
   CatWalking = false;
+  setTimeout(CloseDoors, 300);                          // and its door swings shut behind it
 }
 
 // The PlanWander function sets the cat off again after a while, waiting a little longer when it cannot go right then
@@ -894,7 +923,7 @@ function BooksHop()
 function CatSays()
 {
   if (!CAT_SPOTS[Current.id]) return;
-  if (Kitty.cat) { Say(Kitty.cat, "meow?"); return; }
+  if (Kitty.cat) { Say(Kitty.cat, CatWords("says meow?", "meow?")); return; }
   const Cat = CAT_SPOTS[Current.id](Canvas.width, Canvas.height);
-  SayAt(Cat.x + 6, Cat.y, "meow?");
+  SayAt(Cat.x + 6, Cat.y, CatWords("is asleep, zzz", "meow?"));
 }

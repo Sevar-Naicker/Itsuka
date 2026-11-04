@@ -81,6 +81,12 @@ const NEWS = [
   { number: 20, title: "Lettering", items: [
     { title: "Lettering", text: "The pixel letters are a little bolder now. You can also switch to handwriting: Handwritten notes puts it on the book names, the words inside your books and the journal pages, and Handwritten everywhere puts it on the whole library. Pick it in Settings, under Background.", show: "settings background" },
   ] },
+  { number: 21, title: "Make it yours", items: [
+    { title: "How the shelves look", text: "Stand your books on wall shelves, in cubbies or in a bookcase wall, with glass doors if you like. Line them up on the left or in the middle, and pick Compact books to fit more on each shelf. In Settings, under Shelves.", show: "settings shelves" },
+    { title: "Your cat", text: "Give the cat a coat (ginger, black, grey tabby, calico or white) and a name. With glass doors, it opens the door to get in. In Settings, under Shelves.", show: "settings shelves" },
+    { title: "Name your library", text: "Your library's name goes on a little sign under Itsuka. In Settings, under Library.", show: "settings library" },
+    { title: "Brightness and bigger text", text: "Dim the background, or make all the words a size bigger. In Settings, under Background.", show: "settings background" },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -101,6 +107,7 @@ const GUIDE = [
     ["Books due", "Give a book a Come back on day on its card, or press Remind me to come back inside it. On the day, the Books due slip lists it. Later picks a new day, Clear forgets it. Your days are only yours, even on a joint shelf."],
   ] },
   { group: "Arranging", lines: [
+    ["How the shelves look", "Under Shelves in Settings: Plain, Wall shelves, Cubbies or Bookcase (a bookcase wall, with a new row when the screen is full), lined up on the left or centred, with Cosy or Compact books. The bookcase and cubbies can have glass doors, which swing open when you open a book. It is chosen on each device, so a phone and a laptop can each have their own."],
     ["Move a book", "Drag a book by its spine. On a phone, rest your finger on the spine until it lifts, then drag."],
     ["Pages", "Press Edit on a book, then + Add a page, for up to 8 pages with their own link, notes and picture. Turn them with the arrows under the open book or swipe on a phone, and press the page number to go back to page 1. Drag the slips on the card to change their order. A page can become its own book or move into another."],
     ["Pages between books", "Open a book on a later page and drag the page onto another book (on a phone, rest your finger on it first). Hold a whole book over the middle of another's spine to put it inside. Undo puts either back."],
@@ -112,10 +119,11 @@ const GUIDE = [
     ["Dust", "A book you haven't opened in two months gathers dust. Opening it blows the dust off."],
     ["Date added", "The sticky note in a book's corner shows the day it was added. Switch off Date added in Settings, under Shelves, to hide the notes."],
     ["Day and night", "The background follows the time on your device, from morning light to a dark night. Switch off Day and night in Settings, under Background, to keep each background as it was painted. Like the background itself, it is chosen on each device."],
-    ["The cat", "In the indoor backgrounds, the cat now and then wanders along your shelves. Press it once to pet it, twice to send it home, and press a book it knocked crooked to stand it up. Wandering cat in Settings, under Shelves, keeps it asleep."],
+    ["The cat", "In the indoor backgrounds, the cat now and then wanders along your shelves. Press it once to pet it, twice to send it home, and press a book it knocked crooked to stand it up. Wandering cat in Settings, under Shelves, keeps it asleep. Under The cat, give it a coat and a name, which follow you to every device."],
     ["Things to press", "Each background has a few things that do something when you press them, wherever the shelves leave them showing. A hand and a twinkle show them when you point, and now and then one twinkles by itself."],
     ["Weather", "The skies show the weather in Johannesburg, Pretoria or Cape Town, whichever you pick under Background in Settings: clouds, rain or a storm. It is checked every half hour, and Off keeps the skies clear."],
     ["Lettering", "Pick how the words look under Background in Settings: Pixel, Handwritten notes (handwriting on the book names, the words inside books and the journal pages) or Handwritten everywhere. Like the background, it is chosen on each device."],
+    ["Brightness and bigger text", "Under Background in Settings, the Brightness slider dims the background and Bigger text makes every word a size up. Both are chosen on each device."],
     ["Reading record", "On your library card. Every book you tick done is stamped with the day, with totals and the book that has waited longest. On a joint shelf a book goes on the record of whoever ticked it. A deleted book stays until you press Take off."],
   ] },
   { group: "Sharing", lines: [
@@ -130,6 +138,7 @@ const GUIDE = [
     ["Settings", "A journal with a bookmark for each page: Background, Shelves, Library, Phone and Help. The shelf tools follow you to every device, the background is chosen on each device."],
     ["Shuffle", "Under Background in Settings, the first picture. Itsuka picks a new background each visit or each day. Untick any you want left out, or pick one picture to stop shuffling."],
     ["Your card", "The card in the top corner holds your photo, Sign out and Delete my account."],
+    ["Your library's name", "On the Library page in Settings. It goes on a little sign under Itsuka on every device, and leaving it empty takes the sign away."],
     ["No signal", "With no signal, Itsuka opens the copy of your shelves saved on this device, under a small sign. You can read and find books, and changes come back once you're connected. Swaying sign in Settings keeps the sign still."],
     ["On your phone", "On the Phone page in Settings, Add to home screen puts Itsuka on your home screen, or shows you the steps for your phone. It then opens like an app."],
   ] },

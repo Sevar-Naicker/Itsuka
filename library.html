@@ -29,7 +29,11 @@
 
 <!-- The top of the page: the title, the Guide and Settings buttons and the member's card -->
 <header class="top">
-  <h1><a href="index.html">Itsuka</a></h1>
+  <!-- The title and, when the member has named their library, its name on a sign under it -->
+  <div class="top-title">
+    <h1><a href="index.html">Itsuka</a></h1>
+    <p class="plaque library-sign" id="librarySign" hidden></p>
+  </div>
   <div class="top-actions">
     <button class="plain-button" id="guideButton" type="button">Guide</button>
     <button class="plain-button" id="sceneButton" type="button">Settings</button>
@@ -123,7 +127,7 @@
       <!-- Background page: moving or still, the lettering, Shuffle and the pictures -->
       <section class="journal-section" id="pageBackground" role="tabpanel" aria-labelledby="tabBackground" data-page="background">
         <h3 class="settings-title">Background on this device</h3>
-        <!-- Moving or still, day and night, the weather from a city and the lettering, all kept on this device -->
+        <!-- Moving or still, day and night, the weather from a city, the lettering, the brightness and bigger text, all kept on this device -->
         <div class="background-choices">
           <label class="motion-switch">
             <input type="checkbox" id="motionSwitch"> Moving backgrounds
@@ -148,6 +152,13 @@
               <option value="all">Handwritten everywhere</option>
             </select>
           </label>
+          <label class="weather-choice">
+            <span>Brightness</span>
+            <input type="range" id="brightnessChoice" min="50" max="100" step="5" value="100">
+          </label>
+          <label class="motion-switch">
+            <input type="checkbox" id="bigTextSwitch"> Bigger text
+          </label>
         </div>
         <div class="scene-list" id="sceneList"></div>
         <div class="shuffle-options" id="shuffleOptions" hidden>
@@ -158,11 +169,66 @@
         </div>
       </section>
 
-      <!-- Shelves page: the shelf tools and your colour on joint shelves -->
+      <!-- Shelves page: how the shelves look, the shelf tools, the cat and your colour on joint shelves -->
       <section class="journal-section" id="pageShelves" role="tabpanel" aria-labelledby="tabShelves" data-page="shelves" hidden>
+        <!-- How the shelves look: the style, which way they line up, the book size and glass doors, kept on this device -->
+        <div class="shelf-look">
+          <h3 class="settings-title">How the shelves look on this device</h3>
+          <div class="background-choices">
+            <label class="weather-choice">
+              <span>Shelves</span>
+              <select id="shelfStyleChoice">
+                <option value="plain">Plain</option>
+                <option value="floating">Wall shelves</option>
+                <option value="cubbies">Cubbies</option>
+                <option value="bookcase">Bookcase</option>
+              </select>
+            </label>
+            <label class="weather-choice">
+              <span>Line up</span>
+              <select id="shelfAlignChoice">
+                <option value="left">Left</option>
+                <option value="centre">Centred</option>
+              </select>
+            </label>
+            <label class="weather-choice">
+              <span>Books</span>
+              <select id="bookSizeChoice">
+                <option value="cosy">Cosy</option>
+                <option value="compact">Compact</option>
+              </select>
+            </label>
+            <label class="motion-switch" id="glassLine" hidden>
+              <input type="checkbox" id="glassSwitch"> Glass doors
+            </label>
+          </div>
+          <p class="settings-help">Glass doors are for the bookcase and cubbies. Compact books fit more on each shelf. On a phone the shelves are always centred.</p>
+        </div>
         <h3 class="settings-title">On the shelves</h3>
         <div class="settings-list" id="settingsList"></div>
         <p class="settings-note" id="settingsNote" role="alert" hidden></p>
+        <!-- The cat: its coat and its name, kept with the member's account -->
+        <div class="shelf-look">
+          <h3 class="settings-title">The cat</h3>
+          <div class="background-choices">
+            <label class="weather-choice">
+              <span>Coat</span>
+              <select id="catCoatChoice">
+                <option value="ginger">Ginger</option>
+                <option value="black">Black</option>
+                <option value="grey">Grey tabby</option>
+                <option value="calico">Calico</option>
+                <option value="white">White</option>
+              </select>
+            </label>
+            <label class="weather-choice">
+              <span>Name</span>
+              <input class="settings-text" id="catNameBox" maxlength="16" placeholder="Biscuit" autocomplete="off">
+            </label>
+          </div>
+          <p class="settings-help">The cat sleeps in the indoor rooms and wanders along your shelves when Wandering cat is on. Its name shows when you pet it or type meow.</p>
+          <p class="settings-note" id="catNote" role="alert" hidden></p>
+        </div>
         <div id="colourSection" hidden>
           <h3 class="settings-title">Your colour on joint shelves</h3>
           <div class="colour-picker" id="colourPicker"></div>
@@ -171,8 +237,18 @@
         </div>
       </section>
 
-      <!-- Library page: download a copy or load one back -->
+      <!-- Library page: your library's name, and download a copy or load one back -->
       <section class="journal-section" id="pageLibrary" role="tabpanel" aria-labelledby="tabLibrary" data-page="library" hidden>
+        <!-- The library's name, on a sign under the title, kept with the member's account -->
+        <div class="shelf-look">
+          <h3 class="settings-title">Your library's name</h3>
+          <label class="weather-choice">
+            <span>Name</span>
+            <input class="settings-text" id="libraryNameBox" maxlength="24" placeholder="My library" autocomplete="off">
+          </label>
+          <p class="settings-help">Shown on a little sign under Itsuka. Leave it empty for no sign.</p>
+          <p class="settings-note" id="nameNote" role="alert" hidden></p>
+        </div>
         <h3 class="settings-title">Your library</h3>
         <p class="settings-help">Download your whole library as one file to keep, or load a copy you saved before.</p>
         <div class="library-copy">
