@@ -1475,9 +1475,14 @@ async function UpdateBook(Book, Section, Details)
 // The MoveSection function moves a section one place up (Step is -1) or down (Step is 1) and saves its new place
 async function MoveSection(Section, Step)
 {
+  await MoveSectionTo(Section, Library.indexOf(Section) + Step);
+}
+
+// The MoveSectionTo function moves a section straight to a new place in the list (0 is the top) and saves it, only the moved section's place changes
+async function MoveSectionTo(Section, To)
+{
   const From = Library.indexOf(Section);
-  const To = From + Step;
-  if (To < 0 || To >= Library.length) return;
+  if (To < 0 || To >= Library.length || To === From) return;
   const Others = Library.filter((Other) => Other !== Section);
   const Before = Others[To - 1];
   const After = Others[To];
@@ -1970,6 +1975,19 @@ function RenderSectionRows(FocusId, FocusPart)
     const Row = Make("div", "section-entry");
     Row.dataset.section = Section.id;
     const Line = Make("div", "card-line section-name");
+    const Grip = Make("button", "section-grip");
+    Grip.type = "button";
+    Grip.setAttribute("aria-label", "Move the " + Section.name + " section: drag it, or use the arrow keys, Home and End");
+    Grip.title = "Drag to move";
+    Grip.addEventListener("pointerdown", (event) => DragSectionRow(event, Row, Section));
+    Grip.addEventListener("keydown", (event) =>
+    {
+      const To = { ArrowUp: Index - 1, ArrowDown: Index + 1, Home: 0, End: Library.length - 1 }[event.key];
+      if (To === undefined) return;
+      event.preventDefault();
+      PlaceSectionRow(Section, To);
+    });
+    Line.append(Grip);
     const Box = document.createElement("input");
     Box.type = "text"; Box.value = Section.name; Box.maxLength = 40;
     Box.disabled = Section.owner === false;                          // only the owner can rename a joint shelf
@@ -2137,6 +2155,67 @@ function RenderSectionRows(FocusId, FocusPart)
     const Button = Row && (Row.querySelector("." + FocusPart + ":not(:disabled)") || Row.querySelector(".move-up:not(:disabled), .move-down:not(:disabled)"));
     if (Button) Button.focus();
   }
+}
+
+// The PlaceSectionRow function moves a section to a new place from the sections card and draws the list again, keeping the keyboard on its grip
+async function PlaceSectionRow(Section, To)
+{
+  SectionsNote.hidden = true;
+  try
+  {
+    await MoveSectionTo(Section, Math.max(0, Math.min(To, Library.length - 1)));
+  }
+  catch (error)
+  {
+    console.error(error);
+    ShowCardNote(SectionsNote, ExplainDatabase(error));
+  }
+  RenderSectionRows(Section.id, "section-grip"); RenderTabs(); Update();
+}
+
+// The DragSectionRow function lets a section be dragged up or down the list by its grip: the row lifts and the others make room as it passes, the list scrolls when it is held near the top or bottom, and it is saved where it is let go
+function DragSectionRow(event, Row, Section)
+{
+  if (event.button > 0 || Library.length < 2) return;
+  event.preventDefault();
+  const Grip = event.currentTarget;
+  Grip.focus();
+  Row.classList.add("is-lifted");
+  SectionRows.classList.add("is-sorting");
+  let PointerY = event.clientY;
+
+  // The rows are moved around the lifted one as the pointer passes the middle of each
+  const Follow = () =>
+  {
+    const Others = [...SectionRows.querySelectorAll(".section-entry:not(.is-lifted)")];
+    const Below = Others.find((Other) => { const Box = Other.getBoundingClientRect(); return PointerY < Box.top + Box.height / 2; });
+    if (Below) { if (Row.nextElementSibling !== Below) SectionRows.insertBefore(Row, Below); }
+    else if (SectionRows.lastElementChild !== Row) SectionRows.append(Row);
+  };
+  // Held near the top or bottom of the list it scrolls, faster the closer to the edge
+  const Scroller = setInterval(() =>
+  {
+    const Box = SectionRows.getBoundingClientRect();
+    const Step = PointerY < Box.top + 40 ? -Math.min(20, 6 + (Box.top + 40 - PointerY) / 2) : PointerY > Box.bottom - 40 ? Math.min(20, 6 + (PointerY - Box.bottom + 40) / 2) : 0;
+    if (!Step) return;
+    SectionRows.scrollTop += Step;
+    Follow();
+  }, 30);
+  const Move = (Next) => { PointerY = Next.clientY; Follow(); };
+  const Drop = () =>
+  {
+    clearInterval(Scroller);
+    window.removeEventListener("pointermove", Move);
+    window.removeEventListener("pointerup", Drop);
+    window.removeEventListener("pointercancel", Drop);
+    Row.classList.remove("is-lifted");
+    SectionRows.classList.remove("is-sorting");
+    PlaceSectionRow(Section, [...SectionRows.querySelectorAll(".section-entry")].indexOf(Row));
+  };
+  // The pointer is followed on the whole window, the grip itself moves around the list as the rows change places
+  window.addEventListener("pointermove", Move);
+  window.addEventListener("pointerup", Drop);
+  window.addEventListener("pointercancel", Drop);
 }
 
 // The OpenSectionsCard function opens the sections card

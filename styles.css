@@ -779,8 +779,16 @@ h1 a:focus-visible { outline: 3px solid var(--brass); outline-offset: 4px; }
 
 /* Sections card rows */
 .section-row { grid-template-columns: 1fr auto; align-items: center; }
-.section-entry { margin-bottom: 14px; }
-.section-name { grid-template-columns: 1fr; margin-bottom: 4px; }
+/* Each section has a red margin line down its left, like a ruled notebook, so its name and its tools read as one */
+.section-entry { margin-bottom: 16px; padding: 6px 8px 8px 12px; box-shadow: inset 3px 0 0 #C0574A; }
+.section-name { grid-template-columns: auto 1fr; align-items: center; gap: 6px; margin-bottom: 4px; }
+/* The grip: six ink dots to drag a section up or down by (on a phone straight away, the page does not scroll from it) */
+.section-grip { width: 14px; height: 20px; padding: 0; border: 0; background: radial-gradient(circle, var(--ink) 1.4px, transparent 1.6px) 0 0 / 7px 7px; opacity: 0.55; cursor: grab; touch-action: none; }
+.section-grip:hover, .section-grip:focus-visible { opacity: 1; }
+.section-grip:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+#sectionRows.is-sorting, #sectionRows.is-sorting * { cursor: grabbing; user-select: none; -webkit-user-select: none; }
+/* The section being dragged lifts off the card on a light highlight, keeping its margin line */
+.section-entry.is-lifted { position: relative; z-index: 1; background: #F3E2A6; box-shadow: inset 3px 0 0 #C0574A, 3px 3px 0 rgba(0, 0, 0, 0.25); transform: translate(-2px, -2px); }
 .section-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 12px; font-size: 0.875rem; }
 .section-tools .link-button { font-size: 0.875rem; }
 .section-tools .link-button:disabled { opacity: 0.35; cursor: default; }
@@ -1845,9 +1853,10 @@ body.glass-doors .section.door-open::after, body.glass-doors .section:has(.book.
 body.size-compact { --row: 158px; }
 body.size-compact #library .spine { width: calc(var(--w) * 0.78); height: calc(var(--h) * 0.74); font-size: 0.6875rem; }
 
-/* Bigger text (Settings, Background page): every word a size up */
+/* Bigger text (Settings, Background page): every word a size up, except the names on the spines, which keep their usual size so they still fit */
 html.big-text { font-size: 115%; }
-html.big-text #library .spine { font-size: 0.9375rem; }
+html.big-text #library .spine { font-size: calc(0.8125rem / 1.15); }
+html.big-text body.size-compact #library .spine { font-size: calc(0.6875rem / 1.15); }
 
 /* The library's name: a plaque of its own under the title */
 .top-title { display: flex; flex-direction: column; align-items: flex-start; }

@@ -93,6 +93,9 @@ const NEWS = [
   { number: 23, title: "Nothing lost", items: [
     { title: "Nothing lost", text: "If you leave the page, it reloads, or a book's card closes before you save, what you typed is kept on this device. Open the same card again and it is all still there. Cancel throws it away." },
   ] },
+  { number: 24, title: "Drag your sections", items: [
+    { title: "Drag your sections", text: "In Edit sections, drag a section by the six dots beside its name to move it anywhere in the list, from the bottom straight to the top. Hold it near the top or bottom and the list scrolls." },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -117,7 +120,7 @@ const GUIDE = [
     ["Move a book", "Drag a book by its spine. On a phone, rest your finger on the spine until it lifts, then drag."],
     ["Pages", "Press Edit on a book, then + Add a page, for up to 8 pages with their own link, notes and picture. Turn them with the arrows under the open book or swipe on a phone, and press the page number to go back to page 1. Drag the slips on the card to change their order. A page can become its own book or move into another."],
     ["Pages between books", "Open a book on a later page and drag the page onto another book (on a phone, rest your finger on it first). Hold a whole book over the middle of another's spine to put it inside. Undo puts either back."],
-    ["Edit sections", "Rename shelves, move them up or down, sort their books (A to Z, newest or oldest first), invite friends, share or delete them."],
+    ["Edit sections", "Rename shelves, drag them by the six dots to a new place (or use Up and Down), sort their books (A to Z, newest or oldest first), invite friends, share or delete them."],
     ["Undo", "After deleting a book or a shelf, press Undo on the note at the bottom within a few seconds to put it back."],
     ["Nothing lost", "If you leave the page or a book's card closes before you save, what you typed is kept on this device and comes back when you open the same card again. Cancel throws it away."],
   ] },
