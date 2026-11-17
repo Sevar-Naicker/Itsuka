@@ -255,6 +255,7 @@ DeleteDialog.addEventListener("click", (event) => { if (event.target === DeleteD
 // Sign out forgets the sign-in on this device and goes to the login page
 document.getElementById("signOut").addEventListener("click", async () =>
 {
+  if (typeof ForgetAllDrafts === "function") ForgetAllDrafts();      // drafts.js lets their unsaved drafts go, so the next person on this device never sees them
   await SignOut();
   location.replace("login.html");
 });

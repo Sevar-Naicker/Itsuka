@@ -90,6 +90,9 @@ const NEWS = [
   { number: 22, title: "Signs and labels", items: [
     { title: "Signs and labels", text: "In the bookcase, each shelf's name now hangs on a little sign inside its bay, and it swings when the door opens. The cubbies have a card in a little holder on the front instead. They both take their colours from your background.", show: "settings shelves" },
   ] },
+  { number: 23, title: "Nothing lost", items: [
+    { title: "Nothing lost", text: "If you leave the page, it reloads, or a book's card closes before you save, what you typed is kept on this device. Open the same card again and it is all still there. Cancel throws it away." },
+  ] },
 ];
 // LATEST_NEWS is the number of the newest entry
 const LATEST_NEWS = NEWS[NEWS.length - 1].number;
@@ -116,6 +119,7 @@ const GUIDE = [
     ["Pages between books", "Open a book on a later page and drag the page onto another book (on a phone, rest your finger on it first). Hold a whole book over the middle of another's spine to put it inside. Undo puts either back."],
     ["Edit sections", "Rename shelves, move them up or down, sort their books (A to Z, newest or oldest first), invite friends, share or delete them."],
     ["Undo", "After deleting a book or a shelf, press Undo on the note at the bottom within a few seconds to put it back."],
+    ["Nothing lost", "If you leave the page or a book's card closes before you save, what you typed is kept on this device and comes back when you open the same card again. Cancel throws it away."],
   ] },
   { group: "Keeping track", lines: [
     ["Done", "Open a book and tick Done. It gets a ribbon and a stamp, and Hide done tucks it away."],

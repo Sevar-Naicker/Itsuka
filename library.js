@@ -1841,6 +1841,7 @@ function OpenCatalogueCard(Book)
   if (!DB) ShowCardNote(CatalogueNote, "Login is switched off, so changes show on the shelf but are not saved.");
   CatalogueDialog.showModal();
   BookName.focus();
+  if (typeof PickUpDraft === "function") PickUpDraft();             // drafts.js fills in anything typed here before and not saved
 }
 
 // Choosing New section in the list shows the line for typing its name
@@ -1890,6 +1891,7 @@ CatalogueForm.addEventListener("submit", async (event) =>
     if (typeof SaveComeBackLine === "function") await SaveComeBackLine(Book);  // and saves the day to come back to it
     if (typeof SavePagesLine === "function") await SavePagesLine(Book, Section);   // pages.js saves the pages added, changed, moved or removed on the card
 
+    if (typeof ForgetDraft === "function") ForgetDraft();              // saved, so drafts.js lets the draft go
     CatalogueDialog.close();
     if (Chosen.size) Chosen.add(Section.id);                           // make sure the shelf it is on is showing
     if (!Matches(Book)) ClearSearch();                                 // and that a search is not hiding it
@@ -1912,6 +1914,7 @@ BookDelete.addEventListener("click", async () =>
 {
   const Book = EditingBook;
   if (!(await AskToConfirm("Delete \u201C" + Book.name + "\u201D for good?", "Delete book"))) return;
+  if (typeof ForgetDraft === "function") ForgetDraft(Book.id);
   CatalogueDialog.close();
   // The book leaves the shelf straight away, but it is only deleted once the Undo note has run out
   const SectionId = SectionOf(Book).id;
@@ -1928,9 +1931,13 @@ BookDelete.addEventListener("click", async () =>
   }, () => DeleteBook(Book));
 });
 
-// The Add a book button opens a blank card and the Cancel link closes it
+// The Add a book button opens a blank card and the Cancel link closes it, throwing away anything typed (a draft is only kept when the card is closed some other way)
 document.getElementById("addBook").addEventListener("click", () => OpenCatalogueCard());
-document.getElementById("catalogueCancel").addEventListener("click", () => CatalogueDialog.close());
+document.getElementById("catalogueCancel").addEventListener("click", () =>
+{
+  if (typeof ForgetDraft === "function") ForgetDraft();
+  CatalogueDialog.close();
+});
 
 // The Edit button inside an open book
 LibraryRoot.addEventListener("click", (event) =>
